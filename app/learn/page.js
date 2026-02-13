@@ -1,9 +1,8 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,6 +16,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import Navbar from "@/components/Navbar";
 
 export default function LearnPage() {
   const { data: session, status } = useSession();
@@ -151,38 +152,11 @@ export default function LearnPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
-      <header className="bg-card border-b">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-foreground">LernLang</h1>
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-muted-foreground">
-                Halo, {session.user.name}!
-              </span>
-              <Button asChild variant="outline" size="sm">
-                <Link href="/history">Riwayat</Link>
-              </Button>
-              {session.user.role === "ADMIN" && (
-                <Button asChild size="sm">
-                  <Link href="/admin">Admin</Link>
-                </Button>
-              )}
-              <Button
-                onClick={() => signOut({ callbackUrl: "/" })}
-                variant="destructive"
-                size="sm"
-              >
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Navbar user={session.user} />
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-8">
-        {/* Mode & Difficulty Selection */}
+        `{/* Mode & Difficulty Selection */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Mode Belajar</CardTitle>
@@ -258,16 +232,40 @@ export default function LearnPage() {
             </Button>
           </CardContent>
         </Card>
-
         {/* Error Message */}
         {error && (
           <Alert variant="destructive" className="mb-6">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-
         {/* Question Section */}
-        {currentSentence && (
+        {loading && (
+          <Card className="mb-6">
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <Skeleton className="h-7 w-48" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-6 w-20" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="bg-muted rounded-lg p-4">
+                <Skeleton className="h-6 w-full mb-2" />
+                <Skeleton className="h-6 w-3/4" />
+              </div>
+
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-48 mb-2" />
+                <Skeleton className="h-24 w-full rounded-md" />
+              </div>
+
+              <Skeleton className="h-11 w-full rounded-md" />
+            </CardContent>
+          </Card>
+        )}
+        {currentSentence && !loading && (
           <Card className="mb-6">
             <CardHeader>
               <div className="flex justify-between items-center">
@@ -326,9 +324,60 @@ export default function LearnPage() {
             </CardContent>
           </Card>
         )}
-
         {/* Evaluation Result */}
-        {evaluation && (
+        {evaluating && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center text-2xl">
+                Hasil Evaluasi
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Score and Status Skeleton */}
+              <div className="flex flex-col items-center gap-4">
+                <div className="text-center">
+                  <Skeleton className="h-4 w-24 mx-auto mb-2" />
+                  <Skeleton className="h-20 w-32 mx-auto" />
+                  <Skeleton className="h-3 w-20 mx-auto mt-1" />
+                </div>
+                <Skeleton className="h-8 w-32 rounded-full" />
+              </div>
+
+              <Separator />
+
+              {/* Translations Skeleton */}
+              <div className="space-y-4">
+                <div>
+                  <Skeleton className="h-4 w-36 mb-2" />
+                  <div className="bg-muted rounded-lg p-4">
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <Skeleton className="h-4 w-2/3" />
+                  </div>
+                </div>
+
+                <div>
+                  <Skeleton className="h-4 w-44 mb-2" />
+                  <div className="bg-primary/10 rounded-lg p-4 border-2 border-primary/20">
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
+                </div>
+
+                <div>
+                  <Skeleton className="h-4 w-24 mb-2" />
+                  <div className="bg-muted rounded-lg p-4">
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <Skeleton className="h-4 w-5/6" />
+                  </div>
+                </div>
+              </div>
+
+              <Skeleton className="h-11 w-full rounded-md" />
+            </CardContent>
+          </Card>
+        )}
+        {evaluation && !evaluating && (
           <Card>
             <CardHeader>
               <CardTitle className="text-center text-2xl">

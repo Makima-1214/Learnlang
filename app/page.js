@@ -19,7 +19,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.push("/learn");
+      // router.push("/learn");
     }
   }, [status, router]);
 

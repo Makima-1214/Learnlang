@@ -1,13 +1,18 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -16,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import Navbar from "@/components/Navbar";
 
 export default function HistoryPage() {
   const { data: session, status } = useSession();
@@ -62,22 +68,29 @@ export default function HistoryPage() {
 
   const getStatusVariant = (status) => {
     switch (status) {
-      case "BENAR": return "default";
-      case "SALAH": return "destructive";
-      default: return "secondary";
+      case "BENAR":
+        return "default";
+      case "SALAH":
+        return "destructive";
+      default:
+        return "secondary";
     }
   };
 
   const getStatusLabel = (status) => {
     switch (status) {
-      case "BENAR": return "BENAR";
-      case "HAMPIR_BENAR": return "HAMPIR BENAR";
-      case "SALAH": return "SALAH";
-      default: return status;
+      case "BENAR":
+        return "BENAR";
+      case "HAMPIR_BENAR":
+        return "HAMPIR BENAR";
+      case "SALAH":
+        return "SALAH";
+      default:
+        return status;
     }
   };
 
-  const getModeLabel = (mode) => mode === "EN_ID" ? "EN → ID" : "ID → EN";
+  const getModeLabel = (mode) => (mode === "EN_ID" ? "EN → ID" : "ID → EN");
 
   const getDifficultyLabel = (difficulty) => {
     const map = { EASY: "Mudah", MEDIUM: "Sedang", HARD: "Sulit" };
@@ -103,9 +116,12 @@ export default function HistoryPage() {
     benar: history.filter((h) => h.status === "BENAR").length,
     hampir: history.filter((h) => h.status === "HAMPIR_BENAR").length,
     salah: history.filter((h) => h.status === "SALAH").length,
-    averageScore: history.length > 0
-      ? Math.round(history.reduce((sum, h) => sum + h.score, 0) / history.length)
-      : 0,
+    averageScore:
+      history.length > 0
+        ? Math.round(
+            history.reduce((sum, h) => sum + h.score, 0) / history.length,
+          )
+        : 0,
   };
 
   if (status === "loading" || loading) {
@@ -120,30 +136,18 @@ export default function HistoryPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
-      <header className="bg-card border-b">
-        <div className="max-w-6xl mx-auto px-4 py-6 flex justify-between items-center flex-wrap gap-4">
-          <div className="flex items-center gap-4">
-            <Button asChild variant="outline" size="sm">
-              <Link href="/learn">← Kembali</Link>
-            </Button>
-            <h1 className="text-3xl font-bold">Riwayat Belajar</h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">{session.user.name}</span>
-            {history.length > 0 && (
-              <Button onClick={clearHistory} variant="destructive" size="sm">
-                Hapus Semua
-              </Button>
-            )}
-            <Button onClick={() => signOut({ callbackUrl: "/" })} size="sm">
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Navbar user={session.user} />
 
       <main className="max-w-6xl mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Riwayat Belajar</h1>
+          {history.length > 0 && (
+            <Button onClick={clearHistory} variant="destructive" size="sm">
+              Hapus Semua
+            </Button>
+          )}
+        </div>
+
         {history.length === 0 ? (
           <Card>
             <CardHeader>
@@ -164,32 +168,46 @@ export default function HistoryPage() {
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
               <Card>
                 <CardHeader className="pb-3">
-                  <CardDescription className="text-xs">Total Latihan</CardDescription>
+                  <CardDescription className="text-xs">
+                    Total Latihan
+                  </CardDescription>
                   <CardTitle className="text-3xl">{stats.total}</CardTitle>
                 </CardHeader>
               </Card>
               <Card className="border-primary">
                 <CardHeader className="pb-3">
                   <CardDescription className="text-xs">Benar</CardDescription>
-                  <CardTitle className="text-3xl text-primary">{stats.benar}</CardTitle>
+                  <CardTitle className="text-3xl text-primary">
+                    {stats.benar}
+                  </CardTitle>
                 </CardHeader>
               </Card>
               <Card className="border-orange-500">
                 <CardHeader className="pb-3">
-                  <CardDescription className="text-xs">Hampir Benar</CardDescription>
-                  <CardTitle className="text-3xl text-orange-500">{stats.hampir}</CardTitle>
+                  <CardDescription className="text-xs">
+                    Hampir Benar
+                  </CardDescription>
+                  <CardTitle className="text-3xl text-orange-500">
+                    {stats.hampir}
+                  </CardTitle>
                 </CardHeader>
               </Card>
               <Card className="border-destructive">
                 <CardHeader className="pb-3">
                   <CardDescription className="text-xs">Salah</CardDescription>
-                  <CardTitle className="text-3xl text-destructive">{stats.salah}</CardTitle>
+                  <CardTitle className="text-3xl text-destructive">
+                    {stats.salah}
+                  </CardTitle>
                 </CardHeader>
               </Card>
               <Card>
                 <CardHeader className="pb-3">
-                  <CardDescription className="text-xs">Rata-rata Skor</CardDescription>
-                  <CardTitle className="text-3xl">{stats.averageScore}</CardTitle>
+                  <CardDescription className="text-xs">
+                    Rata-rata Skor
+                  </CardDescription>
+                  <CardTitle className="text-3xl">
+                    {stats.averageScore}
+                  </CardTitle>
                 </CardHeader>
               </Card>
             </div>
@@ -213,7 +231,9 @@ export default function HistoryPage() {
                         <Button
                           key={option.value}
                           onClick={() => setFilter(option.value)}
-                          variant={filter === option.value ? "default" : "outline"}
+                          variant={
+                            filter === option.value ? "default" : "outline"
+                          }
                           size="sm"
                         >
                           {option.label}
@@ -231,7 +251,9 @@ export default function HistoryPage() {
                         <Button
                           key={option.value}
                           onClick={() => setSortBy(option.value)}
-                          variant={sortBy === option.value ? "default" : "outline"}
+                          variant={
+                            sortBy === option.value ? "default" : "outline"
+                          }
                           size="sm"
                         >
                           {option.label}
@@ -270,22 +292,31 @@ export default function HistoryPage() {
                         {sortedHistory.map((item) => (
                           <TableRow key={item.id}>
                             <TableCell className="text-sm">
-                              {new Date(item.createdAt).toLocaleDateString('id-ID', {
-                                day: '2-digit',
-                                month: 'short',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
+                              {new Date(item.createdAt).toLocaleDateString(
+                                "id-ID",
+                                {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                },
+                              )}
                             </TableCell>
                             <TableCell>
-                              <Badge variant="outline">{getModeLabel(item.mode)}</Badge>
+                              <Badge variant="outline">
+                                {getModeLabel(item.mode)}
+                              </Badge>
                             </TableCell>
                             <TableCell>
-                              <Badge variant="secondary">{getDifficultyLabel(item.difficulty)}</Badge>
+                              <Badge variant="secondary">
+                                {getDifficultyLabel(item.difficulty)}
+                              </Badge>
                             </TableCell>
                             <TableCell className="max-w-xs">
-                              <div className="truncate text-sm">{item.sourceSentence}</div>
+                              <div className="truncate text-sm">
+                                {item.sourceSentence}
+                              </div>
                             </TableCell>
                             <TableCell className="text-center font-bold">
                               {item.score}
