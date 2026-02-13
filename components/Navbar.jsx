@@ -71,7 +71,7 @@ export default function Navbar() {
                 className="object-contain rounded-lg"
               />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-green-600 bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-linear-to-r from-primary to-green-600 bg-clip-text text-transparent">
               LernLang
             </span>
           </Link>

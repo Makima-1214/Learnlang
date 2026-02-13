@@ -46,6 +46,9 @@ export default function UsersPage() {
   const router = useRouter();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("date");
   const [deleteDialog, setDeleteDialog] = useState({ open: false, user: null });
   const [roleDialog, setRoleDialog] = useState({
     open: false,
@@ -194,6 +197,32 @@ export default function UsersPage() {
     }
   };
 
+  // Filter and sort users
+  const filteredUsers = users.filter((user) => {
+    // Search filter
+    const matchesSearch =
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Role filter
+    const matchesRole = roleFilter === "all" || user.role === roleFilter;
+
+    return matchesSearch && matchesRole;
+  });
+
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    if (sortBy === "date") {
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    }
+    if (sortBy === "name") {
+      return a.name.localeCompare(b.name);
+    }
+    if (sortBy === "exercises") {
+      return b._count.histories - a._count.histories;
+    }
+    return 0;
+  });
+
   if (status === "loading" || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -246,18 +275,101 @@ export default function UsersPage() {
           </Card>
         </div>
 
+        {/* Search and Filters */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg">Cari & Filter</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Search */}
+              <div className="md:col-span-1">
+                <Label htmlFor="search" className="text-sm mb-2 block">
+                  Cari Pengguna
+                </Label>
+                <Input
+                  id="search"
+                  placeholder="Cari nama atau email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Role Filter */}
+              <div>
+                <Label className="text-sm mb-2 block">Filter Role</Label>
+                <div className="flex gap-2 flex-wrap">
+                  {[
+                    { value: "all", label: "Semua", icon: null },
+                    { value: "ADMIN", label: "Admin", icon: Shield },
+                    { value: "USER", label: "User", icon: UserIcon },
+                  ].map((option) => {
+                    const Icon = option.icon;
+                    return (
+                      <Button
+                        key={option.value}
+                        onClick={() => setRoleFilter(option.value)}
+                        variant={
+                          roleFilter === option.value ? "default" : "outline"
+                        }
+                        size="sm"
+                      >
+                        {Icon && <Icon className="mr-1 h-3 w-3" />}
+                        {option.label}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Sort */}
+              <div>
+                <Label className="text-sm mb-2 block">Urutkan</Label>
+                <div className="flex gap-2 flex-wrap">
+                  {[
+                    { value: "date", label: "Tanggal" },
+                    { value: "name", label: "Nama" },
+                    { value: "exercises", label: "Latihan" },
+                  ].map((option) => (
+                    <Button
+                      key={option.value}
+                      onClick={() => setSortBy(option.value)}
+                      variant={sortBy === option.value ? "default" : "outline"}
+                      size="sm"
+                    >
+                      {option.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Results count */}
+            {searchTerm || roleFilter !== "all" ? (
+              <div className="mt-4 text-sm text-muted-foreground">
+                Menampilkan {sortedUsers.length} dari {users.length} pengguna
+                {searchTerm && ` untuk "${searchTerm}"`}
+                {roleFilter !== "all" && ` dengan role ${roleFilter}`}
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+
         {/* Users Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Semua Pengguna ({users.length})</CardTitle>
+            <CardTitle>Semua Pengguna ({sortedUsers.length})</CardTitle>
             <CardDescription>
               Daftar lengkap semua pengguna terdaftar di platform
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {users.length === 0 ? (
+            {sortedUsers.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
-                Tidak ada pengguna ditemukan.
+                {searchTerm || roleFilter !== "all"
+                  ? "Tidak ada pengguna yang sesuai dengan filter."
+                  : "Tidak ada pengguna ditemukan."}
               </p>
             ) : (
               <div className="overflow-x-auto">
@@ -275,7 +387,7 @@ export default function UsersPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {users.map((user) => (
+                    {sortedUsers.map((user) => (
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">
                           {user.name}

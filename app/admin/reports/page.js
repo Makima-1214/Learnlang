@@ -76,7 +76,7 @@ export default function ReportsPage() {
   if (!session || session.user.role !== "ADMIN") return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 via-white to-green-50">
+    <div className="min-h-screen bg-linear-to-b from-green-50 via-white to-green-50">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
@@ -162,7 +162,7 @@ export default function ReportsPage() {
                     config={{
                       count: { label: "Latihan", color: "hsl(142, 55%, 45%)" },
                     }}
-                    className="h-[300px] w-full"
+                    className="h-75 w-full"
                   >
                     <AreaChart data={data?.dailyActivity || []}>
                       <CartesianGrid strokeDasharray="3 3" />

@@ -100,7 +100,7 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+    <div className="min-h-screen bg-linear-to-b from-green-50 to-white">
       <Navbar />
 
       {/* Hero Section */}
@@ -112,7 +112,7 @@ export default function ContactPage() {
             transition={{ duration: 0.5 }}
           >
             <Badge className="mb-4 px-4 py-1.5">Hubungi Kami</Badge>
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-green-600 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-linear-to-r from-primary to-green-600 bg-clip-text text-transparent">
               Mari Terhubung!
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -166,7 +166,7 @@ export default function ContactPage() {
               <Card className="h-full">
                 <CardHeader>
                   <div className="flex items-start gap-4">
-                    <div className="w-20 h-20 bg-gradient-to-br from-primary to-green-600 rounded-full flex items-center justify-center text-white text-3xl font-bold">
+                    <div className="w-20 h-20 bg-linear-to-br from-primary to-green-600 rounded-full flex items-center justify-center text-white text-3xl font-bold">
                       {developer.name.charAt(0)}
                     </div>
                     <div className="flex-1">
@@ -297,7 +297,7 @@ export default function ContactPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-r from-primary to-green-600">
+      <section className="py-20 px-4 bg-linear-to-r from-primary to-green-600">
         <div className="max-w-4xl mx-auto text-center text-white">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}

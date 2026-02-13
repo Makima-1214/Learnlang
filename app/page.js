@@ -122,7 +122,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 via-white to-green-50">
+    <div className="min-h-screen bg-linear-to-b from-green-50 via-white to-green-50">
       <Navbar />
 
       {/* Hero Section */}
@@ -139,7 +139,7 @@ export default function LandingPage() {
                 Powered by AI Technology
               </Badge>
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6">
-                <span className="bg-gradient-to-r from-primary via-green-600 to-emerald-600 bg-clip-text text-transparent">
+                <span className="bg-linear-to-r from-primary via-green-600 to-emerald-600 bg-clip-text text-transparent">
                   Sistem Pembelajaran
                 </span>
                 <br />
@@ -226,7 +226,7 @@ export default function LandingPage() {
                 <Card className="h-full hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/20 group">
                   <CardHeader>
                     <div
-                      className={`w-16 h-16 bg-gradient-to-br ${feature.gradient} rounded-xl flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform`}
+                      className={`w-16 h-16 bg-linear-to-br ${feature.gradient} rounded-xl flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform`}
                     >
                       {feature.icon}
                     </div>
@@ -320,7 +320,7 @@ export default function LandingPage() {
                     transition={{ delay: 0.1 * index }}
                     className="flex items-center gap-3 bg-green-50 rounded-lg p-4"
                   >
-                    <CheckCircle2 className="h-6 w-6 text-primary flex-shrink-0" />
+                    <CheckCircle2 className="h-6 w-6 text-primary shrink-0" />
                     <span className="text-gray-700 font-medium">{benefit}</span>
                   </motion.div>
                 ))}
@@ -406,7 +406,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-br from-green-50 to-emerald-50">
+      <section className="py-20 px-4 bg-linear-to-br from-green-50 to-emerald-50">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}

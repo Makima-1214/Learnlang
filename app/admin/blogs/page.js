@@ -296,7 +296,7 @@ export default function AdminBlogsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[80px]">Cover</TableHead>
+                      <TableHead className="w-20">Cover</TableHead>
                       <TableHead>Judul</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Penulis</TableHead>
@@ -510,7 +510,7 @@ export default function AdminBlogsPage() {
                 </Button>
               </div>
               {previewMode ? (
-                <div className="min-h-[300px] max-h-[400px] overflow-y-auto border rounded-lg p-4 bg-white prose prose-green prose-sm max-w-none">
+                <div className="min-h-75 max-h-100 overflow-y-auto border rounded-lg p-4 bg-white prose prose-green prose-sm max-w-none">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {form.content || "*Belum ada konten*"}
                   </ReactMarkdown>
@@ -542,7 +542,7 @@ export default function AdminBlogsPage() {
                   }
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
               </label>
               <span className="text-sm font-medium">
                 {form.published ? "Published" : "Draft"}

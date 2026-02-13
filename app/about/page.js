@@ -107,7 +107,7 @@ export default function AboutPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+    <div className="min-h-screen bg-linear-to-b from-green-50 to-white">
       <Navbar />
 
       {/* Hero Section */}
@@ -119,7 +119,7 @@ export default function AboutPage() {
             transition={{ duration: 0.5 }}
           >
             <Badge className="mb-4 px-4 py-1.5">Tentang LernLang</Badge>
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-green-600 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-linear-to-r from-primary to-green-600 bg-clip-text text-transparent">
               Platform Belajar Bahasa Inggris dengan AI
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -233,7 +233,7 @@ export default function AboutPage() {
                 variants={itemVariants}
                 className="flex gap-4"
               >
-                <div className="flex-shrink-0 w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold text-xl">
+                <div className="shrink-0 w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold text-xl">
                   {step.step}
                 </div>
                 <div>
@@ -255,7 +255,7 @@ export default function AboutPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <Card className="bg-gradient-to-br from-primary to-green-600 text-white">
+            <Card className="bg-linear-to-br from-primary to-green-600 text-white">
               <CardContent className="p-12 text-center">
                 <Target className="h-16 w-16 mx-auto mb-6 opacity-90" />
                 <h2 className="text-3xl font-bold mb-6">Misi Kami</h2>
