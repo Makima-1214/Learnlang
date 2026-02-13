@@ -61,10 +61,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link
-            href={"/"}
-            className="flex items-center gap-2 group"
-          >
+          <Link href={"/"} className="flex items-center gap-2 group">
             <div className="relative w-10 h-10 group-hover:scale-110 transition-transform">
               <Image
                 src="/learnlang2.png"
@@ -204,49 +201,63 @@ export default function Navbar() {
               </DropdownMenu>
             )}
 
-            {/* Mobile Menu Button for Public */}
-            {!user && (
-              <button
-                className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              >
-                {mobileMenuOpen ? (
-                  <X className="h-6 w-6" />
-                ) : (
-                  <Menu className="h-6 w-6" />
-                )}
-              </button>
-            )}
+            {/* Mobile Menu Button - Show for all users */}
+            <button
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu for Public Navigation */}
-      {!user && (
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-white border-b"
-            >
-              <div className="px-4 py-4 space-y-3">
-                {publicNavItems.map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className="block py-2 px-3 rounded-lg hover:bg-gray-100 font-medium transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {item.name}
+      {/* Mobile Menu for Navigation */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden bg-white border-b"
+          >
+            <div className="px-4 py-4 space-y-3">
+              {/* Public Navigation Items */}
+              {publicNavItems.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className="block py-2 px-3 rounded-lg hover:bg-gray-100 font-medium transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              ))}
+
+              {/* Auth Buttons for Public Users */}
+              {!user && (
+                <>
+                  <div className="border-t border-gray-200 my-2"></div>
+                  <Link href="/login">
+                    <div className="block py-2 px-3 rounded-lg text-gray-700 font-medium hover:bg-gray-100 transition-colors text-center">
+                      Masuk
+                    </div>
                   </Link>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      )}
+                  <Link href="/register">
+                    <div className="block py-2 px-3 rounded-lg bg-primary text-white font-medium hover:bg-primary/90 transition-colors text-center">
+                      Daftar Gratis
+                    </div>
+                  </Link>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
