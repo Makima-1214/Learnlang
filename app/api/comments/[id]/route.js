@@ -16,11 +16,11 @@ export async function DELETE(request, { params }) {
 
     const comment = await prisma.comment.findUnique({
       where: { id },
-      include: { 
+      include: {
         user: true,
         blog: {
-          select: { slug: true }
-        }
+          select: { slug: true },
+        },
       },
     });
 

@@ -112,10 +112,10 @@ export async function POST(request, { params }) {
       await prisma.reaction.delete({
         where: { id: existingReaction.id },
       });
-      
+
       // Emit real-time event
       emitReactionUpdate(slug, { action: "removed", emoji });
-      
+
       return NextResponse.json({ action: "removed", emoji });
     } else {
       // Add reaction (toggle on)
@@ -126,10 +126,10 @@ export async function POST(request, { params }) {
           userId: session.user.id,
         },
       });
-      
+
       // Emit real-time event
       emitReactionUpdate(slug, { action: "added", emoji });
-      
+
       return NextResponse.json({ action: "added", emoji, reaction });
     }
   } catch (error) {
