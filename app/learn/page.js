@@ -4,6 +4,19 @@ import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 
 export default function LearnPage() {
   const { data: session, status } = useSession();
@@ -126,8 +139,8 @@ export default function LearnPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-[#f0f9f4] flex items-center justify-center">
-        <div className="text-[#1e3a2e] text-xl">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-foreground text-xl">Loading...</div>
       </div>
     );
   }
@@ -137,34 +150,31 @@ export default function LearnPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f0f9f4]">
+    <div className="min-h-screen">
       {/* Header */}
-      <header className="bg-white border-b-2 border-[#d1e8dd]">
+      <header className="bg-card border-b">
         <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-3xl font-bold text-[#1e3a2e]">LernLang</h1>
-            <div className="flex items-center gap-4">
-              <span className="text-[#1e3a2e]">Halo, {session.user.name}!</span>
-              <Link
-                href="/history"
-                className="px-4 py-2 bg-[#a8dcc0] text-[#1e3a2e] rounded-lg hover:bg-[#6fbf8f] hover:text-white transition-colors"
-              >
-                Riwayat
-              </Link>
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold text-foreground">LernLang</h1>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">
+                Halo, {session.user.name}!
+              </span>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/history">Riwayat</Link>
+              </Button>
               {session.user.role === "ADMIN" && (
-                <Link
-                  href="/admin"
-                  className="px-4 py-2 bg-[#6fbf8f] text-white rounded-lg hover:bg-[#4a9d6a] transition-colors"
-                >
-                  Admin
-                </Link>
+                <Button asChild size="sm">
+                  <Link href="/admin">Admin</Link>
+                </Button>
               )}
-              <button
+              <Button
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="px-4 py-2 bg-[#ef4444] text-white rounded-lg hover:bg-[#dc2626] transition-colors"
+                variant="destructive"
+                size="sm"
               >
                 Logout
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -172,231 +182,228 @@ export default function LearnPage() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-8">
-        {/* Welcome Section with Mode Selector */}
-        <div className="bg-white rounded-xl shadow-sm border-2 border-[#d1e8dd] p-8 mb-6">
-          <h2 className="text-2xl font-bold text-[#1e3a2e] mb-3">
-            Mode Belajar
-          </h2>
-
-          {/* Mode Selection */}
-          <div className="mb-6">
-            <label className="block text-[#1e3a2e] font-semibold mb-2">
-              Pilih Mode:
-            </label>
-            <div className="flex gap-3 mb-4">
-              <button
-                onClick={() => setMode("EN_ID")}
-                className={`flex-1 px-6 py-4 rounded-lg font-medium transition-colors ${
-                  mode === "EN_ID"
-                    ? "bg-[#6fbf8f] text-white"
-                    : "bg-[#a8dcc0] text-[#1e3a2e] hover:bg-[#6fbf8f] hover:text-white"
-                }`}
-              >
-                <div className="font-bold text-lg mb-1">
-                  English → Indonesian
-                </div>
-                <div className="text-sm opacity-90">
-                  Terjemahkan dari bahasa Inggris ke Indonesia
-                </div>
-              </button>
-              <button
-                onClick={() => setMode("ID_EN")}
-                className={`flex-1 px-6 py-4 rounded-lg font-medium transition-colors ${
-                  mode === "ID_EN"
-                    ? "bg-[#6fbf8f] text-white"
-                    : "bg-[#a8dcc0] text-[#1e3a2e] hover:bg-[#6fbf8f] hover:text-white"
-                }`}
-              >
-                <div className="font-bold text-lg mb-1">
-                  Indonesian → English
-                </div>
-                <div className="text-sm opacity-90">
-                  Terjemahkan dari bahasa Indonesia ke Inggris
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {/* Difficulty Selection */}
-          <div className="mb-4">
-            <label className="block text-[#1e3a2e] font-semibold mb-2">
-              Tingkat Kesulitan:
-            </label>
-            <div className="flex gap-3">
-              {["EASY", "MEDIUM", "HARD"].map((level) => (
-                <button
-                  key={level}
-                  onClick={() => setDifficulty(level)}
-                  className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                    difficulty === level
-                      ? "bg-[#6fbf8f] text-white"
-                      : "bg-[#a8dcc0] text-[#1e3a2e] hover:bg-[#6fbf8f] hover:text-white"
-                  }`}
+        {/* Mode & Difficulty Selection */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Mode Belajar</CardTitle>
+            <CardDescription>Pilih mode dan tingkat kesulitan</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Mode Selection */}
+            <div>
+              <Label className="mb-3 block">Pilih Mode:</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  onClick={() => setMode("EN_ID")}
+                  variant={mode === "EN_ID" ? "default" : "outline"}
+                  className="h-auto py-4"
                 >
-                  {level === "EASY"
-                    ? "Mudah"
-                    : level === "MEDIUM"
-                      ? "Sedang"
-                      : "Sulit"}
-                </button>
-              ))}
+                  <div>
+                    <div className="font-bold text-base mb-1">
+                      English → Indonesian
+                    </div>
+                    <div className="text-xs opacity-90 font-normal">
+                      Terjemahkan dari bahasa Inggris
+                    </div>
+                  </div>
+                </Button>
+                <Button
+                  onClick={() => setMode("ID_EN")}
+                  variant={mode === "ID_EN" ? "default" : "outline"}
+                  className="h-auto py-4"
+                >
+                  <div>
+                    <div className="font-bold text-base mb-1">
+                      Indonesian → English
+                    </div>
+                    <div className="text-xs opacity-90 font-normal">
+                      Terjemahkan ke bahasa Inggris
+                    </div>
+                  </div>
+                </Button>
+              </div>
             </div>
-          </div>
 
-          <button
-            onClick={generateSentence}
-            disabled={loading}
-            className="w-full bg-[#6fbf8f] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#4a9d6a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading
-              ? "Menghasilkan..."
-              : questionCount === 0
-                ? "Mulai Belajar"
-                : "Generate Kalimat Baru"}
-          </button>
-        </div>
+            {/* Difficulty Selection */}
+            <div>
+              <Label className="mb-3 block">Tingkat Kesulitan:</Label>
+              <div className="flex gap-3">
+                {["EASY", "MEDIUM", "HARD"].map((level) => (
+                  <Button
+                    key={level}
+                    onClick={() => setDifficulty(level)}
+                    variant={difficulty === level ? "default" : "outline"}
+                  >
+                    {level === "EASY"
+                      ? "Mudah"
+                      : level === "MEDIUM"
+                        ? "Sedang"
+                        : "Sulit"}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <Button
+              onClick={generateSentence}
+              disabled={loading}
+              className="w-full"
+              size="lg"
+            >
+              {loading
+                ? "Menghasilkan..."
+                : questionCount === 0
+                  ? "Mulai Belajar"
+                  : "Generate Kalimat Baru"}
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* Error Message */}
         {error && (
-          <div className="bg-[#fee2e2] border-2 border-[#ef4444] rounded-lg p-4 mb-6">
-            <p className="text-[#991b1b] font-medium">{error}</p>
-          </div>
+          <Alert variant="destructive" className="mb-6">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         {/* Question Section */}
         {currentSentence && (
-          <div className="bg-white rounded-xl shadow-sm border-2 border-[#d1e8dd] p-8 mb-6">
-            <div className="mb-6">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-semibold text-[#1e3a2e]">
+          <Card className="mb-6">
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle>
                   {mode === "EN_ID"
-                    ? "Kalimat Bahasa Inggris:"
-                    : "Kalimat Bahasa Indonesia:"}
-                </h3>
+                    ? "Kalimat Bahasa Inggris"
+                    : "Kalimat Bahasa Indonesia"}
+                </CardTitle>
                 <div className="flex gap-2">
-                  <span className="text-sm px-3 py-1 bg-[#a8dcc0] text-[#1e3a2e] rounded-full">
+                  <Badge variant="secondary">
                     {mode === "EN_ID" ? "EN → ID" : "ID → EN"}
-                  </span>
-                  <span className="text-sm px-3 py-1 bg-[#a8dcc0] text-[#1e3a2e] rounded-full">
+                  </Badge>
+                  <Badge variant="outline">
                     {difficulty === "EASY"
                       ? "Mudah"
                       : difficulty === "MEDIUM"
                         ? "Sedang"
                         : "Sulit"}
-                  </span>
+                  </Badge>
                 </div>
               </div>
-              <div className="bg-[#f0f9f4] rounded-lg p-4 border-2 border-[#d1e8dd]">
-                <p className="text-xl text-[#1e3a2e] font-medium">
-                  {currentSentence}
-                </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="bg-muted rounded-lg p-4">
+                <p className="text-xl font-medium">{currentSentence}</p>
               </div>
-            </div>
 
-            <div className="mb-6">
-              <label className="block text-[#1e3a2e] font-semibold mb-2">
-                {mode === "EN_ID"
-                  ? "Terjemahan Anda (Bahasa Indonesia):"
-                  : "Your Translation (English):"}
-              </label>
-              <textarea
-                value={userTranslation}
-                onChange={(e) => setUserTranslation(e.target.value)}
-                placeholder={
-                  mode === "EN_ID"
-                    ? "Ketik terjemahan Anda di sini..."
-                    : "Type your translation here..."
-                }
-                className="w-full px-4 py-3 border-2 border-[#d1e8dd] rounded-lg focus:outline-none focus:border-[#6fbf8f] text-[#1e3a2e] resize-none"
-                rows="4"
-                disabled={evaluating}
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="translation">
+                  {mode === "EN_ID"
+                    ? "Terjemahan Anda (Bahasa Indonesia):"
+                    : "Your Translation (English):"}
+                </Label>
+                <Textarea
+                  id="translation"
+                  value={userTranslation}
+                  onChange={(e) => setUserTranslation(e.target.value)}
+                  placeholder={
+                    mode === "EN_ID"
+                      ? "Ketik terjemahan Anda di sini..."
+                      : "Type your translation here..."
+                  }
+                  rows="4"
+                  disabled={evaluating}
+                />
+              </div>
 
-            <button
-              onClick={evaluateTranslation}
-              disabled={evaluating || !userTranslation.trim()}
-              className="w-full bg-[#6fbf8f] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#4a9d6a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {evaluating ? "Mengevaluasi..." : "Evaluasi Terjemahan"}
-            </button>
-          </div>
+              <Button
+                onClick={evaluateTranslation}
+                disabled={evaluating || !userTranslation.trim()}
+                className="w-full"
+                size="lg"
+              >
+                {evaluating ? "Mengevaluasi..." : "Evaluasi Terjemahan"}
+              </Button>
+            </CardContent>
+          </Card>
         )}
 
         {/* Evaluation Result */}
         {evaluation && (
-          <div className="bg-white rounded-xl shadow-sm border-2 border-[#d1e8dd] p-8">
-            <h3 className="text-2xl font-bold text-[#1e3a2e] mb-6 text-center">
-              Hasil Evaluasi
-            </h3>
-
-            <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center text-2xl">
+                Hasil Evaluasi
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
               {/* Score and Status */}
-              <div className="flex flex-col items-center gap-4 pb-6 border-b-2 border-[#d1e8dd]">
+              <div className="flex flex-col items-center gap-4">
                 <div className="text-center">
-                  <p className="text-sm text-[#1e3a2e] mb-2">Skor Anda:</p>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Skor Anda:
+                  </p>
                   <p
                     className={`text-6xl font-bold ${getScoreColor(evaluation.score)}`}
                   >
                     {evaluation.score}
                   </p>
-                  <p className="text-sm text-[#1e3a2e] mt-1">dari 100</p>
+                  <p className="text-sm text-muted-foreground mt-1">dari 100</p>
                 </div>
-                <span
-                  className={`px-6 py-2 rounded-full font-semibold text-lg ${getStatusColor(
-                    evaluation.status,
-                  )}`}
+                <Badge
+                  variant={
+                    evaluation.status === "BENAR"
+                      ? "default"
+                      : evaluation.status === "SALAH"
+                        ? "destructive"
+                        : "secondary"
+                  }
+                  className="px-6 py-2 text-lg"
                 >
                   {getStatusLabel(evaluation.status)}
-                </span>
+                </Badge>
               </div>
+
+              <Separator />
 
               {/* Translations Comparison */}
-              <div>
-                <h4 className="font-semibold text-[#1e3a2e] mb-2">
-                  Terjemahan Anda:
-                </h4>
-                <div className="bg-[#f0f9f4] rounded-lg p-4 border-2 border-[#d1e8dd]">
-                  <p className="text-[#1e3a2e]">{userTranslation}</p>
+              <div className="space-y-4">
+                <div>
+                  <Label className="mb-2">Terjemahan Anda:</Label>
+                  <div className="bg-muted rounded-lg p-4">
+                    <p>{userTranslation}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="mb-2">Terjemahan yang Benar:</Label>
+                  <div className="bg-primary/10 rounded-lg p-4 border-2 border-primary/20">
+                    <p className="font-medium">
+                      {evaluation.correctTranslation}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Feedback */}
+                <div>
+                  <Label className="mb-2">Feedback:</Label>
+                  <div className="bg-muted rounded-lg p-4">
+                    <p>{evaluation.feedback}</p>
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <h4 className="font-semibold text-[#1e3a2e] mb-2">
-                  Terjemahan yang Benar:
-                </h4>
-                <div className="bg-[#e8f5e9] rounded-lg p-4 border-2 border-[#6fbf8f]">
-                  <p className="text-[#1e3a2e] font-medium">
-                    {evaluation.correctTranslation}
-                  </p>
-                </div>
-              </div>
-
-              {/* Feedback */}
-              <div>
-                <h4 className="font-semibold text-[#1e3a2e] mb-2">Feedback:</h4>
-                <div className="bg-[#f0f9f4] rounded-lg p-4 border-2 border-[#d1e8dd]">
-                  <p className="text-[#1e3a2e]">{evaluation.feedback}</p>
-                </div>
-              </div>
-
-              <button
-                onClick={generateSentence}
-                className="w-full bg-[#6fbf8f] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#4a9d6a] transition-colors mt-4"
-              >
+              <Button onClick={generateSentence} className="w-full" size="lg">
                 Latihan Soal Baru
-              </button>
-            </div>
-          </div>
+              </Button>
+            </CardContent>
+          </Card>
         )}
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t-2 border-[#d1e8dd] mt-12">
-        <div className="max-w-4xl mx-auto px-4 py-6 text-center text-[#1e3a2e]">
-          <p className="text-sm">
-            LernLang © 2026 - Belajar Bahasa Inggris dengan AI
-          </p>
+      <footer className="bg-card border-t mt-12">
+        <div className="max-w-4xl mx-auto px-4 py-6 text-center text-sm text-muted-foreground">
+          <p>LernLang © 2026 - Belajar Bahasa Inggris dengan AI</p>
         </div>
       </footer>
     </div>

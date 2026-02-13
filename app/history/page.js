@@ -4,6 +4,18 @@ import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default function HistoryPage() {
   const { data: session, status } = useSession();
@@ -25,7 +37,6 @@ export default function HistoryPage() {
     try {
       const response = await fetch("/api/history");
       const data = await response.json();
-
       if (response.ok) {
         setHistory(data.histories || []);
       }
@@ -39,10 +50,7 @@ export default function HistoryPage() {
   const clearHistory = async () => {
     if (confirm("Apakah Anda yakin ingin menghapus semua riwayat?")) {
       try {
-        const response = await fetch("/api/history", {
-          method: "DELETE",
-        });
-
+        const response = await fetch("/api/history", { method: "DELETE" });
         if (response.ok) {
           setHistory([]);
         }
@@ -52,53 +60,28 @@ export default function HistoryPage() {
     }
   };
 
-  const getStatusColor = (status) => {
+  const getStatusVariant = (status) => {
     switch (status) {
-      case "BENAR":
-        return "bg-[#6fbf8f] text-white";
-      case "HAMPIR_BENAR":
-        return "bg-[#f59e0b] text-white";
-      case "SALAH":
-        return "bg-[#ef4444] text-white";
-      default:
-        return "bg-gray-500 text-white";
+      case "BENAR": return "default";
+      case "SALAH": return "destructive";
+      default: return "secondary";
     }
   };
 
   const getStatusLabel = (status) => {
     switch (status) {
-      case "BENAR":
-        return "BENAR";
-      case "HAMPIR_BENAR":
-        return "HAMPIR BENAR";
-      case "SALAH":
-        return "SALAH";
-      default:
-        return status;
+      case "BENAR": return "BENAR";
+      case "HAMPIR_BENAR": return "HAMPIR BENAR";
+      case "SALAH": return "SALAH";
+      default: return status;
     }
   };
 
-  const getScoreColor = (score) => {
-    if (score >= 90) return "text-[#4a9d6a]";
-    if (score >= 60) return "text-[#f59e0b]";
-    return "text-[#ef4444]";
-  };
-
-  const getModeLabel = (mode) => {
-    return mode === "EN_ID" ? "EN → ID" : "ID → EN";
-  };
+  const getModeLabel = (mode) => mode === "EN_ID" ? "EN → ID" : "ID → EN";
 
   const getDifficultyLabel = (difficulty) => {
-    switch (difficulty) {
-      case "EASY":
-        return "Mudah";
-      case "MEDIUM":
-        return "Sedang";
-      case "HARD":
-        return "Sulit";
-      default:
-        return difficulty;
-    }
+    const map = { EASY: "Mudah", MEDIUM: "Sedang", HARD: "Sulit" };
+    return map[difficulty] || difficulty;
   };
 
   const filteredHistory = history.filter((item) => {
@@ -110,11 +93,8 @@ export default function HistoryPage() {
   });
 
   const sortedHistory = [...filteredHistory].sort((a, b) => {
-    if (sortBy === "date") {
-      return new Date(b.createdAt) - new Date(a.createdAt);
-    } else if (sortBy === "score") {
-      return b.score - a.score;
-    }
+    if (sortBy === "date") return new Date(b.createdAt) - new Date(a.createdAt);
+    if (sortBy === "score") return b.score - a.score;
     return 0;
   });
 
@@ -123,279 +103,209 @@ export default function HistoryPage() {
     benar: history.filter((h) => h.status === "BENAR").length,
     hampir: history.filter((h) => h.status === "HAMPIR_BENAR").length,
     salah: history.filter((h) => h.status === "SALAH").length,
-    averageScore:
-      history.length > 0
-        ? Math.round(
-            history.reduce((sum, h) => sum + h.score, 0) / history.length,
-          )
-        : 0,
+    averageScore: history.length > 0
+      ? Math.round(history.reduce((sum, h) => sum + h.score, 0) / history.length)
+      : 0,
   };
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-[#f0f9f4] flex items-center justify-center">
-        <div className="text-[#1e3a2e] text-xl">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-foreground text-xl">Loading...</div>
       </div>
     );
   }
 
-  if (!session) {
-    return null;
-  }
+  if (!session) return null;
 
   return (
-    <div className="min-h-screen bg-[#f0f9f4]">
+    <div className="min-h-screen">
       {/* Header */}
-      <header className="bg-white border-b-2 border-[#d1e8dd]">
-        <div className="max-w-6xl mx-auto px-4 py-6 flex justify-between items-center">
+      <header className="bg-card border-b">
+        <div className="max-w-6xl mx-auto px-4 py-6 flex justify-between items-center flex-wrap gap-4">
           <div className="flex items-center gap-4">
-            <Link
-              href="/learn"
-              className="px-4 py-2 bg-[#a8dcc0] text-[#1e3a2e] rounded-lg hover:bg-[#6fbf8f] hover:text-white transition-colors"
-            >
-              ← Kembali
-            </Link>
-            <h1 className="text-3xl font-bold text-[#1e3a2e]">
-              Riwayat Belajar
-            </h1>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/learn">← Kembali</Link>
+            </Button>
+            <h1 className="text-3xl font-bold">Riwayat Belajar</h1>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-[#1e3a2e]">{session.user.name}</span>
+            <span className="text-sm text-muted-foreground">{session.user.name}</span>
             {history.length > 0 && (
-              <button
-                onClick={clearHistory}
-                className="px-4 py-2 bg-[#ef4444] text-white rounded-lg hover:bg-[#dc2626] transition-colors"
-              >
+              <Button onClick={clearHistory} variant="destructive" size="sm">
                 Hapus Semua
-              </button>
+              </Button>
             )}
-            <button
-              onClick={() => signOut({ callbackUrl: "/" })}
-              className="px-4 py-2 bg-[#6fbf8f] text-white rounded-lg hover:bg-[#4a9d6a] transition-colors"
-            >
+            <Button onClick={() => signOut({ callbackUrl: "/" })} size="sm">
               Logout
-            </button>
+            </Button>
           </div>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         {history.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm border-2 border-[#d1e8dd] p-12 text-center">
-            <h2 className="text-2xl font-bold text-[#1e3a2e] mb-3">
-              Belum Ada Riwayat
-            </h2>
-            <p className="text-[#1e3a2e] mb-6">
-              Mulai belajar untuk melihat riwayat latihan Anda di sini.
-            </p>
-            <Link
-              href="/learn"
-              className="inline-block px-6 py-3 bg-[#6fbf8f] text-white rounded-lg font-semibold hover:bg-[#4a9d6a] transition-colors"
-            >
-              Mulai Belajar
-            </Link>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Belum Ada Riwayat</CardTitle>
+              <CardDescription>
+                Mulai belajar untuk melihat riwayat latihan Anda di sini.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center">
+              <Button asChild>
+                <Link href="/learn">Mulai Belajar</Link>
+              </Button>
+            </CardContent>
+          </Card>
         ) : (
           <>
             {/* Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-              <div className="bg-white rounded-xl shadow-sm border-2 border-[#d1e8dd] p-6 text-center">
-                <p className="text-sm text-[#1e3a2e] mb-1">Total Latihan</p>
-                <p className="text-3xl font-bold text-[#1e3a2e]">
-                  {stats.total}
-                </p>
-              </div>
-              <div className="bg-white rounded-xl shadow-sm border-2 border-[#6fbf8f] p-6 text-center">
-                <p className="text-sm text-[#1e3a2e] mb-1">Benar</p>
-                <p className="text-3xl font-bold text-[#4a9d6a]">
-                  {stats.benar}
-                </p>
-              </div>
-              <div className="bg-white rounded-xl shadow-sm border-2 border-[#f59e0b] p-6 text-center">
-                <p className="text-sm text-[#1e3a2e] mb-1">Hampir Benar</p>
-                <p className="text-3xl font-bold text-[#f59e0b]">
-                  {stats.hampir}
-                </p>
-              </div>
-              <div className="bg-white rounded-xl shadow-sm border-2 border-[#ef4444] p-6 text-center">
-                <p className="text-sm text-[#1e3a2e] mb-1">Salah</p>
-                <p className="text-3xl font-bold text-[#ef4444]">
-                  {stats.salah}
-                </p>
-              </div>
-              <div className="bg-white rounded-xl shadow-sm border-2 border-[#d1e8dd] p-6 text-center">
-                <p className="text-sm text-[#1e3a2e] mb-1">Rata-rata Skor</p>
-                <p
-                  className={`text-3xl font-bold ${getScoreColor(stats.averageScore)}`}
-                >
-                  {stats.averageScore}
-                </p>
-              </div>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription className="text-xs">Total Latihan</CardDescription>
+                  <CardTitle className="text-3xl">{stats.total}</CardTitle>
+                </CardHeader>
+              </Card>
+              <Card className="border-primary">
+                <CardHeader className="pb-3">
+                  <CardDescription className="text-xs">Benar</CardDescription>
+                  <CardTitle className="text-3xl text-primary">{stats.benar}</CardTitle>
+                </CardHeader>
+              </Card>
+              <Card className="border-orange-500">
+                <CardHeader className="pb-3">
+                  <CardDescription className="text-xs">Hampir Benar</CardDescription>
+                  <CardTitle className="text-3xl text-orange-500">{stats.hampir}</CardTitle>
+                </CardHeader>
+              </Card>
+              <Card className="border-destructive">
+                <CardHeader className="pb-3">
+                  <CardDescription className="text-xs">Salah</CardDescription>
+                  <CardTitle className="text-3xl text-destructive">{stats.salah}</CardTitle>
+                </CardHeader>
+              </Card>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription className="text-xs">Rata-rata Skor</CardDescription>
+                  <CardTitle className="text-3xl">{stats.averageScore}</CardTitle>
+                </CardHeader>
+              </Card>
             </div>
 
             {/* Filters */}
-            <div className="bg-white rounded-xl shadow-sm border-2 border-[#d1e8dd] p-6 mb-6">
-              <div className="flex flex-wrap gap-4 items-center">
-                <div className="flex-1 min-w-50">
-                  <label className="block text-[#1e3a2e] font-semibold mb-2">
-                    Filter Status:
-                  </label>
-                  <div className="flex gap-2 flex-wrap">
-                    {[
-                      { value: "all", label: "Semua" },
-                      { value: "benar", label: "Benar" },
-                      { value: "hampir", label: "Hampir Benar" },
-                      { value: "salah", label: "Salah" },
-                    ].map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => setFilter(option.value)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                          filter === option.value
-                            ? "bg-[#6fbf8f] text-white"
-                            : "bg-[#a8dcc0] text-[#1e3a2e] hover:bg-[#6fbf8f] hover:text-white"
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="text-lg">Filter & Urutkan</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col md:flex-row gap-6">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium mb-3">Filter Status:</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {[
+                        { value: "all", label: "Semua" },
+                        { value: "benar", label: "Benar" },
+                        { value: "hampir", label: "Hampir" },
+                        { value: "salah", label: "Salah" },
+                      ].map((option) => (
+                        <Button
+                          key={option.value}
+                          onClick={() => setFilter(option.value)}
+                          variant={filter === option.value ? "default" : "outline"}
+                          size="sm"
+                        >
+                          {option.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium mb-3">Urutkan:</p>
+                    <div className="flex gap-2">
+                      {[
+                        { value: "date", label: "Tanggal" },
+                        { value: "score", label: "Skor" },
+                      ].map((option) => (
+                        <Button
+                          key={option.value}
+                          onClick={() => setSortBy(option.value)}
+                          variant={sortBy === option.value ? "default" : "outline"}
+                          size="sm"
+                        >
+                          {option.label}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
 
-                <div className="flex-1 min-w-50">
-                  <label className="block text-[#1e3a2e] font-semibold mb-2">
-                    Urutkan:
-                  </label>
-                  <div className="flex gap-2">
-                    {[
-                      { value: "date", label: "Tanggal" },
-                      { value: "score", label: "Skor" },
-                    ].map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => setSortBy(option.value)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                          sortBy === option.value
-                            ? "bg-[#6fbf8f] text-white"
-                            : "bg-[#a8dcc0] text-[#1e3a2e] hover:bg-[#6fbf8f] hover:text-white"
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* History List */}
-            <div className="space-y-4">
-              {sortedHistory.length === 0 ? (
-                <div className="bg-white rounded-xl shadow-sm border-2 border-[#d1e8dd] p-8 text-center">
-                  <p className="text-[#1e3a2e]">
+            {/* History Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Riwayat Latihan ({sortedHistory.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {sortedHistory.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
                     Tidak ada hasil dengan filter ini.
                   </p>
-                </div>
-              ) : (
-                sortedHistory.map((item) => (
-                  <div
-                    key={item.id}
-                    className="bg-white rounded-xl shadow-sm border-2 border-[#d1e8dd] p-6"
-                  >
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span
-                            className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(
-                              item.status,
-                            )}`}
-                          >
-                            {getStatusLabel(item.status)}
-                          </span>
-                          <span className="text-sm px-3 py-1 bg-[#a8dcc0] text-[#1e3a2e] rounded-full">
-                            {getModeLabel(item.mode)}
-                          </span>
-                          <span className="text-sm px-3 py-1 bg-[#a8dcc0] text-[#1e3a2e] rounded-full">
-                            {getDifficultyLabel(item.difficulty)}
-                          </span>
-                          <span
-                            className={`text-2xl font-bold ${getScoreColor(item.score)}`}
-                          >
-                            {item.score}/100
-                          </span>
-                        </div>
-                        <p className="text-sm text-[#1e3a2e] opacity-75">
-                          {new Date(item.createdAt).toLocaleString("id-ID", {
-                            dateStyle: "long",
-                            timeStyle: "short",
-                          })}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm font-semibold text-[#1e3a2e] mb-1">
-                          {item.mode === "EN_ID"
-                            ? "Kalimat Bahasa Inggris:"
-                            : "Kalimat Bahasa Indonesia:"}
-                        </p>
-                        <div className="bg-[#f0f9f4] rounded-lg p-3 border-2 border-[#d1e8dd]">
-                          <p className="text-[#1e3a2e]">
-                            {item.sourceSentence}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div>
-                        <p className="text-sm font-semibold text-[#1e3a2e] mb-1">
-                          Terjemahan Anda:
-                        </p>
-                        <div className="bg-[#f0f9f4] rounded-lg p-3 border-2 border-[#d1e8dd]">
-                          <p className="text-[#1e3a2e]">
-                            {item.userTranslation}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div>
-                        <p className="text-sm font-semibold text-[#1e3a2e] mb-1">
-                          Terjemahan yang Benar:
-                        </p>
-                        <div className="bg-[#e8f5e9] rounded-lg p-3 border-2 border-[#6fbf8f]">
-                          <p className="text-[#1e3a2e]">
-                            {item.correctTranslation}
-                          </p>
-                        </div>
-                      </div>
-
-                      {item.feedback && (
-                        <div>
-                          <p className="text-sm font-semibold text-[#1e3a2e] mb-1">
-                            Feedback:
-                          </p>
-                          <div className="bg-[#f0f9f4] rounded-lg p-3 border-2 border-[#d1e8dd]">
-                            <p className="text-[#1e3a2e]">{item.feedback}</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Tanggal</TableHead>
+                          <TableHead>Mode</TableHead>
+                          <TableHead>Level</TableHead>
+                          <TableHead>Kalimat</TableHead>
+                          <TableHead className="text-center">Skor</TableHead>
+                          <TableHead className="text-center">Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {sortedHistory.map((item) => (
+                          <TableRow key={item.id}>
+                            <TableCell className="text-sm">
+                              {new Date(item.createdAt).toLocaleDateString('id-ID', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{getModeLabel(item.mode)}</Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary">{getDifficultyLabel(item.difficulty)}</Badge>
+                            </TableCell>
+                            <TableCell className="max-w-xs">
+                              <div className="truncate text-sm">{item.sourceSentence}</div>
+                            </TableCell>
+                            <TableCell className="text-center font-bold">
+                              {item.score}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge variant={getStatusVariant(item.status)}>
+                                {getStatusLabel(item.status)}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
-                ))
-              )}
-            </div>
+                )}
+              </CardContent>
+            </Card>
           </>
         )}
       </main>
-
-      {/* Footer */}
-      <footer className="bg-white border-t-2 border-[#d1e8dd] mt-12">
-        <div className="max-w-6xl mx-auto px-4 py-6 text-center text-[#1e3a2e]">
-          <p className="text-sm">
-            LernLang © 2026 - Belajar Bahasa Inggris dengan AI
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }
