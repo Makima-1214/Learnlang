@@ -63,7 +63,7 @@ export default function Navbar({ user }) {
           >
             <div className="relative w-10 h-10 group-hover:scale-110 transition-transform">
               <Image
-                src="/learnlang.png"
+                src="/learnlang2.png"
                 alt="LernLang Logo"
                 fill
                 className="object-contain rounded-lg"
@@ -74,102 +74,10 @@ export default function Navbar({ user }) {
             </span>
           </Link>
 
-          {/* Authenticated User Section */}
-          {user ? (
-            <div className="flex items-center gap-4">
-              <DropdownMenu>
-                <DropdownMenuTrigger className="focus:outline-none">
-                  <div className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
-                    <div className="text-right hidden sm:block">
-                      <p className="text-sm font-medium">{user?.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {isAdmin ? "Administrator" : "User"}
-                      </p>
-                    </div>
-                    <Avatar>
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        {getInitials(user?.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>
-                    <div>
-                      <p className="font-medium">{user?.name}</p>
-                      <p className="text-xs text-muted-foreground font-normal">
-                        {user?.email}
-                      </p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-
-                  <DropdownMenuItem asChild>
-                    <Link href="/learn" className="cursor-pointer">
-                      <GraduationCap className="mr-2 h-4 w-4" />
-                      Belajar
-                    </Link>
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem disabled>
-                    <FileText className="mr-2 h-4 w-4" />
-                    Quiz (Segera Hadir)
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem asChild>
-                    <Link href="/history" className="cursor-pointer">
-                      <History className="mr-2 h-4 w-4" />
-                      History
-                    </Link>
-                  </DropdownMenuItem>
-
-                  {isAdmin && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuSub>
-                        <DropdownMenuSubTrigger>
-                          <Settings className="mr-2 h-4 w-4" />
-                          Admin
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent>
-                          <DropdownMenuItem asChild>
-                            <Link href="/admin" className="cursor-pointer">
-                              <BarChart3 className="mr-2 h-4 w-4" />
-                              Dashboard
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link
-                              href="/admin/users"
-                              className="cursor-pointer"
-                            >
-                              <Users className="mr-2 h-4 w-4" />
-                              Users
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem disabled>
-                            <ClipboardList className="mr-2 h-4 w-4" />
-                            Reports (Segera)
-                          </DropdownMenuItem>
-                        </DropdownMenuSubContent>
-                      </DropdownMenuSub>
-                    </>
-                  )}
-
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => signOut({ callbackUrl: "/" })}
-                    className="cursor-pointer text-destructive focus:text-destructive"
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          ) : (
-            /* Public Navigation */
-            <>
+          {/* Navigation and Profile Section */}
+          <div className="flex items-center gap-8">
+            {/* Public Navigation Links - Only show on public pages */}
+            {!user && (
               <div className="hidden md:flex items-center gap-8">
                 {publicNavItems.map((item) => (
                   <Link
@@ -181,17 +89,127 @@ export default function Navbar({ user }) {
                     <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300"></span>
                   </Link>
                 ))}
-                <div className="flex items-center gap-3">
-                  <Link href="/login">
-                    <Button variant="outline">Masuk</Button>
-                  </Link>
-                  <Link href="/register">
-                    <Button>Daftar Gratis</Button>
-                  </Link>
-                </div>
               </div>
+            )}
 
-              {/* Mobile Menu Button */}
+            {/* Profile Dropdown - Show for both authenticated and public users */}
+            <DropdownMenu>
+              <DropdownMenuTrigger className="focus:outline-none">
+                <div className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
+                  {user && (
+                    <div className="text-right hidden sm:block">
+                      <p className="text-sm font-medium">{user?.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {isAdmin ? "Administrator" : "User"}
+                      </p>
+                    </div>
+                  )}
+                  {user ? (
+                    <Avatar>
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {getInitials(user?.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                  ) : (
+                    <div className="px-3 py-2 rounded-md bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors">
+                      Profile
+                    </div>
+                  )}
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {user ? (
+                  <>
+                    <DropdownMenuLabel>
+                      <div>
+                        <p className="font-medium">{user?.name}</p>
+                        <p className="text-xs text-muted-foreground font-normal">
+                          {user?.email}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+
+                    <DropdownMenuItem asChild>
+                      <Link href="/learn" className="cursor-pointer">
+                        <GraduationCap className="mr-2 h-4 w-4" />
+                        Belajar
+                      </Link>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem disabled>
+                      <FileText className="mr-2 h-4 w-4" />
+                      Quiz (Segera Hadir)
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem asChild>
+                      <Link href="/history" className="cursor-pointer">
+                        <History className="mr-2 h-4 w-4" />
+                        History
+                      </Link>
+                    </DropdownMenuItem>
+
+                    {isAdmin && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger>
+                            <Settings className="mr-2 h-4 w-4" />
+                            Admin
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent>
+                            <DropdownMenuItem asChild>
+                              <Link href="/admin" className="cursor-pointer">
+                                <BarChart3 className="mr-2 h-4 w-4" />
+                                Dashboard
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link
+                                href="/admin/users"
+                                className="cursor-pointer"
+                              >
+                                <Users className="mr-2 h-4 w-4" />
+                                Users
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem disabled>
+                              <ClipboardList className="mr-2 h-4 w-4" />
+                              Reports (Segera)
+                            </DropdownMenuItem>
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                      </>
+                    )}
+
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                      className="cursor-pointer text-destructive focus:text-destructive"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Logout
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link href="/login" className="cursor-pointer">
+                        Login
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/register" className="cursor-pointer">
+                        Daftar Gratis
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Mobile Menu Button for Public */}
+            {!user && (
               <button
                 className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -202,12 +220,12 @@ export default function Navbar({ user }) {
                   <Menu className="h-6 w-6" />
                 )}
               </button>
-            </>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Mobile Menu for Public */}
+      {/* Mobile Menu for Public Navigation */}
       {!user && (
         <AnimatePresence>
           {mobileMenuOpen && (
@@ -228,19 +246,6 @@ export default function Navbar({ user }) {
                     {item.name}
                   </Link>
                 ))}
-                <div className="flex flex-col gap-2 pt-2">
-                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                    <Button variant="outline" className="w-full">
-                      Masuk
-                    </Button>
-                  </Link>
-                  <Link
-                    href="/register"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Button className="w-full">Daftar Gratis</Button>
-                  </Link>
-                </div>
               </div>
             </motion.div>
           )}

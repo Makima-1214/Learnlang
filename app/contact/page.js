@@ -1,6 +1,6 @@
 "use client";
 
-import LandingNavbar from "@/components/LandingNavbar";
+import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,10 +21,10 @@ import {
 
 export default function ContactPage() {
   const developer = {
-    name: "Fauzaro",
+    name: "Muhamad Fauzan",
     role: "Full Stack Developer",
     bio: "Passionate developer yang berfokus pada pengembangan aplikasi web modern dengan Next.js, React, dan AI integration. Senang menciptakan solusi yang membuat pembelajaran lebih accessible untuk semua orang.",
-    location: "Indonesia",
+    location: "Karawang, Jawa Barat, Indonesia",
     skills: [
       "Next.js",
       "React",

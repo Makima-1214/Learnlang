@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
+import LoadingScreen from "@/components/LoadingScreen";
 import { motion } from "framer-motion";
 import {
   GraduationCap,
@@ -116,11 +118,7 @@ export default function LandingPage() {
   };
 
   if (status === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-foreground text-xl">Loading...</div>
-      </div>
-    );
+    return <LoadingScreen fullPage={true} />;
   }
 
   return (
@@ -396,7 +394,9 @@ export default function LandingPage() {
                 {index < 2 && (
                   <div className="hidden md:block absolute top-8 left-1/2 w-full h-0.5 bg-primary/20"></div>
                 )}
-                <div className="mb-4 text-primary">{item.icon}</div>
+                <div className="mb-4 text-primary flex justify-center">
+                  {item.icon}
+                </div>
                 <h3 className="text-xl font-bold mb-2">{item.title}</h3>
                 <p className="text-gray-600">{item.description}</p>
               </motion.div>
@@ -436,8 +436,13 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div className="col-span-2">
               <div className="flex items-center gap-2 mb-4">
-                <div className="bg-primary rounded-lg p-2">
-                  <GraduationCap className="h-6 w-6 text-white" />
+                <div className="relative w-8 h-8">
+                  <Image
+                    src="/learnlang2.png"
+                    alt="LernLang Logo"
+                    fill
+                    className="object-contain"
+                  />
                 </div>
                 <span className="text-xl font-bold">LernLang</span>
               </div>
