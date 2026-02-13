@@ -25,13 +25,14 @@ export async function GET(request, { params }) {
             id: true,
             name: true,
             email: true,
+            avatar: true,
           },
         },
       },
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json(comments);
+    return NextResponse.json({ comments });
   } catch (error) {
     console.error("Error fetching comments:", error);
     return NextResponse.json(
@@ -81,6 +82,7 @@ export async function POST(request, { params }) {
             id: true,
             name: true,
             email: true,
+            avatar: true,
           },
         },
       },

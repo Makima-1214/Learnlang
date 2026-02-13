@@ -15,7 +15,10 @@ model User {
   id        String   @id @default(cuid())
   email     String   @unique
   name      String
+  username  String?  @unique
   password  String
+  avatar    String?  @db.Text
+  bio       String?  @db.Text
   role      Role     @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
