@@ -438,7 +438,7 @@ export default function LandingPage() {
               <div className="flex items-center gap-2 mb-4">
                 <div className="relative w-8 h-8">
                   <Image
-                    src="/learnlang2.png"
+                    src="/learnlang.png"
                     alt="LernLang Logo"
                     fill
                     className="object-contain"
