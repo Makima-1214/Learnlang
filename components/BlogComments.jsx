@@ -20,9 +20,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { id } from "date-fns/locale";
 import Link from "next/link";
+import { useSocket } from "@/lib/socket-provider";
 
 export default function BlogComments({ slug }) {
   const { data: session } = useSession();
+  const { socket, isConnected } = useSocket();
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(false);
@@ -32,6 +34,34 @@ export default function BlogComments({ slug }) {
   useEffect(() => {
     fetchComments();
   }, [slug]);
+
+  // Socket.IO real-time listeners
+  useEffect(() => {
+    if (!socket || !slug) return;
+
+    // Join blog room
+    socket.emit("join-blog", slug);
+
+    // Listen for new comments
+    socket.on("new-comment", (newComment) => {
+      setComments((prev) => [newComment, ...prev]);
+      if (newComment.user.id !== session?.user?.id) {
+        toast.info(`${newComment.user.name} menambahkan komentar baru`);
+      }
+    });
+
+    // Listen for deleted comments
+    socket.on("delete-comment", ({ commentId }) => {
+      setComments((prev) => prev.filter((c) => c.id !== commentId));
+    });
+
+    // Cleanup
+    return () => {
+      socket.emit("leave-blog", slug);
+      socket.off("new-comment");
+      socket.off("delete-comment");
+    };
+  }, [socket, slug, session]);
 
   const fetchComments = async () => {
     setLoading(true);
@@ -72,7 +102,7 @@ export default function BlogComments({ slug }) {
       if (response.ok) {
         toast.success("Komentar berhasil ditambahkan");
         setNewComment("");
-        fetchComments();
+        // Comment will be added via socket event
       } else {
         const data = await response.json();
         toast.error(data.error || "Gagal menambahkan komentar");
@@ -93,7 +123,7 @@ export default function BlogComments({ slug }) {
 
       if (response.ok) {
         toast.success("Komentar berhasil dihapus");
-        fetchComments();
+        // Comment will be removed via socket event
       } else {
         const data = await response.json();
         toast.error(data.error || "Gagal menghapus komentar");

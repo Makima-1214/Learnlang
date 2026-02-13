@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { emitDeleteComment } from "@/lib/socket";
 
 // DELETE a comment
 export async function DELETE(request, { params }) {
@@ -15,7 +16,12 @@ export async function DELETE(request, { params }) {
 
     const comment = await prisma.comment.findUnique({
       where: { id },
-      include: { user: true },
+      include: { 
+        user: true,
+        blog: {
+          select: { slug: true }
+        }
+      },
     });
 
     if (!comment) {
@@ -28,6 +34,9 @@ export async function DELETE(request, { params }) {
     }
 
     await prisma.comment.delete({ where: { id } });
+
+    // Emit real-time event
+    emitDeleteComment(comment.blog.slug, id);
 
     return NextResponse.json({ message: "Comment deleted successfully" });
   } catch (error) {

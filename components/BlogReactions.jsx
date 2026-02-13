@@ -5,17 +5,39 @@ import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useSocket } from "@/lib/socket-provider";
 
 const AVAILABLE_REACTIONS = ["👍", "❤️", "😂", "🎉", "🤔", "👏"];
 
 export default function BlogReactions({ slug }) {
   const { data: session } = useSession();
+  const { socket, isConnected } = useSocket();
   const [reactions, setReactions] = useState({ summary: [], total: 0 });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchReactions();
   }, [slug]);
+
+  // Socket.IO real-time listeners
+  useEffect(() => {
+    if (!socket || !slug) return;
+
+    // Join blog room (will be same room as comments)
+    socket.emit("join-blog", slug);
+
+    // Listen for reaction updates
+    socket.on("reaction-update", ({ action, emoji }) => {
+      // Refetch reactions to get updated counts
+      fetchReactions();
+    });
+
+    // Cleanup
+    return () => {
+      socket.off("reaction-update");
+      // Don't leave room here as comments component might still need it
+    };
+  }, [socket, slug]);
 
   const fetchReactions = async () => {
     try {
@@ -50,7 +72,7 @@ export default function BlogReactions({ slug }) {
             ? `Reaksi ${emoji} ditambahkan`
             : `Reaksi ${emoji} dihapus`,
         );
-        fetchReactions();
+        // Reactions will be updated via socket event
       } else {
         toast.error("Gagal memberikan reaksi");
       }
