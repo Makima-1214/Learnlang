@@ -206,7 +206,7 @@ export default function ReportsPage() {
                         color: "hsl(160, 55%, 45%)",
                       },
                     }}
-                    className="h-[300px] w-full"
+                    className="h-75 w-full"
                   >
                     <LineChart data={data?.registrations || []}>
                       <CartesianGrid strokeDasharray="3 3" />
@@ -251,7 +251,7 @@ export default function ReportsPage() {
                     config={{
                       count: { label: "Jumlah", color: "hsl(142, 55%, 45%)" },
                     }}
-                    className="h-[300px] w-full"
+                    className="h-75 w-full"
                   >
                     <BarChart data={data?.scoreDistribution || []}>
                       <CartesianGrid strokeDasharray="3 3" />
@@ -287,7 +287,7 @@ export default function ReportsPage() {
                         color: "hsl(142, 55%, 45%)",
                       },
                     }}
-                    className="h-[300px] w-full"
+                    className="h-75 w-full"
                   >
                     <BarChart data={data?.avgScoreByDifficulty || []}>
                       <CartesianGrid strokeDasharray="3 3" />
@@ -326,7 +326,7 @@ export default function ReportsPage() {
                       color: "hsl(142, 55%, 45%)",
                     },
                   }}
-                  className="h-[400px] w-full"
+                  className="h-100 w-full"
                 >
                   <BarChart
                     data={data?.topUsers || []}
@@ -367,7 +367,7 @@ export default function ReportsPage() {
                     config={{
                       count: { label: "Jumlah" },
                     }}
-                    className="h-[250px] w-full"
+                    className="h-62.5 w-full"
                   >
                     <PieChart>
                       <ChartTooltip content={<ChartTooltipContent />} />
@@ -406,7 +406,7 @@ export default function ReportsPage() {
                     config={{
                       count: { label: "Jumlah" },
                     }}
-                    className="h-[250px] w-full"
+                    className="h-62.5 w-full"
                   >
                     <PieChart>
                       <ChartTooltip content={<ChartTooltipContent />} />
@@ -443,7 +443,7 @@ export default function ReportsPage() {
                     config={{
                       count: { label: "Jumlah" },
                     }}
-                    className="h-[250px] w-full"
+                    className="h-62.5 w-full"
                   >
                     <PieChart>
                       <ChartTooltip content={<ChartTooltipContent />} />

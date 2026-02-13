@@ -152,9 +152,11 @@ export default function Navbar() {
                     </Link>
                   </DropdownMenuItem>
 
-                  <DropdownMenuItem disabled>
-                    <FileText className="mr-2 h-4 w-4" />
-                    Quiz (Segera Hadir)
+                  <DropdownMenuItem asChild>
+                    <Link href="/quiz" className="cursor-pointer">
+                      <FileText className="mr-2 h-4 w-4" />
+                      Quiz
+                    </Link>
                   </DropdownMenuItem>
 
                   <DropdownMenuItem asChild>
@@ -204,6 +206,15 @@ export default function Navbar() {
                             >
                               <FileText className="mr-2 h-4 w-4" />
                               Blog Management
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href="/admin/quizzes"
+                              className="cursor-pointer"
+                            >
+                              <ClipboardList className="mr-2 h-4 w-4" />
+                              Quiz Management
                             </Link>
                           </DropdownMenuItem>
                         </DropdownMenuSubContent>

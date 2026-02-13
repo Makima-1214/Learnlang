@@ -27,6 +27,8 @@ model User {
   blogs     Blog[]
   comments  Comment[]
   reactions Reaction[]
+  quizzes   Quiz[]
+  quizResults QuizResult[]
   
   @@map("users")
 }
@@ -132,4 +134,70 @@ model Reaction {
   @@index([blogId])
   @@index([userId])
   @@map("reactions")
+}
+
+// Quiz model
+model Quiz {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  published   Boolean  @default(false)
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy User @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  questions QuizQuestion[]
+  results   QuizResult[]
+
+  @@index([createdById])
+  @@index([published])
+  @@map("quizzes")
+}
+
+// Quiz Question model
+model QuizQuestion {
+  id       String @id @default(cuid())
+  quizId   String
+  question String @db.Text // The word or phrase to translate
+  order    Int    // Question order in the quiz
+  
+  quiz    Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  options QuizOption[]
+
+  @@index([quizId])
+  @@map("quiz_questions")
+}
+
+// Quiz Option model (multiple choice answers)
+model QuizOption {
+  id         String  @id @default(cuid())
+  questionId String
+  option     String  @db.Text // The answer option
+  isCorrect  Boolean @default(false)
+  order      Int     // Option order
+  
+  question QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@map("quiz_options")
+}
+
+// Quiz Result model (stores user's quiz attempts)
+model QuizResult {
+  id          String   @id @default(cuid())
+  quizId      String
+  userId      String
+  score       Int      // Number of correct answers
+  totalQuestions Int   // Total questions in quiz
+  answers     String   @db.LongText // JSON string of user answers
+  completedAt DateTime @default(now())
+
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
+  @@index([userId])
+  @@index([completedAt])
+  @@map("quiz_results")
 }

@@ -181,7 +181,7 @@ export default function PublicProfilePage() {
       : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-green-50">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-green-50">
       <Navbar />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
