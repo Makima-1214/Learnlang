@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// User model with role-based access
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  histories History[]
+  
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+// History model to store learning progress
+model History {
+  id                 String   @id @default(cuid())
+  userId             String
+  mode               Mode     // EN_ID or ID_EN
+  sourceLanguage     String   // "en" or "id"
+  targetLanguage     String   // "id" or "en"
+  sourceSentence     String   @db.Text
+  userTranslation    String   @db.Text
+  correctTranslation String   @db.Text
+  score              Int
+  status             Status
+  feedback           String   @db.Text
+  difficulty         Difficulty
+  createdAt          DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([createdAt])
+  @@map("histories")
+}
+
+enum Mode {
+  EN_ID  // English to Indonesian
+  ID_EN  // Indonesian to English
+}
+
+enum Status {
+  BENAR
+  HAMPIR_BENAR
+  SALAH
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}

@@ -1,36 +1,170 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# LernLang - Aplikasi Belajar Bahasa Inggris dengan AI
 
-## Getting Started
+LernLang adalah aplikasi web modern untuk belajar bahasa Inggris melalui latihan terjemahan yang dinilai oleh AI menggunakan model Gemma2:2b dari Ollama.
 
-First, run the development server:
+## Fitur Utama
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- 🎯 **Generate Kalimat Otomatis**: AI menghasilkan kalimat bahasa Inggris dengan 3 tingkat kesulitan (Mudah, Sedang, Sulit)
+- 📝 **Latihan Terjemahan**: Pengguna menerjemahkan kalimat bahasa Inggris ke bahasa Indonesia
+- 🤖 **Evaluasi AI**: AI mengevaluasi terjemahan dengan:
+  - Skor 0-100
+  - Status: Benar (90-100), Hampir Benar (60-89), atau Salah (<60)
+  - Terjemahan yang benar
+  - Feedback konstruktif
+- 💾 **Penyimpanan Lokal**: Riwayat latihan disimpan di localStorage browser
+- 📊 **Statistik Belajar**: Melihat progress dengan statistik lengkap
+- 🎨 **UI Modern**: Desain clean dengan warna hijau lembut tanpa gradasi
+
+## Prasyarat
+
+Sebelum menjalankan aplikasi, pastikan Anda telah menginstal:
+
+1. **Node.js** (versi 18 atau lebih baru)
+2. **Ollama** dengan model Gemma2:2b
+
+### Instalasi Ollama dan Model
+
+1. Download dan install Ollama dari [https://ollama.ai](https://ollama.ai)
+2. Jalankan Ollama di terminal:
+   ```bash
+   ollama serve
+   ```
+3. Download model Gemma2:2b (di terminal baru):
+   ```bash
+   ollama pull gemma2:2b
+   ```
+
+## Instalasi Aplikasi
+
+1. Clone repository ini
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+## Menjalankan Aplikasi
+
+1. Pastikan Ollama sudah berjalan di background:
+
+   ```bash
+   ollama serve
+   ```
+
+2. Jalankan aplikasi development server:
+
+   ```bash
+   npm run dev
+   ```
+
+3. Buka browser dan akses:
+   ```
+   http://localhost:3000
+   ```
+
+## Cara Menggunakan
+
+1. **Mulai Belajar**:
+   - Pilih tingkat kesulitan (Mudah/Sedang/Sulit)
+   - Klik tombol "Mulai Belajar" atau "Generate Kalimat Baru"
+
+2. **Latihan Terjemahan**:
+   - Baca kalimat bahasa Inggris yang ditampilkan
+   - Tulis terjemahan dalam bahasa Indonesia di kolom yang tersedia
+   - Klik "Evaluasi Terjemahan"
+
+3. **Lihat Hasil**:
+   - Skor Anda (0-100)
+   - Status (Benar/Hampir Benar/Salah)
+   - Perbandingan terjemahan Anda vs terjemahan yang benar
+   - Feedback dari AI
+
+4. **Riwayat Belajar**:
+   - Klik "Riwayat Belajar" di header
+   - Lihat statistik lengkap
+   - Filter berdasarkan status
+   - Urutkan berdasarkan tanggal atau skor
+
+## Teknologi yang Digunakan
+
+- **Framework**: Next.js 16 (App Router)
+- **Styling**: Tailwind CSS 4
+- **AI Model**: Gemma2:2b (via Ollama)
+- **Storage**: localStorage (browser)
+- **Font**: Geist Sans & Geist Mono
+
+## Struktur Folder
+
+```
+learnlang/
+├── app/
+│   ├── api/
+│   │   ├── generate-sentence/
+│   │   │   └── route.js          # API untuk generate kalimat
+│   │   └── evaluate/
+│   │       └── route.js          # API untuk evaluasi terjemahan
+│   ├── history/
+│   │   └── page.js               # Halaman riwayat belajar
+│   ├── globals.css               # Styling global dengan tema hijau
+│   ├── layout.js                 # Root layout
+│   └── page.js                   # Halaman utama
+├── public/                       # Assets statis
+├── package.json                  # Dependencies
+└── README.md                     # Dokumentasi
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Konfigurasi Warna
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+Aplikasi menggunakan skema warna hijau lembut yang konsisten:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Background: `#f0f9f4` (hijau sangat lembut)
+- Primary: `#6fbf8f` (hijau sedang)
+- Primary Dark: `#4a9d6a` (hijau tua untuk hover)
+- Primary Light: `#a8dcc0` (hijau muda)
+- Border: `#d1e8dd` (hijau border)
+- Card Background: `#ffffff` (putih)
 
-## Learn More
+## Troubleshooting
 
-To learn more about Next.js, take a look at the following resources:
+### Error: Failed to generate sentence
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Solusi**: Pastikan Ollama sedang berjalan
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+ollama serve
+```
 
-## Deploy on Vercel
+### Error: Model not found
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Solusi**: Download model gemma2:2b
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+ollama pull gemma2:2b
+```
+
+### Port 11434 tidak dapat diakses
+
+**Solusi**: Periksa apakah Ollama berjalan di port default (11434)
+
+## Pengembangan Lebih Lanjut
+
+Fitur yang bisa ditambahkan:
+
+- [ ] Login/Register dengan database
+- [ ] Leaderboard
+- [ ] Berbagai kategori kalimat (bisnis, travel, daily conversation)
+- [ ] Mode listening (speech-to-text)
+- [ ] Ekspor riwayat ke PDF
+- [ ] Grafik progress belajar
+- [ ] Sistem achievement/badges
+
+## Lisensi
+
+MIT License
+
+## Author
+
+Fauzaro01
+
+---
+
+**LernLang** - Belajar Bahasa Inggris dengan AI © 2026
