@@ -21,6 +21,7 @@ model User {
   updatedAt DateTime @updatedAt
   
   histories History[]
+  blogs     Blog[]
   
   @@map("users")
 }
@@ -68,4 +69,25 @@ enum Difficulty {
   EASY
   MEDIUM
   HARD
+}
+
+// Blog model
+model Blog {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  content     String   @db.LongText
+  excerpt     String   @db.Text
+  coverImage  String?  @db.Text
+  published   Boolean  @default(false)
+  authorId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([slug])
+  @@index([published])
+  @@map("blogs")
 }

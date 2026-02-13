@@ -52,6 +52,7 @@ export default function Navbar() {
   // Public navigation items
   const publicNavItems = [
     { name: "Beranda", href: "/" },
+    { name: "Blog", href: "/blogs" },
     { name: "Tentang", href: "/about" },
     { name: "Kontak", href: "/contact" },
   ];
@@ -173,16 +174,30 @@ export default function Navbar() {
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <Link
+                              href="/admin/reports"
+                              className="cursor-pointer"
+                            >
+                              <ClipboardList className="mr-2 h-4 w-4" />
+                              Reports
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link
                               href="/admin/users"
                               className="cursor-pointer"
                             >
                               <Users className="mr-2 h-4 w-4" />
-                              Users
+                              Users Management
                             </Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem disabled>
-                            <ClipboardList className="mr-2 h-4 w-4" />
-                            Reports (Segera)
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href="/admin/blogs"
+                              className="cursor-pointer"
+                            >
+                              <FileText className="mr-2 h-4 w-4" />
+                              Blog Management
+                            </Link>
                           </DropdownMenuItem>
                         </DropdownMenuSubContent>
                       </DropdownMenuSub>

@@ -53,19 +53,6 @@ export default function HistoryPage() {
     }
   };
 
-  const clearHistory = async () => {
-    if (confirm("Apakah Anda yakin ingin menghapus semua riwayat?")) {
-      try {
-        const response = await fetch("/api/history", { method: "DELETE" });
-        if (response.ok) {
-          setHistory([]);
-        }
-      } catch (error) {
-        console.error("Error clearing history:", error);
-      }
-    }
-  };
-
   const getStatusVariant = (status) => {
     switch (status) {
       case "BENAR":
@@ -141,11 +128,6 @@ export default function HistoryPage() {
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Riwayat Belajar</h1>
-          {history.length > 0 && (
-            <Button onClick={clearHistory} variant="destructive" size="sm">
-              Hapus Semua
-            </Button>
-          )}
         </div>
 
         {history.length === 0 ? (
