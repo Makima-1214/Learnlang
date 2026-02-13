@@ -48,6 +48,29 @@ app.prepare().then(() => {
       console.log(`Socket ${socket.id} left blog:${blogSlug}`);
     });
 
+    // Join discussion room
+    socket.on("join-room", (roomId) => {
+      socket.join(`room:${roomId}`);
+      console.log(`Socket ${socket.id} joined room:${roomId}`);
+    });
+
+    // Leave discussion room
+    socket.on("leave-room", (roomId) => {
+      socket.leave(`room:${roomId}`);
+      console.log(`Socket ${socket.id} left room:${roomId}`);
+    });
+
+    // User typing indicator
+    socket.on("typing-start", ({ roomId, user }) => {
+      socket.to(`room:${roomId}`).emit("user-typing", { user, isTyping: true });
+    });
+
+    socket.on("typing-stop", ({ roomId, user }) => {
+      socket
+        .to(`room:${roomId}`)
+        .emit("user-typing", { user, isTyping: false });
+    });
+
     socket.on("disconnect", () => {
       console.log("Client disconnected:", socket.id);
     });

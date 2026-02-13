@@ -29,6 +29,8 @@ model User {
   reactions Reaction[]
   quizzes   Quiz[]
   quizResults QuizResult[]
+  rooms     Room[]
+  messages  Message[]
   
   @@map("users")
 }
@@ -200,4 +202,39 @@ model QuizResult {
   @@index([userId])
   @@index([completedAt])
   @@map("quiz_results")
+}
+
+// Discussion Room model
+model Room {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+  isDefault   Boolean  @default(false) // Default room for general discussion
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy User      @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  messages  Message[]
+
+  @@index([createdById])
+  @@index([isDefault])
+  @@map("rooms")
+}
+
+// Chat Message model
+model Message {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  roomId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("messages")
 }

@@ -31,6 +31,7 @@ import {
   X,
   ChevronDown,
   User,
+  MessageSquare,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -166,6 +167,13 @@ export default function Navbar() {
                     </Link>
                   </DropdownMenuItem>
 
+                  <DropdownMenuItem asChild>
+                    <Link href="/diskusi" className="cursor-pointer">
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      Forum Diskusi
+                    </Link>
+                  </DropdownMenuItem>
+
                   {isAdmin && (
                     <>
                       <DropdownMenuSeparator />
@@ -270,6 +278,18 @@ export default function Navbar() {
                   {item.name}
                 </Link>
               ))}
+
+              {/* Diskusi Link for Authenticated Users */}
+              {user && (
+                <Link
+                  href="/diskusi"
+                  className="flex items-center gap-2 py-2 px-3 rounded-lg hover:bg-gray-100 font-medium transition-colors text-primary"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Forum Diskusi
+                </Link>
+              )}
 
               {/* Auth Buttons for Public Users */}
               {!user && (
