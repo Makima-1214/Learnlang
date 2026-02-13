@@ -87,10 +87,10 @@ export default function LandingPage() {
   ];
 
   const benefits = [
-    "✨ Gratis tanpa biaya tersembunyi",
-    "🚀 Langsung mulai tanpa setup rumit",
-    "📱 Akses dari mana saja, kapan saja",
-    "🎯 Personal learning path",
+    "Gratis tanpa biaya tersembunyi",
+    "Langsung mulai tanpa setup rumit",
+    "Akses dari mana saja, kapan saja",
+    "Personal learning path",
   ];
 
   const stats = [
