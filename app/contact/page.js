@@ -21,7 +21,7 @@ import {
 
 export default function ContactPage() {
   const developer = {
-    name: "Muhamad Fauzan",
+    name: "Muhamad Fauzaan",
     role: "Full Stack Developer",
     bio: "Passionate developer yang berfokus pada pengembangan aplikasi web modern dengan Next.js, React, dan AI integration. Senang menciptakan solusi yang membuat pembelajaran lebih accessible untuk semua orang.",
     location: "Karawang, Jawa Barat, Indonesia",
