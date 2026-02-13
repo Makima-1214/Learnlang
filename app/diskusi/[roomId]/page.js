@@ -232,12 +232,12 @@ export default function ChatRoomPage() {
             </Button>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-primary flex-shrink-0" />
+                <MessageSquare className="w-5 h-5 text-primary shrink-0" />
                 <h1 className="font-semibold text-gray-900 truncate">
                   {room?.name}
                 </h1>
                 {room?.isDefault && (
-                  <Badge className="bg-yellow-100 text-yellow-700 border-0 gap-1 flex-shrink-0">
+                  <Badge className="bg-yellow-100 text-yellow-700 border-0 gap-1 shrink-0">
                     <Star className="w-3 h-3" />
                     Default
                   </Badge>
@@ -298,7 +298,7 @@ export default function ChatRoomPage() {
                       className={`flex gap-3 ${isOwnMessage ? "flex-row-reverse" : ""}`}
                     >
                       {!isOwnMessage && (
-                        <Avatar className="w-8 h-8 flex-shrink-0">
+                        <Avatar className="w-8 h-8 shrink-0">
                           <AvatarImage
                             src={message.user.avatar}
                             alt={message.user.name}
@@ -323,7 +323,7 @@ export default function ChatRoomPage() {
                               : "bg-white border border-gray-200 rounded-tl-sm"
                           }`}
                         >
-                          <p className="whitespace-pre-wrap break-words">
+                          <p className="whitespace-pre-wrap warp-break-word">
                             {message.content}
                           </p>
                         </div>

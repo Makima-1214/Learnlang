@@ -278,7 +278,7 @@ export default function DiskusiPage() {
                   )}
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg flex items-center gap-2 pr-16">
-                      <MessageSquare className="w-5 h-5 text-primary flex-shrink-0" />
+                      <MessageSquare className="w-5 h-5 text-primary shrink-0" />
                       <span className="truncate">{room.name}</span>
                     </CardTitle>
                     {room.description && (
@@ -305,7 +305,7 @@ export default function DiskusiPage() {
                             {getInitials(room.createdBy.name)}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="text-xs text-gray-500 truncate max-w-[100px]">
+                        <span className="text-xs text-gray-500 truncate max-w-25">
                           {room.createdBy.name}
                         </span>
                       </div>

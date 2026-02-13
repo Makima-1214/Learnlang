@@ -47,7 +47,7 @@ export default function QuizListPage() {
   if (status === "unauthenticated") return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-blue-50">
       <Navbar />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -129,7 +129,7 @@ export default function QuizListPage() {
 
                       {/* Last Result */}
                       {hasCompleted && (
-                        <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                        <div className="p-3 bg-linear-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-gray-700">
                               Skor terakhir:

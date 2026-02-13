@@ -134,7 +134,7 @@ export default function TakeQuizPage() {
   // Show result
   if (result) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-green-50">
+      <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-green-50">
         <Navbar />
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <motion.div
@@ -152,7 +152,7 @@ export default function TakeQuizPage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Score */}
-                <div className="text-center py-6 bg-gradient-to-r from-primary/5 to-green-50 rounded-xl">
+                <div className="text-center py-6 bg-linear-to-r from-primary/5 to-green-50 rounded-xl">
                   <div className="text-6xl font-bold text-primary mb-2">
                     {result.percentage}%
                   </div>
@@ -178,9 +178,9 @@ export default function TakeQuizPage() {
                       <CardContent className="pt-6">
                         <div className="flex items-start gap-3">
                           {item.isCorrect ? (
-                            <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
+                            <CheckCircle className="w-6 h-6 text-green-600 shrink-0 mt-1" />
                           ) : (
-                            <XCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" />
+                            <XCircle className="w-6 h-6 text-red-600 shrink-0 mt-1" />
                           )}
                           <div className="flex-1">
                             <p className="font-semibold text-gray-900 mb-2">
@@ -254,7 +254,7 @@ export default function TakeQuizPage() {
   const answeredCount = Object.keys(answers).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-blue-50">
       <Navbar />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
