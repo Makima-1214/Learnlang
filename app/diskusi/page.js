@@ -34,8 +34,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, Plus, Users, Trash2, Star } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
+import { MessageSquare, Plus, Users, Trash2, Star, MessageCircleMore } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
@@ -291,7 +291,7 @@ export default function DiskusiPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         <div className="flex items-center gap-1">
-                          <Users className="w-4 h-4" />
+                          <MessageCircleMore className="w-4 h-4" />
                           <span>{room._count.messages} pesan</span>
                         </div>
                       </div>
