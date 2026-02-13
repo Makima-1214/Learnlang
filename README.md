@@ -145,18 +145,6 @@ ollama pull gemma2:2b
 
 **Solusi**: Periksa apakah Ollama berjalan di port default (11434)
 
-## Pengembangan Lebih Lanjut
-
-Fitur yang bisa ditambahkan:
-
-- [ ] Login/Register dengan database
-- [ ] Leaderboard
-- [ ] Berbagai kategori kalimat (bisnis, travel, daily conversation)
-- [ ] Mode listening (speech-to-text)
-- [ ] Ekspor riwayat ke PDF
-- [ ] Grafik progress belajar
-- [ ] Sistem achievement/badges
-
 ## Lisensi
 
 MIT License

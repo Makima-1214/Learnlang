@@ -22,6 +22,8 @@ model User {
   
   histories History[]
   blogs     Blog[]
+  comments  Comment[]
+  reactions Reaction[]
   
   @@map("users")
 }
@@ -85,9 +87,46 @@ model Blog {
   updatedAt   DateTime @updatedAt
 
   author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments Comment[]
+  reactions Reaction[]
 
   @@index([authorId])
   @@index([slug])
   @@index([published])
   @@map("blogs")
+}
+
+// Comment model
+model Comment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  blogId    String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([blogId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("comments")
+}
+
+// Reaction model
+model Reaction {
+  id        String   @id @default(cuid())
+  emoji     String   // emoji character like 👍, ❤️, 😂, etc.
+  blogId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([blogId, userId, emoji]) // One user can only react with the same emoji once per blog
+  @@index([blogId])
+  @@index([userId])
+  @@map("reactions")
 }

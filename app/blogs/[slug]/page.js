@@ -14,6 +14,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
+import BlogReactions from "@/components/BlogReactions";
+import BlogComments from "@/components/BlogComments";
 
 export default function BlogDetailPage() {
   const params = useParams();
@@ -159,6 +161,16 @@ export default function BlogDetailPage() {
             >
               {blog.content}
             </ReactMarkdown>
+          </div>
+
+          {/* Reactions Section */}
+          <div className="mt-12">
+            <BlogReactions slug={params.slug} />
+          </div>
+
+          {/* Comments Section */}
+          <div className="mt-8">
+            <BlogComments slug={params.slug} />
           </div>
 
           {/* Divider */}

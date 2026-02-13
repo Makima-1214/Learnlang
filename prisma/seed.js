@@ -493,6 +493,72 @@ Setiap terjemahan akan dinilai oleh AI dengan:
   }
 
   console.log(`\n✅ ${blogCount} blogs created`);
+
+  // ============================================
+  // COMMENTS & REACTIONS
+  // ============================================
+  console.log("\n📝 Creating sample comments and reactions...");
+
+  // Get first blog for comments and reactions
+  const firstBlog = await prisma.blog.findFirst({
+    where: { published: true },
+  });
+
+  if (firstBlog) {
+    // Create comments
+    const comments = [
+      {
+        content:
+          "Artikel yang sangat menarik! Saya jadi lebih termotivasi untuk belajar bahasa Inggris.",
+        userId: users[0].id,
+        blogId: firstBlog.id,
+      },
+      {
+        content:
+          "Tips yang diberikan sangat praktis dan mudah diikuti. Terima kasih!",
+        userId: users[1].id,
+        blogId: firstBlog.id,
+      },
+      {
+        content:
+          "Saya sudah mencoba beberapa tips ini dan hasilnya luar biasa. Highly recommended!",
+        userId: users[2].id,
+        blogId: firstBlog.id,
+      },
+    ];
+
+    for (const c of comments) {
+      await prisma.comment.upsert({
+        where: {
+          id: `comment-${c.userId}-${c.blogId}`,
+        },
+        update: {},
+        create: c,
+      });
+    }
+    console.log(`✅ Created ${comments.length} comments`);
+
+    // Create reactions
+    const reactions = [
+      { emoji: "👍", userId: users[0].id, blogId: firstBlog.id },
+      { emoji: "❤️", userId: users[1].id, blogId: firstBlog.id },
+      { emoji: "👍", userId: users[2].id, blogId: firstBlog.id },
+      { emoji: "🎉", userId: users[3].id, blogId: firstBlog.id },
+      { emoji: "👍", userId: users[4].id, blogId: firstBlog.id },
+    ];
+
+    for (const r of reactions) {
+      try {
+        await prisma.reaction.create({
+          data: r,
+        });
+      } catch (error) {
+        // Skip if already exists (unique constraint)
+      }
+    }
+    console.log(`✅ Created reactions`);
+  }
+
   console.log("\n🎉 Seeding completed!\n");
   console.log("📌 Login credentials:");
   console.log("   Admin: admin@learnlang.com / admin123");
