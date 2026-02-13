@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
+import { useState } from "react";
 import { signOut } from "next-auth/react";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -23,9 +26,13 @@ import {
   Users,
   ClipboardList,
   LogOut,
+  Menu,
+  X,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Navbar({ user }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const getInitials = (name) => {
     if (!name) return "U";
     return name
@@ -38,105 +45,207 @@ export default function Navbar({ user }) {
 
   const isAdmin = user?.role === "ADMIN";
 
+  // Public navigation items
+  const publicNavItems = [
+    { name: "Beranda", href: "/" },
+    { name: "Tentang", href: "/about" },
+    { name: "Kontak", href: "/contact" },
+  ];
+
   return (
-    <header className="bg-card border-b sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto px-4 py-4">
-        <div className="flex justify-between items-center">
+    <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
           <Link
-            href="/learn"
-            className="text-2xl font-bold hover:text-primary transition-colors"
+            href={user ? "/learn" : "/"}
+            className="flex items-center gap-2 group"
           >
-            LernLang
+            <div className="relative w-10 h-10 group-hover:scale-110 transition-transform">
+              <Image
+                src="/learnlang.png"
+                alt="LernLang Logo"
+                fill
+                className="object-contain rounded-lg"
+              />
+            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-primary to-green-600 bg-clip-text text-transparent">
+              LernLang
+            </span>
           </Link>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger className="focus:outline-none">
-              <div className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-medium">{user?.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {isAdmin ? "Administrator" : "User"}
-                  </p>
-                </div>
-                <Avatar>
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    {getInitials(user?.name)}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <div>
-                  <p className="font-medium">{user?.name}</p>
-                  <p className="text-xs text-muted-foreground font-normal">
-                    {user?.email}
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-
-              <DropdownMenuItem asChild>
-                <Link href="/learn" className="cursor-pointer">
-                  <GraduationCap className="mr-2 h-4 w-4" />
-                  Belajar
-                </Link>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem disabled>
-                <FileText className="mr-2 h-4 w-4" />
-                Quiz (Segera Hadir)
-              </DropdownMenuItem>
-
-              <DropdownMenuItem asChild>
-                <Link href="/history" className="cursor-pointer">
-                  <History className="mr-2 h-4 w-4" />
-                  History
-                </Link>
-              </DropdownMenuItem>
-
-              {isAdmin && (
-                <>
+          {/* Authenticated User Section */}
+          {user ? (
+            <div className="flex items-center gap-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger className="focus:outline-none">
+                  <div className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
+                    <div className="text-right hidden sm:block">
+                      <p className="text-sm font-medium">{user?.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {isAdmin ? "Administrator" : "User"}
+                      </p>
+                    </div>
+                    <Avatar>
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {getInitials(user?.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div>
+                      <p className="font-medium">{user?.name}</p>
+                      <p className="text-xs text-muted-foreground font-normal">
+                        {user?.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                      <Settings className="mr-2 h-4 w-4" />
-                      Admin
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent>
-                      <DropdownMenuItem asChild>
-                        <Link href="/admin" className="cursor-pointer">
-                          <BarChart3 className="mr-2 h-4 w-4" />
-                          Dashboard
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link href="/admin/users" className="cursor-pointer">
-                          <Users className="mr-2 h-4 w-4" />
-                          Users
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem disabled>
-                        <ClipboardList className="mr-2 h-4 w-4" />
-                        Reports (Segera)
-                      </DropdownMenuItem>
-                    </DropdownMenuSubContent>
-                  </DropdownMenuSub>
-                </>
-              )}
 
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => signOut({ callbackUrl: "/" })}
-                className="cursor-pointer text-destructive focus:text-destructive"
+                  <DropdownMenuItem asChild>
+                    <Link href="/learn" className="cursor-pointer">
+                      <GraduationCap className="mr-2 h-4 w-4" />
+                      Belajar
+                    </Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem disabled>
+                    <FileText className="mr-2 h-4 w-4" />
+                    Quiz (Segera Hadir)
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem asChild>
+                    <Link href="/history" className="cursor-pointer">
+                      <History className="mr-2 h-4 w-4" />
+                      History
+                    </Link>
+                  </DropdownMenuItem>
+
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                          <Settings className="mr-2 h-4 w-4" />
+                          Admin
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin" className="cursor-pointer">
+                              <BarChart3 className="mr-2 h-4 w-4" />
+                              Dashboard
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href="/admin/users"
+                              className="cursor-pointer"
+                            >
+                              <Users className="mr-2 h-4 w-4" />
+                              Users
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem disabled>
+                            <ClipboardList className="mr-2 h-4 w-4" />
+                            Reports (Segera)
+                          </DropdownMenuItem>
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
+                    </>
+                  )}
+
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => signOut({ callbackUrl: "/" })}
+                    className="cursor-pointer text-destructive focus:text-destructive"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          ) : (
+            /* Public Navigation */
+            <>
+              <div className="hidden md:flex items-center gap-8">
+                {publicNavItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className="text-gray-700 hover:text-primary font-medium transition-colors relative group"
+                  >
+                    {item.name}
+                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300"></span>
+                  </Link>
+                ))}
+                <div className="flex items-center gap-3">
+                  <Link href="/login">
+                    <Button variant="outline">Masuk</Button>
+                  </Link>
+                  <Link href="/register">
+                    <Button>Daftar Gratis</Button>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Mobile Menu Button */}
+              <button
+                className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                {mobileMenuOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
+              </button>
+            </>
+          )}
         </div>
       </div>
+
+      {/* Mobile Menu for Public */}
+      {!user && (
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden bg-white border-b"
+            >
+              <div className="px-4 py-4 space-y-3">
+                {publicNavItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className="block py-2 px-3 rounded-lg hover:bg-gray-100 font-medium transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+                <div className="flex flex-col gap-2 pt-2">
+                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="outline" className="w-full">
+                      Masuk
+                    </Button>
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Button className="w-full">Daftar Gratis</Button>
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
     </header>
   );
 }

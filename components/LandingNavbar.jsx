@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function LandingNavbar() {
@@ -21,8 +22,13 @@ export default function LandingNavbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="bg-primary rounded-lg p-2 group-hover:scale-110 transition-transform">
-              <GraduationCap className="h-6 w-6 text-white" />
+            <div className="relative w-10 h-10 group-hover:scale-110 transition-transform">
+              <Image
+                src="/learnlang.png"
+                alt="LernLang Logo"
+                fill
+                className="object-contain rounded-lg"
+              />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-green-600 bg-clip-text text-transparent">
               LernLang

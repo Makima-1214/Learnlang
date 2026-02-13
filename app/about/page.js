@@ -108,7 +108,7 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
-      <LandingNavbar />
+      <Navbar />
 
       {/* Hero Section */}
       <section className="pt-32 pb-16 px-4">
