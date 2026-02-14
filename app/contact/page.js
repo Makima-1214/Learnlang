@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,42 @@ import {
 } from "lucide-react";
 
 export default function ContactPage() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+
+  const handleSendEmail = (e) => {
+    e.preventDefault();
+
+    if (
+      !formData.name ||
+      !formData.email ||
+      !formData.subject ||
+      !formData.message
+    ) {
+      alert("Semua field harus diisi!");
+      return;
+    }
+
+    const mailtoLink = `mailto:muhamadfauzan4750@gmail.com?subject=${encodeURIComponent(
+      formData.subject,
+    )}&body=${encodeURIComponent(
+      `Nama: ${formData.name}\nEmail: ${formData.email}\n\n${formData.message}`,
+    )}`;
+
+    window.location.href = mailtoLink;
+  };
   const developer = {
     name: "Muhamad Fauzaan",
     role: "Full Stack Developer",
@@ -240,12 +277,14 @@ export default function ContactPage() {
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <form className="space-y-4">
+                  <form onSubmit={handleSendEmail} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">Nama</Label>
                       <Input
                         id="name"
                         placeholder="Masukkan nama Anda"
+                        value={formData.name}
+                        onChange={handleInputChange}
                         required
                       />
                     </div>
@@ -256,6 +295,8 @@ export default function ContactPage() {
                         id="email"
                         type="email"
                         placeholder="nama@example.com"
+                        value={formData.email}
+                        onChange={handleInputChange}
                         required
                       />
                     </div>
@@ -265,6 +306,8 @@ export default function ContactPage() {
                       <Input
                         id="subject"
                         placeholder="Topik pesan Anda"
+                        value={formData.subject}
+                        onChange={handleInputChange}
                         required
                       />
                     </div>
@@ -275,6 +318,8 @@ export default function ContactPage() {
                         id="message"
                         placeholder="Tulis pesan Anda di sini..."
                         rows={6}
+                        value={formData.message}
+                        onChange={handleInputChange}
                         required
                       />
                     </div>
@@ -285,8 +330,7 @@ export default function ContactPage() {
                     </Button>
 
                     <p className="text-xs text-center text-gray-500">
-                      Pesan Anda akan dikirim ke email developer dan biasanya
-                      dibalas dalam 1-2 hari kerja.
+                      Pesan Anda akan dikirim melalui email client default Anda.
                     </p>
                   </form>
                 </CardContent>
