@@ -9,7 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Send, MessageSquare, Users, Star } from "lucide-react";
+import {
+  ArrowLeft,
+  Send,
+  MessageSquare,
+  Users,
+  Star,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow, format, isToday, isYesterday } from "date-fns";
@@ -56,6 +63,13 @@ export default function ChatRoomPage() {
       }
     });
 
+    // Listen for deleted messages
+    socket.on("message-deleted", (message) => {
+      setMessages((prev) =>
+        prev.map((msg) => (msg.id === message.id ? message : msg)),
+      );
+    });
+
     // Listen for typing indicators
     socket.on("user-typing", ({ user, isTyping }) => {
       setTypingUsers((prev) => {
@@ -74,6 +88,7 @@ export default function ChatRoomPage() {
     return () => {
       socket.emit("leave-room", params.roomId);
       socket.off("new-message");
+      socket.off("message-deleted");
       socket.off("user-typing");
     };
   }, [socket, params.roomId, session]);
@@ -213,6 +228,40 @@ export default function ChatRoomPage() {
     return format(messageDate, "EEEE, dd MMMM yyyy", { locale: id });
   };
 
+  const canDeleteMessage = (message) => {
+    if (session?.user?.role === "ADMIN") return true;
+
+    if (message.userId !== session?.user?.id) return false;
+
+    // Check if message is less than 1 minute old
+    const messageAgeInMs = Date.now() - new Date(message.createdAt).getTime();
+    const messageAgeInMinutes = messageAgeInMs / (1000 * 60);
+    return messageAgeInMinutes < 1 && !message.isDeleted;
+  };
+
+  const handleDeleteMessage = async (messageId, roomId) => {
+    try {
+      const response = await fetch(
+        `/api/rooms/${roomId}/messages/${messageId}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        toast.error(error.error || "Gagal menghapus pesan");
+        return;
+      }
+
+      toast.success("Pesan berhasil dihapus");
+      // Message update will come via socket event
+    } catch (error) {
+      console.error("Failed to delete message:", error);
+      toast.error("Gagal menghapus pesan");
+    }
+  };
+
   if (loading || status === "loading") return <LoadingScreen />;
 
   return (
@@ -295,7 +344,7 @@ export default function ChatRoomPage() {
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className={`flex gap-3 ${isOwnMessage ? "flex-row-reverse" : ""}`}
+                      className={`flex gap-3 group ${isOwnMessage ? "flex-row-reverse" : ""}`}
                     >
                       {!isOwnMessage && (
                         <Avatar className="w-8 h-8 shrink-0">
@@ -317,15 +366,42 @@ export default function ChatRoomPage() {
                           </p>
                         )}
                         <div
-                          className={`rounded-2xl px-4 py-2 ${
+                          className={`rounded-2xl px-4 py-2 relative ${
                             isOwnMessage
                               ? "bg-primary text-white rounded-tr-sm"
                               : "bg-white border border-gray-200 rounded-tl-sm"
                           }`}
                         >
-                          <p className="whitespace-pre-wrap warp-break-word">
+                          <p
+                            className={`whitespace-pre-wrap warp-break-word ${
+                              message.isDeleted ? "italic text-gray-400" : ""
+                            }`}
+                          >
                             {message.content}
                           </p>
+
+                          {/* Delete Button */}
+                          {canDeleteMessage(message) && (
+                            <button
+                              onClick={() =>
+                                handleDeleteMessage(message.id, params.roomId)
+                              }
+                              className={`absolute -top-2 ${
+                                isOwnMessage ? "left-1" : "right-1"
+                              } opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-full ${
+                                isOwnMessage
+                                  ? "hover:bg-red-200"
+                                  : "hover:bg-red-100"
+                              }`}
+                              title="Hapus pesan"
+                            >
+                              <Trash2
+                                className={`w-3 h-3 ${
+                                  isOwnMessage ? "text-red-600" : "text-red-500"
+                                }`}
+                              />
+                            </button>
+                          )}
                         </div>
                         <p
                           className={`text-xs text-gray-400 mt-1 ${isOwnMessage ? "text-right mr-1" : "ml-1"}`}

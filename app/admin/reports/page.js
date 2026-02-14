@@ -33,7 +33,7 @@ import {
   Area,
   AreaChart,
 } from "recharts";
-import { Users, BookOpen, TrendingUp, Award, ArrowLeft } from "lucide-react";
+import { Users, BookOpen, Award, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 const COLORS = [

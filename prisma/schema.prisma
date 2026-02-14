@@ -229,6 +229,10 @@ model Message {
   roomId    String
   userId    String
   createdAt DateTime @default(now())
+  isDeleted Boolean  @default(false)
+  deletedAt DateTime?
+  deletedBy String? // userId of who deleted the message (admin or the message owner)
+  deletionReason String? // "user" or "admin"
 
   room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
