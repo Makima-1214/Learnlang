@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export async function POST(request) {
   try {
@@ -33,30 +36,19 @@ ${!isEnglishSource ? "- Use proper Indonesian grammar and vocabulary" : ""}
 
 Only return the ${isEnglishSource ? "English" : "Indonesian"} sentence, nothing else. No explanations.`;
 
-    const response = await fetch("http://localhost:11434/api/generate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gemma2:2b",
-        prompt: prompt,
-        stream: false,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to generate sentence from Ollama");
-    }
-
-    const data = await response.json();
-    const sentence = data.response.trim();
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const sentence = response.text().trim();
 
     return NextResponse.json({ sentence });
   } catch (error) {
     console.error("Error generating sentence:", error);
     return NextResponse.json(
-      { error: "Failed to generate sentence. Make sure Ollama is running." },
+      {
+        error:
+          "Failed to generate sentence. Make sure your Gemini API key is configured.",
+      },
       { status: 500 },
     );
   }

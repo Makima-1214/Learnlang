@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export async function POST(request) {
   try {
@@ -52,28 +55,14 @@ Respond in this EXACT JSON format:
 
 Only return the JSON, nothing else.`;
 
-    const response = await fetch("http://localhost:11434/api/generate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gemma2:2b",
-        prompt: prompt,
-        stream: false,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to evaluate from Ollama");
-    }
-
-    const data = await response.json();
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
     let evaluation;
 
     try {
       // Clean the response and extract JSON
-      let responseText = data.response.trim();
+      let responseText = response.text().trim();
 
       // Try to find JSON object with balanced braces
       const firstBrace = responseText.indexOf("{");
@@ -110,8 +99,8 @@ Only return the JSON, nothing else.`;
         throw new Error("Missing required fields in evaluation");
       }
     } catch (parseError) {
-      console.error("Error parsing Ollama response:", parseError);
-      console.error("Raw response:", data.response);
+      console.error("Error parsing Gemini response:", parseError);
+      console.error("Raw response:", response.text());
       evaluation = {
         score: 50,
         status: "HAMPIR_BENAR",
@@ -161,7 +150,10 @@ Only return the JSON, nothing else.`;
   } catch (error) {
     console.error("Error evaluating translation:", error);
     return NextResponse.json(
-      { error: "Failed to evaluate translation. Make sure Ollama is running." },
+      {
+        error:
+          "Failed to evaluate translation. Make sure your Gemini API key is configured.",
+      },
       { status: 500 },
     );
   }
