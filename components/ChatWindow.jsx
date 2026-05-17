@@ -91,8 +91,10 @@ export default function ChatWindow({
     const handleNewMessage = (message) => {
       // Check if message is from the current friend
       if (
-        (message.senderId === friendId && message.receiverId === session?.user?.id) ||
-        (message.senderId === session?.user?.id && message.receiverId === friendId)
+        (message.senderId === friendId &&
+          message.receiverId === session?.user?.id) ||
+        (message.senderId === session?.user?.id &&
+          message.receiverId === friendId)
       ) {
         setMessages((prev) => mergeUniqueMessages(prev, [message]));
       }
@@ -121,7 +123,9 @@ export default function ChatWindow({
 
     const files = selected.slice(0, remaining);
     if (selected.length > remaining) {
-      toast.warning(`Hanya ${remaining} file yang ditambahkan (maksimal ${MAX_ATTACHMENTS})`);
+      toast.warning(
+        `Hanya ${remaining} file yang ditambahkan (maksimal ${MAX_ATTACHMENTS})`,
+      );
     }
 
     setIsUploading(true);
@@ -144,7 +148,9 @@ export default function ChatWindow({
         uploaded.push(data);
       }
 
-      setAttachments((prev) => [...prev, ...uploaded].slice(0, MAX_ATTACHMENTS));
+      setAttachments((prev) =>
+        [...prev, ...uploaded].slice(0, MAX_ATTACHMENTS),
+      );
       toast.success(`${uploaded.length} attachment siap dikirim`);
     } catch (err) {
       toast.error(err.message || "Gagal upload attachment");
@@ -173,7 +179,9 @@ export default function ChatWindow({
 
         const data = await res.json();
         if (!res.ok) {
-          throw new Error(data?.error?.message || data?.error || "Failed to send message");
+          throw new Error(
+            data?.error?.message || data?.error || "Failed to send message",
+          );
         }
         createdMessages.push(data.data.message);
       } else {
@@ -195,7 +203,11 @@ export default function ChatWindow({
 
           const data = await res.json();
           if (!res.ok) {
-            throw new Error(data?.error?.message || data?.error || "Failed to send attachment");
+            throw new Error(
+              data?.error?.message ||
+                data?.error ||
+                "Failed to send attachment",
+            );
           }
           createdMessages.push(data.data.message);
         }
@@ -243,7 +255,12 @@ export default function ChatWindow({
           <p className="text-sm whitespace-pre-wrap">{msg.attachmentCaption}</p>
         )}
         {isImage ? (
-          <a href={msg.attachmentUrl} target="_blank" rel="noreferrer" className="block">
+          <a
+            href={msg.attachmentUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="block"
+          >
             <img
               src={msg.attachmentUrl}
               alt={msg.attachmentName || "attachment"}
@@ -254,8 +271,12 @@ export default function ChatWindow({
           <div className="flex items-center gap-2 rounded-xl border bg-white/90 p-3 max-w-sm">
             <Paperclip className="w-4 h-4 text-gray-500" />
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium truncate">{msg.attachmentName || "File"}</p>
-              <p className="text-[11px] text-gray-500 truncate">{msg.attachmentType || "Attachment"}</p>
+              <p className="text-xs font-medium truncate">
+                {msg.attachmentName || "File"}
+              </p>
+              <p className="text-[11px] text-gray-500 truncate">
+                {msg.attachmentType || "Attachment"}
+              </p>
             </div>
             <a
               href={msg.attachmentUrl}
@@ -340,7 +361,11 @@ export default function ChatWindow({
                         : "bg-white text-gray-900 border border-gray-200"
                     }`}
                   >
-                    {msg.content ? <p className="text-sm whitespace-pre-wrap">{msg.content}</p> : null}
+                    {msg.content ? (
+                      <p className="text-sm whitespace-pre-wrap">
+                        {msg.content}
+                      </p>
+                    ) : null}
                     {renderAttachment(msg)}
                     <p
                       className={`text-xs mt-1 ${
@@ -365,7 +390,10 @@ export default function ChatWindow({
             {attachments.map((att, idx) => {
               const isImage = att?.isImage || IMAGE_TYPES.includes(att?.type);
               return (
-                <div key={`${att.url}-${idx}`} className="group relative rounded-xl border bg-gray-50 p-2 overflow-hidden">
+                <div
+                  key={`${att.url}-${idx}`}
+                  className="group relative rounded-xl border bg-gray-50 p-2 overflow-hidden"
+                >
                   <button
                     type="button"
                     className="absolute top-1 right-1 h-6 w-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
@@ -391,7 +419,10 @@ export default function ChatWindow({
                     </div>
                   )}
 
-                  <p className="mt-1 text-[10px] truncate text-gray-600" title={att.name}>
+                  <p
+                    className="mt-1 text-[10px] truncate text-gray-600"
+                    title={att.name}
+                  >
                     {att.name}
                   </p>
                 </div>
@@ -416,7 +447,11 @@ export default function ChatWindow({
                 type="button"
                 variant="outline"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading || isSending || attachments.length >= MAX_ATTACHMENTS}
+                disabled={
+                  isUploading ||
+                  isSending ||
+                  attachments.length >= MAX_ATTACHMENTS
+                }
               >
                 {isUploading ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -436,7 +471,9 @@ export default function ChatWindow({
 
             <Button
               type="submit"
-              disabled={(!messageInput.trim() && attachments.length === 0) || isSending}
+              disabled={
+                (!messageInput.trim() && attachments.length === 0) || isSending
+              }
             >
               {isSending ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />

@@ -234,7 +234,9 @@ export default function FriendsPage() {
 
       toast.success(
         data?.data?.message ||
-          (data?.data?.isFriend ? "Sekarang kalian berteman!" : "Berhasil mengikuti pengguna"),
+          (data?.data?.isFriend
+            ? "Sekarang kalian berteman!"
+            : "Berhasil mengikuti pengguna"),
       );
     } catch (err) {
       setError(err.message);
@@ -313,7 +315,10 @@ export default function FriendsPage() {
 
             <div className="flex gap-2 flex-col sm:flex-row mt-1">
               {isFriend && (
-                <Link href={`/chats?userId=${user.id}`} className="w-full sm:w-1/2">
+                <Link
+                  href={`/chats?userId=${user.id}`}
+                  className="w-full sm:w-1/2"
+                >
                   <Button size="sm" variant="ghost" className="w-full gap-2">
                     <MessageSquare className="w-4 h-4" />
                     Chat
@@ -359,7 +364,12 @@ export default function FriendsPage() {
         <h3 className="text-sm font-semibold text-gray-800 mb-1">{title}</h3>
         <p className="text-sm text-gray-500 mb-4">{description}</p>
         {actionLabel && onAction && (
-          <Button variant="outline" size="sm" onClick={onAction} className="gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onAction}
+            className="gap-2"
+          >
             <UserPlus className="w-4 h-4" />
             {actionLabel}
           </Button>
@@ -434,14 +444,21 @@ export default function FriendsPage() {
           <div className="sticky top-16 z-20 bg-gray-50/95 backdrop-blur-sm pt-1 pb-3 mb-3">
             <Card className="mb-3 shadow-sm border-gray-200">
               <CardContent className="pt-4 pb-4">
-                <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2">
+                <form
+                  onSubmit={handleSearch}
+                  className="flex flex-col sm:flex-row gap-2"
+                >
                   <Input
                     placeholder="Cari nama atau username..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="flex-1"
                   />
-                  <Button type="submit" size="icon" disabled={loading || searchQuery.length < 2}>
+                  <Button
+                    type="submit"
+                    size="icon"
+                    disabled={loading || searchQuery.length < 2}
+                  >
                     {loading && activeTab === "search" ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
@@ -455,11 +472,36 @@ export default function FriendsPage() {
             {/* Tabs */}
             <div className="overflow-x-auto pb-1">
               <TabsList className="inline-flex w-max min-w-full gap-1 p-1">
-                <TabsTrigger value="search" className="min-w-[92px] transition-all duration-200 data-[state=active]:shadow-sm data-[state=active]:scale-[1.02]">Cari</TabsTrigger>
-                <TabsTrigger value="recommendations" className="min-w-[120px] transition-all duration-200 data-[state=active]:shadow-sm data-[state=active]:scale-[1.02]">Rekomendasi</TabsTrigger>
-                <TabsTrigger value="friends" className="min-w-[92px] transition-all duration-200 data-[state=active]:shadow-sm data-[state=active]:scale-[1.02]">Teman</TabsTrigger>
-                <TabsTrigger value="followers" className="min-w-[100px] transition-all duration-200 data-[state=active]:shadow-sm data-[state=active]:scale-[1.02]">Pengikut</TabsTrigger>
-                <TabsTrigger value="following" className="min-w-[104px] transition-all duration-200 data-[state=active]:shadow-sm data-[state=active]:scale-[1.02]">Mengikuti</TabsTrigger>
+                <TabsTrigger
+                  value="search"
+                  className="min-w-[92px] transition-all duration-200 data-[state=active]:shadow-sm data-[state=active]:scale-[1.02]"
+                >
+                  Cari
+                </TabsTrigger>
+                <TabsTrigger
+                  value="recommendations"
+                  className="min-w-[120px] transition-all duration-200 data-[state=active]:shadow-sm data-[state=active]:scale-[1.02]"
+                >
+                  Rekomendasi
+                </TabsTrigger>
+                <TabsTrigger
+                  value="friends"
+                  className="min-w-[92px] transition-all duration-200 data-[state=active]:shadow-sm data-[state=active]:scale-[1.02]"
+                >
+                  Teman
+                </TabsTrigger>
+                <TabsTrigger
+                  value="followers"
+                  className="min-w-[100px] transition-all duration-200 data-[state=active]:shadow-sm data-[state=active]:scale-[1.02]"
+                >
+                  Pengikut
+                </TabsTrigger>
+                <TabsTrigger
+                  value="following"
+                  className="min-w-[104px] transition-all duration-200 data-[state=active]:shadow-sm data-[state=active]:scale-[1.02]"
+                >
+                  Mengikuti
+                </TabsTrigger>
               </TabsList>
             </div>
           </div>
@@ -484,7 +526,9 @@ export default function FriendsPage() {
               </div>
             ) : (
               <EmptyState
-                title={hasSearched ? "Tidak ada hasil pencarian" : "Cari teman baru"}
+                title={
+                  hasSearched ? "Tidak ada hasil pencarian" : "Cari teman baru"
+                }
                 description={
                   hasSearched
                     ? "Coba kata kunci lain (nama atau username)."

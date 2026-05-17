@@ -34,7 +34,8 @@ export default function FriendsList({
         const updated = [...prev];
         const convIndex = updated.findIndex(
           (c) =>
-            c.friendId === message.senderId || c.friendId === message.receiverId,
+            c.friendId === message.senderId ||
+            c.friendId === message.receiverId,
         );
 
         if (convIndex > -1) {
@@ -42,7 +43,10 @@ export default function FriendsList({
           conv.lastMessage = message;
 
           // increment unread only if message came from friend and this thread isn't active
-          if (message.senderId === conv.friendId && selectedFriendId !== conv.friendId) {
+          if (
+            message.senderId === conv.friendId &&
+            selectedFriendId !== conv.friendId
+          ) {
             conv.unreadCount = (conv.unreadCount || 0) + 1;
           }
 
