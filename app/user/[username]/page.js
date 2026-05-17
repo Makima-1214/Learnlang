@@ -25,6 +25,7 @@ import {
   Share2,
   Copy,
   Check,
+  MessageSquare,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
@@ -222,9 +223,20 @@ export default function PublicProfilePage() {
                     <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
                       {user?.name}
                     </h1>
-                    <p className="text-base sm:text-lg text-gray-500 font-medium">
-                      @{user?.username}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
+                      <p className="text-base sm:text-lg text-gray-500 font-medium">
+                        @{user?.username}
+                      </p>
+                      {user?.viewerRelationship?.isFriend && (
+                        <Badge className="bg-green-100 text-green-700 border-0">
+                          🤝 Teman
+                        </Badge>
+                      )}
+                      {!user?.viewerRelationship?.isFriend &&
+                        user?.viewerRelationship?.isFollowing && (
+                          <Badge variant="outline">Mengikuti</Badge>
+                        )}
+                    </div>
                   </div>
 
                   {user?.bio && (
@@ -274,6 +286,29 @@ export default function PublicProfilePage() {
                       </Button>
                     </div>
                   </div>
+
+                  <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-2">
+                    <Badge variant="secondary">
+                      {user?.followersCount || 0} Pengikut
+                    </Badge>
+                    <Badge variant="secondary">
+                      {user?.followingCount || 0} Mengikuti
+                    </Badge>
+                    <Badge variant="secondary">
+                      {user?.friendshipCount || 0} Teman
+                    </Badge>
+                  </div>
+
+                  {user?.viewerRelationship?.isFriend && (
+                    <div className="pt-2 flex justify-center sm:justify-start">
+                      <Link href={`/chats?userId=${user.id}`}>
+                        <Button className="gap-2">
+                          <MessageSquare className="w-4 h-4" />
+                          Chat Teman
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>

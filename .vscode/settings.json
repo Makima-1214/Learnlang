@@ -1,6 +1,10 @@
 {
     "prisma.pinToPrisma6": true,
     "chat.tools.terminal.autoApprove": {
-        "npm install": true
+        "npm install": true,
+        "/^npm run build \\*>&1 \\| Tee-Object -FilePath build-output\\.txt$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     }
 }

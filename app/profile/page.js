@@ -240,6 +240,17 @@ export default function ProfilePage() {
                   >
                     {profile?.role === "ADMIN" ? "Administrator" : "Pengguna"}
                   </Badge>
+                  <div className="flex flex-wrap gap-2 justify-center mt-3">
+                    <Badge variant="outline">
+                      {profile?.followersCount || 0} Pengikut
+                    </Badge>
+                    <Badge variant="outline">
+                      {profile?.followingCount || 0} Mengikuti
+                    </Badge>
+                    <Badge variant="outline">
+                      {profile?.friendshipCount || 0} Teman
+                    </Badge>
+                  </div>
                   <p className="text-sm text-gray-500 mt-2 flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
                     Bergabung{" "}

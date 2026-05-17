@@ -23,14 +23,37 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
-  histories History[]
-  blogs     Blog[]
-  comments  Comment[]
-  reactions Reaction[]
-  quizzes   Quiz[]
-  quizResults QuizResult[]
-  rooms     Room[]
-  messages  Message[]
+  histories     History[]
+  blogs         Blog[]
+  comments      Comment[]
+  reactions     Reaction[]
+  quizzes       Quiz[]
+  quizResults   QuizResult[]
+  rooms         Room[]
+  messages      Message[]
+  
+  // Friend relationships
+  followers     Follow[]  @relation("follower")
+  following     Follow[]  @relation("following")
+  friendsInitiated Friendship[] @relation("initiator")
+  friendsReceived  Friendship[] @relation("friend")
+  
+  // Friend Requests
+  friendRequestsSent FriendRequest[] @relation("sender")
+  friendRequestsReceived FriendRequest[] @relation("receiver")
+  
+  // Blocked Users
+  blockedUsers BlockedUser[] @relation("blocker")
+  blockedByUsers BlockedUser[] @relation("blocked")
+  
+  // Private Messages
+  sentMessages PrivateMessage[] @relation("sender")
+  receivedMessages PrivateMessage[] @relation("receiver")
+  
+  // Activity Feed
+  activities Activity[]
+  // Notifications inbox
+  notifications Notification[]
   
   @@map("users")
 }
@@ -241,4 +264,148 @@ model Message {
   @@index([userId])
   @@index([createdAt])
   @@map("messages")
+}
+// Follow model - tracks who follows whom
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String   // User who follows
+  followingId String   // User being followed
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId]) // A user can only follow another once
+  @@index([followerId])
+  @@index([followingId])
+  @@map("follows")
+}
+
+// Friendship model - tracks mutual friendships (both follow each other)
+model Friendship {
+  id         String   @id @default(cuid())
+  initiatorId String  // User who initiated the friendship (or first to follow)
+  friendId   String   // The friend
+  createdAt  DateTime @default(now())
+
+  initiator User @relation("initiator", fields: [initiatorId], references: [id], onDelete: Cascade)
+  friend    User @relation("friend", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([initiatorId, friendId]) // A friendship only exists once between two users
+  @@index([initiatorId])
+  @@index([friendId])
+  @@map("friendships")
+}
+
+// Friend Request model - tracks pending friend requests
+model FriendRequest {
+  id         String   @id @default(cuid())
+  senderId   String   // User sending request
+  receiverId String   // User receiving request
+  status     RequestStatus @default(PENDING)
+  createdAt  DateTime @default(now())
+  respondedAt DateTime?
+
+  sender   User @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId]) // Only one request between two users
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([status])
+  @@map("friend_requests")
+}
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+// Blocked User model - tracks blocked relationships
+model BlockedUser {
+  id        String   @id @default(cuid())
+  blockerId String   // User who blocked
+  blockedId String   // User being blocked
+  reason    String?  @db.Text
+  createdAt DateTime @default(now())
+
+  blocker User @relation("blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId]) // A user can only block another once
+  @@index([blockerId])
+  @@index([blockedId])
+  @@map("blocked_users")
+}
+
+// Private Message model - direct messaging between friends
+model PrivateMessage {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  content    String   @db.Text
+  attachmentUrl String? @db.Text
+  attachmentName String? @db.Text
+  attachmentType String? @db.Text
+  attachmentSize Int?
+  attachmentCaption String? @db.Text
+  createdAt  DateTime @default(now())
+  isRead     Boolean  @default(false)
+  readAt     DateTime?
+  isDeleted  Boolean  @default(false)
+
+  sender   User @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([createdAt])
+  @@map("private_messages")
+}
+
+// Activity Feed model - tracks user activities
+model Activity {
+  id        String   @id @default(cuid())
+  userId    String
+  type      ActivityType // "lesson_completed", "quiz_passed", "blog_published", "friend_added"
+  title     String
+  description String? @db.Text
+  metadata  String?  @db.LongText // Store additional data as JSON string
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([type])
+  @@map("activities")
+}
+
+enum ActivityType {
+  LESSON_COMPLETED
+  QUIZ_PASSED
+  BLOG_PUBLISHED
+  BLOG_COMMENTED
+  FRIEND_ADDED
+  FRIEND_ACCEPTED
+}
+
+// Notification model - persistent user inbox
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String   // recipient
+  title       String
+  description String?  @db.Text
+  icon        String?  @db.Text // icon name or path
+  link        String?  @db.Text // optional link for action
+  isRead      Boolean  @default(false)
+  metadata    String?  @db.LongText
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("notifications")
 }

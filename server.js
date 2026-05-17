@@ -60,6 +60,32 @@ app.prepare().then(() => {
       console.log(`Socket ${socket.id} left room:${roomId}`);
     });
 
+    // Join private friend chat room
+    socket.on("join-private-chat", ({ userId1, userId2 }) => {
+      const roomId = `dm:${[userId1, userId2].sort().join(":")}`;
+      socket.join(roomId);
+      console.log(`Socket ${socket.id} joined ${roomId}`);
+    });
+
+    // Identify user and join personal room for direct notifications
+    socket.on("identify", (payload) => {
+      try {
+        const userId = payload?.userId || payload;
+        if (userId) {
+          socket.join(`user:${userId}`);
+          console.log(`Socket ${socket.id} joined user:${userId}`);
+        }
+      } catch (err) {
+        console.error("Identify error:", err);
+      }
+    });
+
+    socket.on("leave-private-chat", ({ userId1, userId2 }) => {
+      const roomId = `dm:${[userId1, userId2].sort().join(":")}`;
+      socket.leave(roomId);
+      console.log(`Socket ${socket.id} left ${roomId}`);
+    });
+
     // User typing indicator
     socket.on("typing-start", ({ roomId, user }) => {
       socket.to(`room:${roomId}`).emit("user-typing", { user, isTyping: true });

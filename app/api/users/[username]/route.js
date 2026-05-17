@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 // GET - Get public user profile by username
 export async function GET(request, { params }) {
   try {
     const { username } = await params;
+    const session = await getServerSession(authOptions);
 
     const user = await prisma.user.findUnique({
       where: { username },
@@ -27,6 +30,59 @@ export async function GET(request, { params }) {
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const [followersCount, followingCount, friendshipCount] = await Promise.all(
+      [
+        prisma.follow.count({
+          where: { followingId: user.id },
+        }),
+        prisma.follow.count({
+          where: { followerId: user.id },
+        }),
+        prisma.friendship.count({
+          where: {
+            OR: [{ initiatorId: user.id }, { friendId: user.id }],
+          },
+        }),
+      ],
+    );
+
+    let viewerRelationship = {
+      isFollowing: false,
+      isFriend: false,
+    };
+
+    if (session?.user?.id && session.user.id !== user.id) {
+      const [followRecord, friendRecord] = await Promise.all([
+        prisma.follow.findUnique({
+          where: {
+            followerId_followingId: {
+              followerId: session.user.id,
+              followingId: user.id,
+            },
+          },
+        }),
+        prisma.friendship.findFirst({
+          where: {
+            OR: [
+              {
+                initiatorId: session.user.id,
+                friendId: user.id,
+              },
+              {
+                initiatorId: user.id,
+                friendId: session.user.id,
+              },
+            ],
+          },
+        }),
+      ]);
+
+      viewerRelationship = {
+        isFollowing: !!followRecord,
+        isFriend: !!friendRecord,
+      };
     }
 
     // Get learning stats
@@ -74,6 +130,10 @@ export async function GET(request, { params }) {
 
     return NextResponse.json({
       ...user,
+      followersCount,
+      followingCount,
+      friendshipCount,
+      viewerRelationship,
       stats: {
         totalExercises: stats._count.id,
         averageScore: Math.round(stats._avg.score || 0),

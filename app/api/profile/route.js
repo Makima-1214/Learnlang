@@ -36,6 +36,25 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    const [followersCount, followingCount, friendshipCount] = await Promise.all(
+      [
+        prisma.follow.count({
+          where: { followingId: session.user.id },
+        }),
+        prisma.follow.count({
+          where: { followerId: session.user.id },
+        }),
+        prisma.friendship.count({
+          where: {
+            OR: [
+              { initiatorId: session.user.id },
+              { friendId: session.user.id },
+            ],
+          },
+        }),
+      ],
+    );
+
     // Get learning stats
     const stats = await prisma.history.aggregate({
       where: { userId: session.user.id },
@@ -49,6 +68,9 @@ export async function GET() {
 
     return NextResponse.json({
       ...user,
+      followersCount,
+      followingCount,
+      friendshipCount,
       stats: {
         totalExercises: stats._count.id,
         averageScore: Math.round(stats._avg.score || 0),
