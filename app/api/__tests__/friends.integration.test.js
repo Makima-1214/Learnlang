@@ -40,6 +40,13 @@ jest.mock("@/lib/prisma", () => ({
       findMany: jest.fn(),
       count: jest.fn(),
     },
+    notification: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      count: jest.fn(),
+      updateMany: jest.fn(),
+      deleteMany: jest.fn(),
+    },
     privateMessage: {
       create: jest.fn(),
       findMany: jest.fn(),
@@ -87,6 +94,19 @@ jest.mock("@/lib/ratelimit", () => ({
 
 jest.mock("@/lib/socket", () => ({
   emitNewPrivateMessage: jest.fn(),
+  emitNewNotification: jest.fn(),
+}));
+
+jest.mock("@/lib/notifications", () => ({
+  createNotification: jest.fn(),
+  NotificationType: {
+    FOLLOW: "FOLLOW",
+    FRIEND_REQUEST: "FRIEND_REQUEST",
+    FRIEND_REQUEST_ACCEPTED: "FRIEND_REQUEST_ACCEPTED",
+    FRIEND_ADDED: "FRIEND_ADDED",
+    BLOG_COMMENT: "BLOG_COMMENT",
+    BLOG_REACTION: "BLOG_REACTION",
+  },
 }));
 
 jest.mock("fs/promises", () => ({
@@ -120,6 +140,12 @@ describe("Friend system routes", () => {
       status: "PENDING",
     });
     prisma.activity.create.mockResolvedValue({ id: "act-1" });
+    prisma.notification.create.mockResolvedValue({
+      id: "notif-1",
+      userId: "user-2",
+      title: "Permintaan Pertemanan",
+      isRead: false,
+    });
 
     const req = {
       json: async () => ({ followingId: "user-2" }),

@@ -5,7 +5,8 @@ import { ApiResponse, jsonResponse } from "@/lib/api-response";
 import { schemas } from "@/lib/validation";
 import { apiLogger } from "@/lib/logger";
 import { limiters, getRateLimitKey } from "@/lib/ratelimit";
-import { emitNewFriendRequest, emitNewNotification } from "@/lib/socket";
+import { emitNewFriendRequest } from "@/lib/socket";
+import { createNotification, NotificationType } from "@/lib/notifications";
 
 /**
  * POST /api/friends/request
@@ -103,16 +104,15 @@ export async function POST(req) {
     });
 
     // Persist notification for receiver
-    const notification = await prisma.notification.create({
-      data: {
-        userId: followingId,
-        title: "Permintaan Pertemanan",
-        description: `${session.user.name} mengirim permintaan pertemanan`,
-        icon: "users",
-        metadata: JSON.stringify({
-          requestId: friendRequest.id,
-          senderId: userId,
-        }),
+    await createNotification({
+      userId: followingId,
+      type: NotificationType.FRIEND_REQUEST,
+      title: "Permintaan Pertemanan",
+      description: `${session.user.name} mengirim permintaan pertemanan`,
+      icon: "👋",
+      metadata: {
+        requestId: friendRequest.id,
+        senderId: userId,
       },
     });
 
@@ -128,18 +128,6 @@ export async function POST(req) {
         sender,
         status: friendRequest.status,
         createdAt: friendRequest.createdAt,
-      });
-    } catch (err) {
-      console.error("Emit friend request error:", err);
-    }
-
-    try {
-      emitNewNotification(followingId, {
-        id: notification.id,
-        title: notification.title,
-        description: notification.description,
-        icon: notification.icon,
-        createdAt: notification.createdAt,
       });
     } catch (err) {
       console.error("Emit friend request error:", err);

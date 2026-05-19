@@ -4,8 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { ApiResponse, jsonResponse } from "@/lib/api-response";
 import { apiLogger } from "@/lib/logger";
 import { limiters, getRateLimitKey } from "@/lib/ratelimit";
-import { getIO } from "@/lib/socket";
-import { emitNewNotification } from "@/lib/socket";
+import { createNotification, NotificationType } from "@/lib/notifications";
 
 /**
  * POST /api/friends/request/[id]/accept
@@ -105,23 +104,18 @@ export async function POST(req, { params }) {
     });
 
     // Create notification for sender
-    const notification = await prisma.notification.create({
-      data: {
-        userId: friendRequest.senderId,
-        title: "Permintaan Pertemanan Diterima",
-        description: `${session.user.name} telah menerima permintaan pertemanan Anda`,
-        icon: "👋",
-        link: `/friends`,
-        isRead: false,
+    await createNotification({
+      userId: friendRequest.senderId,
+      type: NotificationType.FRIEND_REQUEST_ACCEPTED,
+      title: "Permintaan Pertemanan Diterima",
+      description: `${session.user.name} telah menerima permintaan pertemanan Anda`,
+      icon: "🎉",
+      link: `/friends`,
+      metadata: {
+        friendshipId: `${id1}:${id2}`,
+        acceptedBy: userId,
       },
     });
-
-    // Emit notification via socket
-    try {
-      emitNewNotification(friendRequest.senderId, notification);
-    } catch (err) {
-      console.error("Failed to emit notification:", err);
-    }
 
     const duration = Date.now() - startTime;
     apiLogger.logApiRequest(

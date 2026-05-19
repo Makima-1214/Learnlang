@@ -391,21 +391,56 @@ enum ActivityType {
   FRIEND_ACCEPTED
 }
 
+enum NotificationType {
+  // Social/Friends
+  FOLLOW
+  FRIEND_REQUEST
+  FRIEND_REQUEST_ACCEPTED
+  FRIEND_ADDED
+  UNFOLLOW
+  
+  // Blog/Content
+  BLOG_COMMENT
+  BLOG_COMMENT_REPLY
+  BLOG_REACTION
+  BLOG_PUBLISHED
+  
+  // Quiz/Learning
+  QUIZ_CREATED
+  QUIZ_SHARED
+  QUIZ_RESULT
+  LESSON_COMPLETED
+  
+  // Chat/Messages
+  MESSAGE_RECEIVED
+  GROUP_MESSAGE
+  
+  // Discussion
+  ROOM_MESSAGE
+  ROOM_CREATED
+  
+  // System
+  SYSTEM
+  ANNOUNCEMENT
+}
+
 // Notification model - persistent user inbox
 model Notification {
-  id          String   @id @default(cuid())
-  userId      String   // recipient
+  id          String           @id @default(cuid())
+  userId      String           // recipient
+  type        NotificationType @default(SYSTEM)
   title       String
-  description String?  @db.Text
-  icon        String?  @db.Text // icon name or path
-  link        String?  @db.Text // optional link for action
-  isRead      Boolean  @default(false)
-  metadata    String?  @db.LongText
-  createdAt   DateTime @default(now())
+  description String?          @db.Text
+  icon        String?          @db.Text // icon name or emoji
+  link        String?          @db.Text // optional link for action
+  isRead      Boolean          @default(false)
+  metadata    String?          @db.LongText // JSON string for additional data
+  createdAt   DateTime         @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([createdAt])
+  @@index([type])
   @@map("notifications")
 }

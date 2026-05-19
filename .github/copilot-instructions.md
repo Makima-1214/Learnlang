@@ -40,16 +40,25 @@ Brief focused guidance to help coding agents be productive in this repository.
 ## 5. Code locations to reference for common tasks
 
 - Root layout & providers: `app/layout.js`, `app/providers.js` — theme, fonts, global UI.
+- Pages by feature:
+  - Learning: `app/learn/page.js`, `app/history/page.js`
+  - Quiz: `app/quiz/[id]/page.js`, `app/admin/quizzes/`
+  - Blog: `app/blogs/[slug]/page.js`
+  - Chat: `app/chats/page.js` (direct messaging with real-time WebSocket)
+  - Community: `app/diskusi/[roomId]/page.js` (discussion rooms), `app/friends/page.js` (follow/friend management)
 - API handlers: `app/api/*/route.js` (search here for request/response patterns).
+  - Messages: `app/api/messages/*` (send, list, attachments)
+  - Chat queries: `app/api/messages/conversation/[userId]`, `app/api/messages/list`
 - Validation & schemas: `lib/validation.js` — all request body validators.
 - Rate limiting: `lib/ratelimit.js` — preset limiters and middleware.
 - Logging: `lib/logger.js` — centralized logging with namespaces.
 - Error handling: `lib/api-response.js` — standardized API responses + `withErrorHandler` wrapper.
 - Error boundaries: `components/ErrorBoundary.jsx` — React error UI.
-- Realtime helpers: `lib/socket.js` and server bootstrap `server.js`.
-- Database models & intent: `prisma/schema.prisma` (History scoring, Role enum, Quiz models).
+- Notifications: `lib/notifications.js` — universal notification system with `createNotification()`, `createBulkNotifications()`, helper functions for all features.
+- Realtime helpers: `lib/socket.js` (emit helpers: `emitNewComment`, `emitNewMessage`, `emitNewPrivateMessage`), `lib/friends-utils.js` (follow state sync) and server bootstrap `server.js`.
+- Database models & intent: `prisma/schema.prisma` (History scoring, Role enum, Quiz models, Message/Conversation schemas, NotificationType enum).
 - Auth flow: `lib/auth.js` and NextAuth config via `app/api/auth/[...nextauth]/route.js`.
-- UI components: `components/` (examples: `BlogComments.jsx`, `BlogReactions.jsx`).
+- UI components: `components/` (examples: `BlogComments.jsx`, `BlogReactions.jsx`, `ChatWindow.jsx`).
 
 ## 6. Testing infrastructure & guidelines
 
@@ -191,21 +200,46 @@ spy.mockRestore();
 
 ## 8. Helpful examples for code edits
 
+- **Send a notification to any user:** use `createNotification()` from `lib/notifications.js` for any feature event:
+
+  ```javascript
+  import { createNotification, NotificationType } from "@/lib/notifications";
+
+  await createNotification({
+    userId: recipientId,
+    type: NotificationType.BLOG_COMMENT,
+    title: "Komentar Baru",
+    description: `${userName} berkomentar pada artikel Anda`,
+    icon: "💬", // Optional, defaults to type's icon
+    link: `/blogs/${blogSlug}`,
+    metadata: { commentId, blogId }, // Optional, passed as object
+  });
+  ```
+
+  - Types available: `FOLLOW`, `FRIEND_REQUEST`, `FRIEND_REQUEST_ACCEPTED`, `BLOG_COMMENT`, `BLOG_REACTION`, `QUIZ_CREATED`, `MESSAGE_RECEIVED`, `ROOM_MESSAGE`, etc.
+  - Automatically emits real-time notification via Socket.IO to recipient's `user:{userId}` room
+  - Use `createBulkNotifications()` for broadcasting to multiple users (e.g., all followers)
+
 - **Emitting a new comment from server code:** call `emitNewComment(blogSlug, comment)` from `lib/socket.js` — this uses `blog:{slug}` room.
+- **Emitting a new private message:** call `emitNewPrivateMessage(receiverId, message)` from `lib/socket.js` — this broadcasts to recipient's real-time chat.
 - **Access Prisma:** `import { prisma } from '@/lib/prisma'` and follow existing patterns (use `.findUnique`, `.create`, etc.).
 - **Update session fields:** follow `authOptions.callbacks.jwt` and `.session` in `lib/auth.js` to keep token/session in sync.
 - **Validate API request:** import `schemas` from `lib/validation`, check `schemas.registerSchema(body)` before processing.
 - **Rate limit a route:** import `limiters, getRateLimitKey` from `lib/ratelimit`, check `limiters.evaluate.middleware()` early in handler.
 - **Log API activity:** use `apiLogger.logApiRequest(method, path, statusCode, duration)` instead of console.log.
 - **Return standardized response:** use `jsonResponse(ApiResponse.success(data), 200)` or `ApiResponse.validationError(errors)`.
+- **Follow state sync in UI:** import functions from `lib/friends-utils.js` (`buildFollowingIdSet`, `applyFollowStateToList`, `syncFollowStateAcrossCollections`) to keep friend lists in sync after follow/unfollow actions.
 
 ## 9. Non-obvious gotchas
 
 - Dev server uses `node server.js`. Replacing the start command with `next dev` will remove the Socket.IO integration.
+- Chat page (`app/chats/page.js`) is a server component that reads `searchParams.userId` and passes `initialUserId` prop to client component (`ChatsClient`). This avoids prerender bailout for dynamic routes in Next.js 16.
+
 - Prisma client uses a global variable to avoid 'too many connections' during HMR in dev — keep that pattern.
 - Global sockets are stored on `global.io`; accessing before server boot will throw (see `getIO()` in `lib/socket.js`).
 - Validation helpers return truthy/falsy values, not always strict booleans — use `.toBeFalsy()` in tests, not `.toBe(false)`.
 - Logger respects `LOG_LEVEL` environment variable — if no logs appear, check env and `jest.setup.js`.
 - Rate limiter uses in-memory Map (not Redis yet) — will reset on server restart, use for dev only.
+- **Notification system is universal:** Use `createNotification()` from `lib/notifications.js` for ANY feature that needs to notify users. Don't create inline `prisma.notification.create()` calls — the utility handles both DB persistence and real-time emission in one call. See `lib/notifications.js` for all available notification types and helper functions.
 
 If anything here is incomplete or you want more examples, tell me which area to expand.

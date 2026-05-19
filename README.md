@@ -138,6 +138,9 @@ learnlang/
 │   ├── admin/                # Admin pages
 │   ├── quiz/                 # Quiz pages
 │   ├── blogs/                # Blog pages
+│   ├── chats/                # Direct messaging (real-time)
+│   ├── diskusi/              # Discussion rooms
+│   ├── friends/              # Friend management
 │   ├── layout.js             # Root layout
 │   └── page.js               # Home page
 ├── components/               # Reusable components

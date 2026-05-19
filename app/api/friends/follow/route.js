@@ -5,7 +5,7 @@ import { ApiResponse, jsonResponse } from "@/lib/api-response";
 import { schemas } from "@/lib/validation";
 import { apiLogger } from "@/lib/logger";
 import { limiters, getRateLimitKey } from "@/lib/ratelimit";
-import { emitNewNotification } from "@/lib/socket";
+import { createNotification, NotificationType } from "@/lib/notifications";
 
 /**
  * POST /api/friends/follow
@@ -82,34 +82,19 @@ export async function POST(req) {
       select: { id: true, name: true, username: true, avatar: true },
     });
 
-    const followNotification = await prisma.notification.create({
-      data: {
-        userId: followingId,
-        title: "Follower Baru",
-        description: `${follower?.name ?? "Seseorang"} mulai mengikuti Anda`,
-        icon: "👤",
-        link: `/user/${follower?.username || follower?.id}`,
-        metadata: JSON.stringify({
-          type: "FOLLOW",
-          followerId: userId,
-          followId: follow.id,
-        }),
+    // Create and emit follow notification
+    await createNotification({
+      userId: followingId,
+      type: NotificationType.FOLLOW,
+      title: "Follower Baru",
+      description: `${follower?.name ?? "Seseorang"} mulai mengikuti Anda`,
+      icon: "👤",
+      link: `/user/${follower?.username || follower?.id}`,
+      metadata: {
+        followerId: userId,
+        followId: follow.id,
       },
     });
-
-    try {
-      emitNewNotification(followingId, {
-        id: followNotification.id,
-        title: followNotification.title,
-        description: followNotification.description,
-        icon: followNotification.icon,
-        link: followNotification.link,
-        isRead: followNotification.isRead,
-        createdAt: followNotification.createdAt,
-      });
-    } catch (error) {
-      console.error("Emit follow notification error:", error);
-    }
 
     // Check for mutual follow (user follows me back?)
     const mutualFollow = await prisma.follow.findUnique({
@@ -145,56 +130,27 @@ export async function POST(req) {
       }
       isFriend = true;
 
-      const friendshipNotificationForUser = await prisma.notification.create({
-        data: {
+      // Notify both users of new friendship
+      await Promise.all([
+        createNotification({
           userId,
+          type: NotificationType.FRIEND_ADDED,
           title: "Teman Baru",
           description: `${targetUser.name} juga mengikuti Anda. Anda sekarang berteman!`,
           icon: "🤝",
           link: `/friends`,
-          metadata: JSON.stringify({
-            type: "FRIENDSHIP_CREATED",
-            friendId: followingId,
-          }),
-        },
-      });
-
-      const friendshipNotificationForTarget = await prisma.notification.create({
-        data: {
+          metadata: { friendId: followingId },
+        }),
+        createNotification({
           userId: followingId,
+          type: NotificationType.FRIEND_ADDED,
           title: "Teman Baru",
           description: `${follower?.name ?? "Seseorang"} juga mengikuti Anda. Anda sekarang berteman!`,
           icon: "🤝",
           link: `/friends`,
-          metadata: JSON.stringify({
-            type: "FRIENDSHIP_CREATED",
-            friendId: userId,
-          }),
-        },
-      });
-
-      try {
-        emitNewNotification(userId, {
-          id: friendshipNotificationForUser.id,
-          title: friendshipNotificationForUser.title,
-          description: friendshipNotificationForUser.description,
-          icon: friendshipNotificationForUser.icon,
-          link: friendshipNotificationForUser.link,
-          isRead: friendshipNotificationForUser.isRead,
-          createdAt: friendshipNotificationForUser.createdAt,
-        });
-        emitNewNotification(followingId, {
-          id: friendshipNotificationForTarget.id,
-          title: friendshipNotificationForTarget.title,
-          description: friendshipNotificationForTarget.description,
-          icon: friendshipNotificationForTarget.icon,
-          link: friendshipNotificationForTarget.link,
-          isRead: friendshipNotificationForTarget.isRead,
-          createdAt: friendshipNotificationForTarget.createdAt,
-        });
-      } catch (error) {
-        console.error("Emit friendship notification error:", error);
-      }
+          metadata: { friendId: userId },
+        }),
+      ]);
     }
 
     const duration = Date.now() - startTime;
