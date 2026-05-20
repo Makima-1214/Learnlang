@@ -6,6 +6,10 @@
             "approve": true,
             "matchCommandLine": true
         },
-        "npx prisma": true
+        "npx prisma": true,
+        "/^git checkout app/user/\\[username\\]/page\\.js$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     }
 }

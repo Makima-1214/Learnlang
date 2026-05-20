@@ -5,6 +5,7 @@ import { ApiResponse, jsonResponse } from "@/lib/api-response";
 import { apiLogger } from "@/lib/logger";
 import { limiters, getRateLimitKey } from "@/lib/ratelimit";
 import { createNotification, NotificationType } from "@/lib/notifications";
+import { awardFriendAchievements } from "@/lib/achievements";
 
 /**
  * POST /api/friends/request/[id]/accept
@@ -116,6 +117,15 @@ export async function POST(req, { params }) {
         acceptedBy: userId,
       },
     });
+
+    try {
+      await Promise.all([
+        awardFriendAchievements(userId),
+        awardFriendAchievements(friendRequest.senderId),
+      ]);
+    } catch (achievementError) {
+      console.error("Failed to award friend achievements:", achievementError);
+    }
 
     const duration = Date.now() - startTime;
     apiLogger.logApiRequest(

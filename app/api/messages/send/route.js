@@ -5,6 +5,7 @@ import { ApiResponse, jsonResponse } from "@/lib/api-response";
 import { apiLogger } from "@/lib/logger";
 import { limiters, getRateLimitKey } from "@/lib/ratelimit";
 import { emitNewPrivateMessage } from "@/lib/socket";
+import { awardDirectMessageAchievements } from "@/lib/achievements";
 
 /**
  * POST /api/messages/send
@@ -155,6 +156,12 @@ export async function POST(req) {
     });
 
     emitNewPrivateMessage(userId, receiverId, message);
+
+    try {
+      await awardDirectMessageAchievements(userId);
+    } catch (achievementError) {
+      console.error("Failed to award DM achievements:", achievementError);
+    }
 
     const duration = Date.now() - startTime;
     apiLogger.logApiRequest("POST", "/api/messages/send", 200, duration);

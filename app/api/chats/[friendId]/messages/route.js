@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ApiResponse, jsonResponse } from "@/lib/api-response";
 import { apiLogger } from "@/lib/logger";
+import { awardDirectMessageAchievements } from "@/lib/achievements";
 
 /**
  * GET /api/chats/[friendId]/messages
@@ -159,6 +160,12 @@ export async function POST(req, { params }) {
       emitNewPrivateMessage(friendId, message);
     } catch (err) {
       console.error("Failed to emit message:", err);
+    }
+
+    try {
+      await awardDirectMessageAchievements(userId);
+    } catch (achievementError) {
+      console.error("Failed to award chat achievements:", achievementError);
     }
 
     const duration = Date.now() - startTime;

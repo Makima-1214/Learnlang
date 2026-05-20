@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  getAchievementProgress,
+  getUserAchievements,
+} from "@/lib/achievements";
 
 export async function GET(request, { params }) {
   try {
@@ -33,6 +37,11 @@ export async function GET(request, { params }) {
         }),
       ],
     );
+
+    const [achievementData, achievementProgress] = await Promise.all([
+      getUserAchievements(user.id),
+      getAchievementProgress(user.id),
+    ]);
 
     let viewerRelationship = { isFollowing: false, isFriend: false };
 
@@ -68,6 +77,15 @@ export async function GET(request, { params }) {
       followingCount,
       friendshipCount,
       viewerRelationship,
+      achievements: achievementData.achievements,
+      achievementSummary: {
+        count: achievementData.count,
+        totalPoints: achievementData.totalPoints,
+        unlocked: achievementProgress.unlocked,
+        total: achievementProgress.total,
+        percentage: achievementProgress.percentage,
+        nextAchievements: achievementProgress.nextAchievements,
+      },
     });
   } catch (error) {
     console.error("Error fetching user by id:", error);

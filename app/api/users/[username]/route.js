@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  getAchievementProgress,
+  getUserAchievements,
+} from "@/lib/achievements";
 
 // GET - Get public user profile by username
 export async function GET(request, { params }) {
@@ -128,6 +132,11 @@ export async function GET(request, { params }) {
       },
     });
 
+    const [achievementData, achievementProgress] = await Promise.all([
+      getUserAchievements(user.id),
+      getAchievementProgress(user.id),
+    ]);
+
     return NextResponse.json({
       ...user,
       followersCount,
@@ -147,6 +156,15 @@ export async function GET(request, { params }) {
           acc[m.mode] = m._count.id;
           return acc;
         }, {}),
+      },
+      achievements: achievementData.achievements,
+      achievementSummary: {
+        count: achievementData.count,
+        totalPoints: achievementData.totalPoints,
+        unlocked: achievementProgress.unlocked,
+        total: achievementProgress.total,
+        percentage: achievementProgress.percentage,
+        nextAchievements: achievementProgress.nextAchievements,
       },
       recentActivity,
     });

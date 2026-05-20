@@ -507,6 +507,32 @@ Setiap terjemahan akan dinilai oleh AI dengan:
 
 > 📝 *Artikel ini masih dalam tahap draft dan akan diperbarui.*`,
     },
+    {
+      title: "Rutinitas 15 Menit untuk Konsisten Belajar Bahasa Inggris",
+      slug: "rutinitas-15-menit-belajar-bahasa-inggris",
+      excerpt:
+        "Belajar bahasa Inggris tidak harus lama. Dengan rutinitas 15 menit yang konsisten, progresmu bisa lebih stabil setiap hari.",
+      coverImage: null,
+      published: true,
+      authorId: admin.id,
+      content: `# Rutinitas 15 Menit untuk Konsisten Belajar Bahasa Inggris
+
+Konsistensi lebih penting daripada durasi panjang. Artikel ini merangkum rutinitas singkat yang bisa kamu ulang setiap hari agar belajar tetap berjalan tanpa terasa berat.
+
+## 1. 5 Menit Review Kosakata
+
+Ulangi 5-10 kata baru yang sudah dipelajari kemarin.
+
+## 2. 5 Menit Membaca
+
+Baca satu paragraf artikel, lalu tandai kata yang belum dipahami.
+
+## 3. 5 Menit Menulis atau Menerjemahkan
+
+Tulis satu atau dua kalimat sederhana, atau terjemahkan kalimat pendek di LernLang.
+
+> Kunci utamanya adalah kecil, konsisten, dan bisa diulang setiap hari.`,
+    },
   ];
 
   let blogCount = 0;
@@ -554,6 +580,18 @@ Setiap terjemahan akan dinilai oleh AI dengan:
         userId: users[2].id,
         blogId: firstBlog.id,
       },
+      {
+        content:
+          "Saya suka struktur artikelnya, sangat mudah dipahami oleh pemula.",
+        userId: users[3].id,
+        blogId: firstBlog.id,
+      },
+      {
+        content:
+          "Contoh-contohnya jelas dan relevan dengan kebutuhan belajar sehari-hari.",
+        userId: users[4].id,
+        blogId: firstBlog.id,
+      },
     ];
 
     for (const c of comments) {
@@ -562,7 +600,10 @@ Setiap terjemahan akan dinilai oleh AI dengan:
           id: `comment-${c.userId}-${c.blogId}`,
         },
         update: {},
-        create: c,
+        create: {
+          id: `comment-${c.userId}-${c.blogId}`,
+          ...c,
+        },
       });
     }
     console.log(`✅ Created ${comments.length} comments`);
@@ -588,14 +629,9 @@ Setiap terjemahan akan dinilai oleh AI dengan:
     console.log(`✅ Created reactions`);
   }
 
-  console.log("\n🎉 Seeding completed!\n");
-  console.log("📌 Login credentials:");
-  console.log("   Admin: admin@learnlang.com / admin123");
-  console.log("   Users: budi@example.com / password123");
-  console.log("          siti@example.com / password123");
-  console.log("          andi@example.com / password123");
-  console.log("          dewi@example.com / password123");
-  console.log("          rizky@example.com / password123");
+  console.log(
+    "\n🧩 Core seed data created; continuing with quizzes, rooms, and feature data...\n",
+  );
 
   // ============================================
   // QUIZZES
@@ -923,6 +959,511 @@ Setiap terjemahan akan dinilai oleh AI dengan:
     });
   }
   console.log(`✅ Sample messages added to ${generalRoom.name}`);
+
+  const samplePrivateMessage = await prisma.privateMessage.findFirst({
+    where: {
+      senderId: admin.id,
+      receiverId: users[0].id,
+      content: "Halo Budi, kalau ada pertanyaan bisa langsung chat saya ya.",
+    },
+  });
+
+  if (!samplePrivateMessage) {
+    await prisma.privateMessage.create({
+      data: {
+        senderId: admin.id,
+        receiverId: users[0].id,
+        content: "Halo Budi, kalau ada pertanyaan bisa langsung chat saya ya.",
+      },
+    });
+    console.log("✅ Sample private message created");
+  }
+
+  // ============================================
+  // SOCIAL RELATIONSHIPS
+  // ============================================
+  console.log("\n🤝 Seeding follows and friendships...");
+
+  const followSeeds = [
+    { followerId: users[0].id, followingId: users[1].id },
+    { followerId: users[1].id, followingId: users[0].id },
+    { followerId: users[2].id, followingId: users[0].id },
+    { followerId: users[3].id, followingId: users[0].id },
+    { followerId: users[4].id, followingId: users[0].id },
+    { followerId: admin.id, followingId: users[0].id },
+  ];
+
+  for (const follow of followSeeds) {
+    await prisma.follow.upsert({
+      where: {
+        followerId_followingId: {
+          followerId: follow.followerId,
+          followingId: follow.followingId,
+        },
+      },
+      update: {},
+      create: follow,
+    });
+  }
+
+  const friendshipSeeds = [
+    [users[0].id, users[1].id],
+    [users[0].id, users[2].id],
+  ];
+
+  for (const [firstUserId, secondUserId] of friendshipSeeds) {
+    const [initiatorId, friendId] =
+      firstUserId < secondUserId
+        ? [firstUserId, secondUserId]
+        : [secondUserId, firstUserId];
+
+    await prisma.friendship.upsert({
+      where: {
+        initiatorId_friendId: {
+          initiatorId,
+          friendId,
+        },
+      },
+      update: {},
+      create: {
+        initiatorId,
+        friendId,
+      },
+    });
+  }
+  console.log("✅ Follow and friendship data created");
+
+  // ============================================
+  // QUIZ RESULTS
+  // ============================================
+  console.log("\n🏆 Seeding quiz results...");
+
+  const quizResultSeeds = [
+    {
+      id: `quizresult-${users[0].id}-${quiz1.id}-1`,
+      quizId: quiz1.id,
+      userId: users[0].id,
+      score: 10,
+      totalQuestions: 10,
+      answers: JSON.stringify({ attempt: 1, source: "seed" }),
+      completedAt: new Date("2026-01-01T08:00:00.000Z"),
+    },
+    {
+      id: `quizresult-${users[0].id}-${quiz1.id}-2`,
+      quizId: quiz1.id,
+      userId: users[0].id,
+      score: 10,
+      totalQuestions: 10,
+      answers: JSON.stringify({ attempt: 2, source: "seed" }),
+      completedAt: new Date("2026-01-02T08:00:00.000Z"),
+    },
+    {
+      id: `quizresult-${users[0].id}-${quiz2.id}-3`,
+      quizId: quiz2.id,
+      userId: users[0].id,
+      score: 10,
+      totalQuestions: 10,
+      answers: JSON.stringify({ attempt: 3, source: "seed" }),
+      completedAt: new Date("2026-01-03T08:00:00.000Z"),
+    },
+    {
+      id: `quizresult-${users[0].id}-${quiz2.id}-4`,
+      quizId: quiz2.id,
+      userId: users[0].id,
+      score: 10,
+      totalQuestions: 10,
+      answers: JSON.stringify({ attempt: 4, source: "seed" }),
+      completedAt: new Date("2026-01-04T08:00:00.000Z"),
+    },
+    {
+      id: `quizresult-${users[0].id}-${quiz1.id}-5`,
+      quizId: quiz1.id,
+      userId: users[0].id,
+      score: 10,
+      totalQuestions: 10,
+      answers: JSON.stringify({ attempt: 5, source: "seed" }),
+      completedAt: new Date("2026-01-05T08:00:00.000Z"),
+    },
+    {
+      id: `quizresult-${users[1].id}-${quiz1.id}-1`,
+      quizId: quiz1.id,
+      userId: users[1].id,
+      score: 8,
+      totalQuestions: 10,
+      answers: JSON.stringify({ attempt: 1, source: "seed" }),
+      completedAt: new Date("2026-01-02T09:00:00.000Z"),
+    },
+    {
+      id: `quizresult-${users[2].id}-${quiz2.id}-1`,
+      quizId: quiz2.id,
+      userId: users[2].id,
+      score: 7,
+      totalQuestions: 10,
+      answers: JSON.stringify({ attempt: 1, source: "seed" }),
+      completedAt: new Date("2026-01-02T10:00:00.000Z"),
+    },
+    {
+      id: `quizresult-${users[3].id}-${quiz1.id}-1`,
+      quizId: quiz1.id,
+      userId: users[3].id,
+      score: 9,
+      totalQuestions: 10,
+      answers: JSON.stringify({ attempt: 1, source: "seed" }),
+      completedAt: new Date("2026-01-03T10:00:00.000Z"),
+    },
+    {
+      id: `quizresult-${users[4].id}-${quiz2.id}-1`,
+      quizId: quiz2.id,
+      userId: users[4].id,
+      score: 6,
+      totalQuestions: 10,
+      answers: JSON.stringify({ attempt: 1, source: "seed" }),
+      completedAt: new Date("2026-01-04T10:00:00.000Z"),
+    },
+  ];
+
+  for (const result of quizResultSeeds) {
+    await prisma.quizResult.upsert({
+      where: { id: result.id },
+      update: {},
+      create: result,
+    });
+  }
+  console.log(`✅ ${quizResultSeeds.length} quiz results created`);
+
+  // ============================================
+  // ACHIEVEMENTS
+  // ============================================
+  console.log("\n🏅 Seeding sample achievements...");
+
+  const achievementSeeds = [
+    {
+      userId: admin.id,
+      type: "FIRST_BLOG",
+      title: "Blogger Pemula",
+      description: "Mempublikasikan blog pertama",
+      icon: "✍️",
+      badgeColor: "blue",
+      points: 10,
+    },
+    {
+      userId: admin.id,
+      type: "BLOGGER",
+      title: "Blogger Aktif",
+      description: "Mempublikasikan 5 blog post",
+      icon: "📝",
+      badgeColor: "orange",
+      points: 50,
+    },
+    {
+      userId: admin.id,
+      type: "COMMUNITY_HELPER",
+      title: "Pembantu Komunitas",
+      description: "Membantu 10 orang (reaksi/komentar)",
+      icon: "🤝",
+      badgeColor: "green",
+      points: 100,
+    },
+    {
+      userId: admin.id,
+      type: "ROOM_CREATOR",
+      title: "Pembuka Ruang",
+      description: "Membuat room diskusi pertama",
+      icon: "🏠",
+      badgeColor: "cyan",
+      points: 20,
+    },
+    {
+      userId: admin.id,
+      type: "ROOM_HOST",
+      title: "Tuan Rumah Komunitas",
+      description: "Membuat 3 room diskusi",
+      icon: "🗣️",
+      badgeColor: "blue",
+      points: 75,
+    },
+    {
+      userId: admin.id,
+      type: "DM_STARTER",
+      title: "Pembuka Obrolan",
+      description: "Mengirim pesan pribadi pertama",
+      icon: "💌",
+      badgeColor: "pink",
+      points: 20,
+    },
+    {
+      userId: users[0].id,
+      type: "FIRST_LESSON",
+      title: "Pelajaran Pertama",
+      description: "Menyelesaikan pelajaran pertama",
+      icon: "📚",
+      badgeColor: "green",
+      points: 10,
+    },
+    {
+      userId: users[0].id,
+      type: "FIRST_FRIEND",
+      title: "Teman Pertama",
+      description: "Menambahkan teman pertama Anda",
+      icon: "👥",
+      badgeColor: "blue",
+      points: 10,
+    },
+    {
+      userId: users[1].id,
+      type: "FIRST_FRIEND",
+      title: "Teman Pertama",
+      description: "Menambahkan teman pertama Anda",
+      icon: "👥",
+      badgeColor: "blue",
+      points: 10,
+    },
+    {
+      userId: users[0].id,
+      type: "FIRST_QUIZ",
+      title: "Kuis Pertama",
+      description: "Menyelesaikan kuis pertama",
+      icon: "❓",
+      badgeColor: "blue",
+      points: 10,
+    },
+    {
+      userId: users[0].id,
+      type: "PERFECT_SCORE",
+      title: "Skor Sempurna",
+      description: "Mendapatkan skor sempurna (100%) pada kuis",
+      icon: "💯",
+      badgeColor: "red",
+      points: 50,
+    },
+    {
+      userId: users[0].id,
+      type: "QUIZ_MASTER",
+      title: "Master Kuis",
+      description: "Mendapatkan skor sempurna di 5 kuis",
+      icon: "🏆",
+      badgeColor: "gold",
+      points: 100,
+    },
+    {
+      userId: users[1].id,
+      type: "FIRST_LESSON",
+      title: "Pelajaran Pertama",
+      description: "Menyelesaikan pelajaran pertama",
+      icon: "📚",
+      badgeColor: "green",
+      points: 10,
+    },
+    {
+      userId: users[1].id,
+      type: "FIRST_QUIZ",
+      title: "Kuis Pertama",
+      description: "Menyelesaikan kuis pertama",
+      icon: "❓",
+      badgeColor: "blue",
+      points: 10,
+    },
+    {
+      userId: users[2].id,
+      type: "FIRST_LESSON",
+      title: "Pelajaran Pertama",
+      description: "Menyelesaikan pelajaran pertama",
+      icon: "📚",
+      badgeColor: "green",
+      points: 10,
+    },
+    {
+      userId: users[2].id,
+      type: "FIRST_QUIZ",
+      title: "Kuis Pertama",
+      description: "Menyelesaikan kuis pertama",
+      icon: "❓",
+      badgeColor: "blue",
+      points: 10,
+    },
+    {
+      userId: users[3].id,
+      type: "FIRST_LESSON",
+      title: "Pelajaran Pertama",
+      description: "Menyelesaikan pelajaran pertama",
+      icon: "📚",
+      badgeColor: "green",
+      points: 10,
+    },
+    {
+      userId: users[3].id,
+      type: "FIRST_QUIZ",
+      title: "Kuis Pertama",
+      description: "Menyelesaikan kuis pertama",
+      icon: "❓",
+      badgeColor: "blue",
+      points: 10,
+    },
+    {
+      userId: users[4].id,
+      type: "FIRST_LESSON",
+      title: "Pelajaran Pertama",
+      description: "Menyelesaikan pelajaran pertama",
+      icon: "📚",
+      badgeColor: "green",
+      points: 10,
+    },
+    {
+      userId: users[4].id,
+      type: "FIRST_QUIZ",
+      title: "Kuis Pertama",
+      description: "Menyelesaikan kuis pertama",
+      icon: "❓",
+      badgeColor: "blue",
+      points: 10,
+    },
+    {
+      userId: users[0].id,
+      type: "COMMENTATOR",
+      title: "Komentator",
+      description: "Meninggalkan 50 komentar",
+      icon: "💬",
+      badgeColor: "green",
+      points: 50,
+    },
+    {
+      userId: users[0].id,
+      type: "COMMUNITY_HELPER",
+      title: "Pembantu Komunitas",
+      description: "Membantu 10 orang (reaksi/komentar)",
+      icon: "🤝",
+      badgeColor: "green",
+      points: 100,
+    },
+    {
+      userId: users[0].id,
+      type: "CONTENT_CREATOR",
+      title: "Pembuat Konten",
+      description: "Membuat konten di 3+ fitur berbeda",
+      icon: "🎨",
+      badgeColor: "purple",
+      points: 75,
+    },
+    {
+      userId: users[0].id,
+      type: "SOCIAL_BUTTERFLY",
+      title: "Kupu-kupu Sosial",
+      description: "Memiliki 50+ pengikut",
+      icon: "🦋",
+      badgeColor: "pink",
+      points: 100,
+    },
+    {
+      userId: users[1].id,
+      type: "ROOM_CREATOR",
+      title: "Pembuka Ruang",
+      description: "Membuat room diskusi pertama",
+      icon: "🏠",
+      badgeColor: "cyan",
+      points: 20,
+    },
+    {
+      userId: users[1].id,
+      type: "DM_STARTER",
+      title: "Pembuka Obrolan",
+      description: "Mengirim pesan pribadi pertama",
+      icon: "💌",
+      badgeColor: "pink",
+      points: 20,
+    },
+    {
+      userId: users[1].id,
+      type: "EARLY_BIRD",
+      title: "Burung Pagi",
+      description: "Bergabung dengan ruang diskusi pertama",
+      icon: "🐦",
+      badgeColor: "yellow",
+      points: 10,
+    },
+    {
+      userId: users[2].id,
+      type: "ROOM_HOST",
+      title: "Tuan Rumah Komunitas",
+      description: "Membuat 3 room diskusi",
+      icon: "🗣️",
+      badgeColor: "blue",
+      points: 75,
+    },
+    {
+      userId: users[2].id,
+      type: "COMMUNITY_VOICE",
+      title: "Suara Komunitas",
+      description: "Mengirim 25 pesan di room diskusi",
+      icon: "📢",
+      badgeColor: "emerald",
+      points: 75,
+    },
+    {
+      userId: users[3].id,
+      type: "QUIZ_MASTER",
+      title: "Master Kuis",
+      description: "Mendapatkan skor sempurna di 5 kuis",
+      icon: "🏆",
+      badgeColor: "gold",
+      points: 100,
+    },
+    {
+      userId: users[3].id,
+      type: "PERFECT_SCORE",
+      title: "Skor Sempurna",
+      description: "Mendapatkan skor sempurna (100%) pada kuis",
+      icon: "💯",
+      badgeColor: "red",
+      points: 50,
+    },
+    {
+      userId: users[4].id,
+      type: "BLOGGER",
+      title: "Blogger Aktif",
+      description: "Mempublikasikan 5 blog post",
+      icon: "📝",
+      badgeColor: "orange",
+      points: 50,
+    },
+    {
+      userId: users[4].id,
+      type: "VIRAL_POST",
+      title: "Viral!",
+      description: "Mendapatkan 100+ reaksi pada sebuah postingan",
+      icon: "🚀",
+      badgeColor: "red",
+      points: 100,
+    },
+  ];
+
+  for (const achievement of achievementSeeds) {
+    await prisma.achievement.upsert({
+      where: {
+        userId_type: {
+          userId: achievement.userId,
+          type: achievement.type,
+        },
+      },
+      update: {
+        title: achievement.title,
+        description: achievement.description,
+        icon: achievement.icon,
+        badgeColor: achievement.badgeColor,
+        points: achievement.points,
+      },
+      create: achievement,
+    });
+  }
+  console.log(`✅ ${achievementSeeds.length} achievements seeded`);
+
+  console.log("\n🎉 Seeding completed!\n");
+  console.log("📌 Login credentials:");
+  console.log("   Admin: admin@learnlang.com / admin123");
+  console.log("   Users: budi@example.com / password123");
+  console.log("          siti@example.com / password123");
+  console.log("          andi@example.com / password123");
+  console.log("          dewi@example.com / password123");
+  console.log("          rizky@example.com / password123");
 }
 
 main()

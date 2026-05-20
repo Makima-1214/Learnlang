@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { emitReactionUpdate } from "@/lib/socket";
+import { awardViralPostAchievement } from "@/lib/achievements";
 
 // GET all reactions for a blog
 export async function GET(request, { params }) {
@@ -129,6 +130,15 @@ export async function POST(request, { params }) {
 
       // Emit real-time event
       emitReactionUpdate(slug, { action: "added", emoji });
+
+      try {
+        await awardViralPostAchievement(blog.id);
+      } catch (achievementError) {
+        console.error(
+          "Failed to award viral post achievement:",
+          achievementError,
+        );
+      }
 
       return NextResponse.json({ action: "added", emoji, reaction });
     }

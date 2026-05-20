@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { awardQuizAchievements } from "@/lib/achievements";
 
 // POST - Submit quiz answers and get score
 export async function POST(request, { params }) {
@@ -66,6 +67,12 @@ export async function POST(request, { params }) {
         answers: JSON.stringify(answers),
       },
     });
+
+    try {
+      await awardQuizAchievements(session.user.id);
+    } catch (achievementError) {
+      console.error("Failed to award quiz achievements:", achievementError);
+    }
 
     return NextResponse.json({
       resultId: result.id,

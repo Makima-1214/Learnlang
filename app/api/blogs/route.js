@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { awardBlogAuthorAchievements } from "@/lib/achievements";
 
 // GET all blogs (public: published only, admin: all)
 export async function GET(request) {
@@ -73,6 +74,12 @@ export async function POST(request) {
         author: { select: { name: true, email: true } },
       },
     });
+
+    try {
+      await awardBlogAuthorAchievements(session.user.id);
+    } catch (achievementError) {
+      console.error("Failed to award blog achievements:", achievementError);
+    }
 
     return NextResponse.json(blog, { status: 201 });
   } catch (error) {

@@ -54,6 +54,8 @@ model User {
   activities Activity[]
   // Notifications inbox
   notifications Notification[]
+  // Achievements
+  achievements Achievement[]
   
   @@map("users")
 }
@@ -443,4 +445,60 @@ model Notification {
   @@index([createdAt])
   @@index([type])
   @@map("notifications")
+}
+
+enum AchievementType {
+  // Social Achievements
+  FIRST_FRIEND          // Add first friend
+  FRIEND_MASTER        // Have 10+ friends
+  SOCIAL_BUTTERFLY     // Have 50+ followers
+  
+  // Learning Achievements
+  FIRST_LESSON         // Complete first lesson
+  LEARNING_STREAK_7    // Complete 7 consecutive days
+  LEARNING_STREAK_30   // Complete 30 consecutive days
+  POLYGLOT             // Complete 100 lessons total
+  LANGUAGE_EXPERT      // Complete 500 lessons total
+  
+  // Quiz Achievements
+  FIRST_QUIZ           // Complete first quiz
+  QUIZ_MASTER          // Score 100% on 5 quizzes
+  QUIZ_WIZARD          // Complete 50 quizzes
+  PERFECT_SCORE        // Get perfect score on any quiz
+  
+  // Blogging Achievements
+  FIRST_BLOG           // Publish first blog post
+  BLOGGER              // Publish 5 blog posts
+  VIRAL_POST           // Get 100+ reactions on a post
+  COMMENTATOR          // Leave 50 comments
+  
+  // Engagement Achievements
+  EARLY_BIRD           // Join first discussion room
+  COMMUNITY_HELPER     // Help 10 people (reactions/comments)
+  CONTENT_CREATOR      // Create content across 3+ features
+  ROOM_CREATOR         // Create first discussion room
+  ROOM_HOST            // Create 3 discussion rooms
+  DM_STARTER           // Send first private message
+  COMMUNITY_VOICE      // Send 25 room messages
+  LEGENDARY            // Reach 1000+ achievement points
+}
+
+model Achievement {
+  id             String          @id @default(cuid())
+  userId         String
+  type           AchievementType
+  title          String
+  description    String?         @db.Text
+  icon           String?         @db.Text      // emoji or icon name
+  badgeColor     String?         @default("blue") // color for badge display
+  points         Int             @default(10)  // XP points for achievement
+  unlockedAt     DateTime        @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type])  // Each user can only unlock each achievement once
+  @@index([userId])
+  @@index([type])
+  @@index([unlockedAt])
+  @@map("achievements")
 }

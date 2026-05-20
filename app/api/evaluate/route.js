@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { awardLearningAchievements } from "@/lib/achievements";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -141,6 +142,15 @@ Only return the JSON, nothing else.`;
           difficulty: difficulty,
         },
       });
+
+      try {
+        await awardLearningAchievements(session.user.id);
+      } catch (achievementError) {
+        console.error(
+          "Failed to award learning achievements:",
+          achievementError,
+        );
+      }
     } catch (dbError) {
       console.error("Error saving to database:", dbError);
       // Continue even if database save fails

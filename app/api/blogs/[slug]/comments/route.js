@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { emitNewComment } from "@/lib/socket";
+import { awardCommentAchievements } from "@/lib/achievements";
 
 // GET all comments for a blog
 export async function GET(request, { params }) {
@@ -91,6 +92,12 @@ export async function POST(request, { params }) {
 
     // Emit real-time event
     emitNewComment(slug, comment);
+
+    try {
+      await awardCommentAchievements(session.user.id);
+    } catch (achievementError) {
+      console.error("Failed to award comment achievements:", achievementError);
+    }
 
     return NextResponse.json(comment, { status: 201 });
   } catch (error) {
