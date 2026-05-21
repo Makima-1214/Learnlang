@@ -1209,6 +1209,31 @@ export default function MethodPracticeClient({ method }) {
                             : "Soal Berikutnya"}
                       {revealed && <ChevronRight className="ml-2 h-5 w-5" />}
                     </Button>
+
+                    {/* Feedback (Listening only) */}
+                    {revealed && (
+                      <div
+                        className="rounded-2xl p-4 border-l-4 animate-in fade-in"
+                        style={{
+                          backgroundColor: correct ? "#ecfdf5" : "#fef2f2",
+                          borderLeftColor: correct ? "#10b981" : "#ef4444",
+                        }}
+                      >
+                        <p
+                          className={`font-bold ${correct ? "text-emerald-700" : "text-red-700"}`}
+                        >
+                          {correct ? "✓ Benar!" : "✗ Salah"}
+                        </p>
+                        {!correct && (
+                          <p className="text-sm text-slate-700 mt-2">
+                            Jawaban yang benar:{" "}
+                            <span className="font-bold">
+                              {formatListeningTokens(currentQuestion.answer)}
+                            </span>
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </>
                 )}
 
@@ -1263,8 +1288,8 @@ export default function MethodPracticeClient({ method }) {
                   </>
                 )}
 
-                {/* Feedback */}
-                {revealed && (
+                {/* Feedback (Vocabulary & Grammar only) */}
+                {revealed && methodStr !== "listening" && (
                   <div
                     className="rounded-2xl p-4 border-l-4 animate-in fade-in"
                     style={{
@@ -1281,28 +1306,28 @@ export default function MethodPracticeClient({ method }) {
                       <p className="text-sm text-slate-700 mt-2">
                         Jawaban yang benar:{" "}
                         <span className="font-bold">
-                          {methodStr === "listening"
-                            ? formatListeningTokens(currentQuestion.answer)
-                            : currentQuestion.answer}
+                          {currentQuestion.answer}
                         </span>
                       </p>
                     )}
                   </div>
                 )}
 
-                {/* Next Button */}
-                <Button
-                  className="w-full h-12 rounded-2xl text-base font-bold"
-                  onClick={goNext}
-                  disabled={!revealed || submitting}
-                >
-                  {submitting
-                    ? "Mengirim..."
-                    : currentIndex === total - 1
-                      ? "Selesaikan & Lihat Hasil"
-                      : "Soal Berikutnya"}
-                  <ChevronRight className="ml-2 h-5 w-5" />
-                </Button>
+                {/* Next Button (Vocabulary & Grammar only) */}
+                {methodStr !== "listening" && (
+                  <Button
+                    className="w-full h-12 rounded-2xl text-base font-bold"
+                    onClick={goNext}
+                    disabled={!revealed || submitting}
+                  >
+                    {submitting
+                      ? "Mengirim..."
+                      : currentIndex === total - 1
+                        ? "Selesaikan & Lihat Hasil"
+                        : "Soal Berikutnya"}
+                    <ChevronRight className="ml-2 h-5 w-5" />
+                  </Button>
+                )}
               </CardContent>
             </Card>
           )}

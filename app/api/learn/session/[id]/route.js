@@ -223,6 +223,8 @@ export async function POST(req, { params }) {
           score: correctCount,
           total: session.total,
           percentage: Math.round((correctCount / session.total) * 100),
+          createdAt: updatedSession.createdAt,
+          completedAt: updatedSession.completedAt,
         },
         results: detailedResults,
       }),

@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { ApiResponse, jsonResponse } from "@/lib/api-response";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 /**
  * POST /api/learn/session - Create a new learning session with questions
@@ -12,6 +14,10 @@ export async function POST(req) {
     if (!method || !["vocabulary", "listening", "grammar"].includes(method)) {
       return jsonResponse(ApiResponse.validationError("Invalid method"), 400);
     }
+
+    // Get user session if authenticated
+    const userSession = await getServerSession(authOptions);
+    const userId = userSession?.user?.id ?? null;
 
     // Fetch questions based on method
     let questions = [];
@@ -44,9 +50,10 @@ export async function POST(req) {
       );
     }
 
-    // Create session
+    // Create session with userId if authenticated
     const session = await prisma.learningSession.create({
       data: {
+        userId,
         method,
         level,
         total: questions.length,
