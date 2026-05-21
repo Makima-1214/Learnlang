@@ -14,25 +14,23 @@ export async function GET() {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const dailyActivity = await prisma.history.groupBy({
-      by: ["createdAt"],
-      _count: true,
+    const sessionsLast30 = await prisma.learningSession.findMany({
       where: { createdAt: { gte: thirtyDaysAgo } },
+      select: { createdAt: true },
       orderBy: { createdAt: "asc" },
     });
 
-    // Aggregate by day
     const activityByDay = {};
-    dailyActivity.forEach((item) => {
-      const day = new Date(item.createdAt).toISOString().split("T")[0];
-      activityByDay[day] = (activityByDay[day] || 0) + item._count;
+    sessionsLast30.forEach((s) => {
+      const day = new Date(s.createdAt).toISOString().split("T")[0];
+      activityByDay[day] = (activityByDay[day] || 0) + 1;
     });
     const dailyChartData = Object.entries(activityByDay).map(
       ([date, count]) => ({ date, count }),
     );
 
     // 2. Score distribution
-    const allScores = await prisma.history.findMany({
+    const allScores = await prisma.learningSession.findMany({
       select: { score: true },
     });
     const scoreRanges = [
@@ -48,19 +46,19 @@ export async function GET() {
     });
 
     // 3. Exercises by mode
-    const exercisesByMode = await prisma.history.groupBy({
-      by: ["mode"],
+    const exercisesByMode = await prisma.learningSession.groupBy({
+      by: ["method"],
       _count: true,
     });
 
     // 4. Exercises by difficulty
-    const exercisesByDifficulty = await prisma.history.groupBy({
-      by: ["difficulty"],
+    const exercisesByDifficulty = await prisma.learningSession.groupBy({
+      by: ["level"],
       _count: true,
     });
 
     // 5. Exercises by status
-    const exercisesByStatus = await prisma.history.groupBy({
+    const exercisesByStatus = await prisma.learningSession.groupBy({
       by: ["status"],
       _count: true,
     });
@@ -69,15 +67,15 @@ export async function GET() {
     const topUsers = await prisma.user.findMany({
       select: {
         name: true,
-        _count: { select: { histories: true } },
+        _count: { select: { learningSessions: true } },
       },
-      orderBy: { histories: { _count: "desc" } },
+      orderBy: { learningSessions: { _count: "desc" } },
       take: 10,
     });
 
     // 7. Average score by difficulty
-    const avgScoreByDifficulty = await prisma.history.groupBy({
-      by: ["difficulty"],
+    const avgScoreByDifficulty = await prisma.learningSession.groupBy({
+      by: ["level"],
       _avg: { score: true },
       _count: true,
     });
@@ -98,8 +96,10 @@ export async function GET() {
 
     // 9. Overall stats
     const totalUsers = await prisma.user.count();
-    const totalExercises = await prisma.history.count();
-    const avgScore = await prisma.history.aggregate({ _avg: { score: true } });
+    const totalExercises = await prisma.learningSession.count();
+    const avgScore = await prisma.learningSession.aggregate({
+      _avg: { score: true },
+    });
 
     return NextResponse.json({
       dailyActivity: dailyChartData,
@@ -108,11 +108,11 @@ export async function GET() {
         count,
       })),
       exercisesByMode: exercisesByMode.map((e) => ({
-        mode: e.mode,
+        method: e.method,
         count: e._count,
       })),
       exercisesByDifficulty: exercisesByDifficulty.map((e) => ({
-        difficulty: e.difficulty,
+        level: e.level,
         count: e._count,
       })),
       exercisesByStatus: exercisesByStatus.map((e) => ({
@@ -121,10 +121,10 @@ export async function GET() {
       })),
       topUsers: topUsers.map((u) => ({
         name: u.name,
-        count: u._count.histories,
+        count: u._count.learningSessions,
       })),
       avgScoreByDifficulty: avgScoreByDifficulty.map((e) => ({
-        difficulty: e.difficulty,
+        level: e.level,
         avgScore: Math.round(e._avg.score || 0),
         count: e._count,
       })),

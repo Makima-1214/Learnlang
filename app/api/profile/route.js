@@ -24,7 +24,6 @@ export async function GET() {
         createdAt: true,
         _count: {
           select: {
-            histories: true,
             comments: true,
             reactions: true,
           },
@@ -55,18 +54,25 @@ export async function GET() {
       ],
     );
 
-    // Get learning stats
-    const stats = await prisma.history.aggregate({
-      where: { userId: session.user.id },
-      _avg: { score: true },
-      _count: { id: true },
+    // Get learning stats from completed LearningSession records
+    const completedSessions = await prisma.learningSession.findMany({
+      where: { userId: session.user.id, status: "COMPLETED" },
+      select: { id: true, score: true, total: true, method: true },
     });
 
-    const correctCount = await prisma.history.count({
-      where: { userId: session.user.id, status: "BENAR" },
-    });
+    const totalExercises = completedSessions.length;
+    const averageScore = totalExercises
+      ? Math.round(
+          completedSessions.reduce((s, cs) => s + (cs.score || 0), 0) /
+            totalExercises || 0,
+        )
+      : 0;
 
-    // Get learning method breakdown from learning sessions
+    const correctCount = completedSessions.filter(
+      (s) => typeof s.score === "number" && s.score === s.total,
+    ).length;
+
+    // Get learning method breakdown from learning sessions (completed)
     const methodStats = await prisma.learningSession.groupBy({
       by: ["method"],
       where: { userId: session.user.id, status: "COMPLETED" },
@@ -84,8 +90,8 @@ export async function GET() {
       followingCount,
       friendshipCount,
       stats: {
-        totalExercises: stats._count.id,
-        averageScore: Math.round(stats._avg.score || 0),
+        totalExercises,
+        averageScore,
         correctCount,
         methodBreakdown,
       },

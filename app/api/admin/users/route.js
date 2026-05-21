@@ -21,7 +21,7 @@ export async function GET() {
         createdAt: true,
         _count: {
           select: {
-            histories: true,
+            learningSessions: true,
           },
         },
       },
@@ -66,8 +66,8 @@ export async function DELETE(request) {
       );
     }
 
-    // Delete user's histories first
-    await prisma.history.deleteMany({
+    // Delete user's learning session records first
+    await prisma.learningSession.deleteMany({
       where: { userId: userId },
     });
 

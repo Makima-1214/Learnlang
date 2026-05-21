@@ -6,7 +6,6 @@ async function main() {
   console.log("🌱 Seeding database...\n");
 
   const { seedUsers } = require("./seed/users");
-  const { seedHistories } = require("./seed/histories");
   const { seedBlogs } = require("./seed/blogs");
   const { seedCommentsAndReactions } = require("./seed/comments-reactions");
   const { seedQuizzes } = require("./seed/quizzes");
@@ -19,7 +18,6 @@ async function main() {
   const { seedAchievements } = require("./seed/achievements");
 
   const { admin, users } = await seedUsers(prisma);
-  await seedHistories(prisma, users);
   await seedBlogs(prisma, admin);
   await seedCommentsAndReactions(prisma, users);
   const { quiz1, quiz2 } = await seedQuizzes(prisma, admin);

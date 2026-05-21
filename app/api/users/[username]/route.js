@@ -89,34 +89,48 @@ export async function GET(request, { params }) {
       };
     }
 
-    // Get learning stats
-    const stats = await prisma.history.aggregate({
-      where: { userId: user.id },
-      _avg: { score: true },
+    // Get learning stats from LearningSession (completed)
+    const completedSessions = await prisma.learningSession.findMany({
+      where: { userId: user.id, status: "COMPLETED" },
+      select: {
+        id: true,
+        score: true,
+        total: true,
+        method: true,
+        createdAt: true,
+        level: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const totalExercises = completedSessions.length;
+    const averageScore = totalExercises
+      ? Math.round(
+          completedSessions.reduce((s, cs) => s + (cs.score || 0), 0) /
+            totalExercises || 0,
+        )
+      : 0;
+
+    const correctCount = completedSessions.filter(
+      (s) => typeof s.score === "number" && s.score === s.total,
+    ).length;
+
+    // Define 'almost correct' as >=60% and <100%
+    const almostCorrectCount = completedSessions.filter((s) => {
+      if (typeof s.score !== "number" || !s.total) return false;
+      const pct = (s.score / s.total) * 100;
+      return pct >= 60 && pct < 100;
+    }).length;
+
+    // Difficulty breakdown - use 'level' as proxy
+    const difficultyStats = await prisma.learningSession.groupBy({
+      by: ["level"],
+      where: { userId: user.id, status: "COMPLETED" },
       _count: { id: true },
     });
 
-    const correctCount = await prisma.history.count({
-      where: { userId: user.id, status: "BENAR" },
-    });
-
-    const almostCorrectCount = await prisma.history.count({
-      where: { userId: user.id, status: "HAMPIR_BENAR" },
-    });
-
-    // Get difficulty breakdown
-    const difficultyStats = await prisma.history.groupBy({
-      by: ["difficulty"],
-      where: { userId: user.id },
-      _count: { id: true },
-    });
-
-    // Get mode breakdown (EN_ID vs ID_EN)
-    const modeStats = await prisma.history.groupBy({
-      by: ["mode"],
-      where: { userId: user.id },
-      _count: { id: true },
-    });
+    // Mode breakdown no longer applicable (old EN_ID/ID_EN), return empty
+    const modeStats = [];
 
     // Get learning method breakdown from learning sessions
     const methodStats = await prisma.learningSession.groupBy({
@@ -130,19 +144,14 @@ export async function GET(request, { params }) {
       return acc;
     }, {});
 
-    // Get recent activity (last 5)
-    const recentActivity = await prisma.history.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      select: {
-        mode: true,
-        score: true,
-        status: true,
-        difficulty: true,
-        createdAt: true,
-      },
-    });
+    // Get recent activity (last 5) from learning sessions
+    const recentActivity = completedSessions.slice(0, 5).map((s) => ({
+      method: s.method,
+      score: s.score,
+      total: s.total,
+      level: s.level,
+      createdAt: s.createdAt,
+    }));
 
     const [achievementData, achievementProgress] = await Promise.all([
       getUserAchievements(user.id),
@@ -156,18 +165,15 @@ export async function GET(request, { params }) {
       friendshipCount,
       viewerRelationship,
       stats: {
-        totalExercises: stats._count.id,
-        averageScore: Math.round(stats._avg.score || 0),
+        totalExercises,
+        averageScore,
         correctCount,
         almostCorrectCount,
         difficultyBreakdown: difficultyStats.reduce((acc, d) => {
-          acc[d.difficulty] = d._count.id;
+          acc[d.level] = d._count.id;
           return acc;
         }, {}),
-        modeBreakdown: modeStats.reduce((acc, m) => {
-          acc[m.mode] = m._count.id;
-          return acc;
-        }, {}),
+        modeBreakdown: {},
         methodBreakdown,
       },
       achievements: achievementData.achievements,

@@ -187,30 +187,30 @@ export async function POST(req, { params }) {
       },
     });
 
-    // Optionally save to History if userId is present
+    // Optionally create an activity record for completed learning session
     if (session.userId) {
       try {
-        await prisma.history.create({
+        await prisma.activity.create({
           data: {
             userId: session.userId,
-            mode: "EN_ID", // Default mode for learning sessions
-            sourceLanguage: "en",
-            targetLanguage: "id",
-            sourceSentence: `${session.method} session (${session.level})`,
-            userTranslation: `Score: ${correctCount}/${session.total}`,
-            correctTranslation: `Completed learning session`,
-            score: Math.round((correctCount / session.total) * 100),
-            status: correctCount === session.total ? "BENAR" : "HAMPIR_BENAR",
-            feedback: `You got ${correctCount} out of ${session.total} correct`,
-            difficulty: session.level,
+            type: "LESSON_COMPLETED",
+            title: `Completed ${session.method} session`,
+            description: `Score ${correctCount}/${session.total}`,
+            metadata: JSON.stringify({
+              sessionId: session.id,
+              method: session.method,
+              level: session.level,
+              score: correctCount,
+              total: session.total,
+            }),
           },
         });
-      } catch (historyErr) {
-        apiLogger.error("Error saving to history", historyErr, {
+      } catch (actErr) {
+        apiLogger.error("Error creating activity for session", actErr, {
           sessionId,
           userId: session.userId,
         });
-        // Don't fail the request if history save fails
+        // Don't fail the request if activity save fails
       }
     }
 

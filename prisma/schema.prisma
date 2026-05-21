@@ -23,7 +23,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
-  histories     History[]
+  // histories removed - use learningSessions for completed session records
   blogs         Blog[]
   comments      Comment[]
   reactions     Reaction[]
@@ -67,28 +67,7 @@ enum Role {
   ADMIN
 }
 
-// History model to store learning progress
-model History {
-  id                 String   @id @default(cuid())
-  userId             String
-  mode               Mode     // EN_ID or ID_EN
-  sourceLanguage     String   // "en" or "id"
-  targetLanguage     String   // "id" or "en"
-  sourceSentence     String   @db.Text
-  userTranslation    String   @db.Text
-  correctTranslation String   @db.Text
-  score              Int
-  status             Status
-  feedback           String   @db.Text
-  difficulty         Difficulty
-  createdAt          DateTime @default(now())
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@index([userId])
-  @@index([createdAt])
-  @@map("histories")
-}
+// History model removed. Keep learning_sessions as canonical source of completed exercises.
 
 enum Mode {
   EN_ID  // English to Indonesian
