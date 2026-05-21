@@ -118,6 +118,18 @@ export async function GET(request, { params }) {
       _count: { id: true },
     });
 
+    // Get learning method breakdown from learning sessions
+    const methodStats = await prisma.learningSession.groupBy({
+      by: ["method"],
+      where: { userId: user.id, status: "COMPLETED" },
+      _count: { id: true },
+    });
+
+    const methodBreakdown = methodStats.reduce((acc, m) => {
+      acc[m.method] = m._count.id;
+      return acc;
+    }, {});
+
     // Get recent activity (last 5)
     const recentActivity = await prisma.history.findMany({
       where: { userId: user.id },
@@ -156,6 +168,7 @@ export async function GET(request, { params }) {
           acc[m.mode] = m._count.id;
           return acc;
         }, {}),
+        methodBreakdown,
       },
       achievements: achievementData.achievements,
       achievementSummary: {

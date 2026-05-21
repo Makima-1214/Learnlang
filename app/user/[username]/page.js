@@ -477,37 +477,42 @@ export default function PublicProfilePage() {
               </CardContent>
             </Card>
 
-            {/* Mode Breakdown */}
+            {/* Learning Methods Breakdown */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <BookOpen className="w-4 h-4" />
-                  Mode Latihan
+                  Metode Belajar
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {[
                   {
-                    key: "EN_ID",
-                    label: "Inggris → Indonesia",
-                    icon: "🇬🇧 → 🇮🇩",
+                    key: "vocabulary",
+                    label: "Vocabulary",
+                    icon: "📚",
                   },
                   {
-                    key: "ID_EN",
-                    label: "Indonesia → Inggris",
-                    icon: "🇮🇩 → 🇬🇧",
+                    key: "listening",
+                    label: "Listening",
+                    icon: "🎧",
                   },
-                ].map((mode) => {
-                  const count = user?.stats?.modeBreakdown?.[mode.key] || 0;
+                  {
+                    key: "grammar",
+                    label: "Grammar",
+                    icon: "✏️",
+                  },
+                ].map((method) => {
+                  const count = user?.stats?.methodBreakdown?.[method.key] || 0;
                   return (
                     <div
-                      key={mode.key}
+                      key={method.key}
                       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="text-lg">{mode.icon}</span>
+                        <span className="text-lg">{method.icon}</span>
                         <span className="font-medium text-sm">
-                          {mode.label}
+                          {method.label}
                         </span>
                       </div>
                       <Badge variant="secondary" className="font-bold">

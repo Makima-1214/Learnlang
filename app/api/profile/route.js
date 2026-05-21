@@ -66,6 +66,18 @@ export async function GET() {
       where: { userId: session.user.id, status: "BENAR" },
     });
 
+    // Get learning method breakdown from learning sessions
+    const methodStats = await prisma.learningSession.groupBy({
+      by: ["method"],
+      where: { userId: session.user.id, status: "COMPLETED" },
+      _count: { id: true },
+    });
+
+    const methodBreakdown = methodStats.reduce((acc, m) => {
+      acc[m.method] = m._count.id;
+      return acc;
+    }, {});
+
     return NextResponse.json({
       ...user,
       followersCount,
@@ -75,6 +87,7 @@ export async function GET() {
         totalExercises: stats._count.id,
         averageScore: Math.round(stats._avg.score || 0),
         correctCount,
+        methodBreakdown,
       },
     });
   } catch (error) {

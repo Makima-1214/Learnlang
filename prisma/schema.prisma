@@ -502,3 +502,85 @@ model Achievement {
   @@index([unlockedAt])
   @@map("achievements")
 }
+
+// Vocabulary questions for DB-sourced multiple-choice exercises
+model VocabularyQuestion {
+  id        String   @id @default(cuid())
+  level     String   // CEFR level, e.g., "A1"
+  question  String   @db.Text
+  options   Json     // JSON object { A: string, B: string, C: string, D: string }
+  answer    String   // one of A|B|C|D
+  skill     String   // e.g., "vocabulary", "grammar"
+  createdAt DateTime @default(now())
+
+  @@index([level])
+  @@index([skill])
+  @@map("vocabulary_questions")
+}
+
+// (Speaking prompts removed) -- speaking feature deprecated
+// Listening exercises use audio + cloze text + answer options
+model ListeningQuestion {
+  id         String   @id @default(cuid())
+  level      String
+  audioUrl   String   @db.Text
+  sentence   String   @db.Text
+  clozeText  String   @db.Text
+  options    Json
+  answer     String
+  createdAt  DateTime @default(now())
+
+  @@index([level])
+  @@map("listening_questions")
+}
+
+// Grammar exercises show a sentence with one wrong word to replace
+model GrammarQuestion {
+  id          String   @id @default(cuid())
+  level       String
+  sentence    String   @db.Text
+  words       Json
+  wrongIndex  Int
+  choices     Json
+  answer      String
+  createdAt   DateTime @default(now())
+
+  @@index([level])
+  @@map("grammar_questions")
+}
+
+// Persistent learning session and per-session questions
+model LearningSession {
+  id          String   @id @default(cuid())
+  userId      String?  // optional for anonymous sessions
+  method      String   // e.g., "vocabulary", "listening", "grammar"
+  level       String
+  total       Int
+  score       Int?
+  status      String?  // e.g., "IN_PROGRESS", "COMPLETED"
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+
+  questions   SessionQuestion[]
+
+  @@index([userId])
+  @@index([method])
+  @@map("learning_sessions")
+}
+
+model SessionQuestion {
+  id           String   @id @default(cuid())
+  sessionId    String
+  questionId   String   // original question id from its table
+  questionType String   // which model it came from
+  snapshot     Json     // snapshot of question (options, text) at time of session
+  userAnswer   String?
+  isCorrect    Boolean?
+  order        Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  session LearningSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@map("session_questions")
+}

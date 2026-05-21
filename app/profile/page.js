@@ -339,6 +339,52 @@ export default function ProfilePage() {
                       <p className="text-xs text-gray-600">Skor Rata-rata</p>
                     </div>
                   </div>
+
+                  {/* Learning Methods Breakdown */}
+                  <div className="mt-5 pt-5 border-t space-y-3">
+                    <p className="text-xs font-semibold text-gray-600 mb-3">
+                      Metode Belajar
+                    </p>
+                    {[
+                      {
+                        key: "vocabulary",
+                        label: "Vocabulary",
+                        icon: "📚",
+                        color: "text-blue-600",
+                      },
+                      {
+                        key: "listening",
+                        label: "Listening",
+                        icon: "🎧",
+                        color: "text-purple-600",
+                      },
+                      {
+                        key: "grammar",
+                        label: "Grammar",
+                        icon: "✏️",
+                        color: "text-green-600",
+                      },
+                    ].map((method) => {
+                      const count =
+                        profile?.stats?.methodBreakdown?.[method.key] || 0;
+                      return (
+                        <div
+                          key={method.key}
+                          className="flex items-center justify-between"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">{method.icon}</span>
+                            <span className="text-sm text-gray-700">
+                              {method.label}
+                            </span>
+                          </div>
+                          <span className={`font-bold text-sm ${method.color}`}>
+                            {count}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </CardContent>
               </Card>
             </div>
