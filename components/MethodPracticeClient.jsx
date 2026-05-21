@@ -1190,7 +1190,7 @@ export default function MethodPracticeClient({ method }) {
                       </div>
                     </DndContext>
 
-                    {/* Unified Button and Feedback */}
+                    {/* Unified Button */}
                     <Button
                       type="button"
                       className="w-full h-12 rounded-2xl text-base font-bold bg-emerald-600 hover:bg-emerald-700"
@@ -1209,24 +1209,6 @@ export default function MethodPracticeClient({ method }) {
                             : "Soal Berikutnya"}
                       {revealed && <ChevronRight className="ml-2 h-5 w-5" />}
                     </Button>
-
-                    {revealed && (
-                      <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5 space-y-3">
-                        <p className="text-sm font-semibold text-slate-700">
-                          Kalimat benar
-                        </p>
-                        <p className="text-base font-bold text-slate-900">
-                          {currentQuestion.sentences}
-                        </p>
-                        <p className="text-sm text-slate-600">
-                          Susunan jawaban:
-                          <span className="font-semibold text-slate-900">
-                            {" "}
-                            {listeningAnswer.map((item) => item.text).join(" ")}
-                          </span>
-                        </p>
-                      </div>
-                    )}
                   </>
                 )}
 

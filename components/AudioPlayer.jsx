@@ -69,7 +69,7 @@ export default function AudioPlayer({ text, title = "Audio", subtitle }) {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-GB";
     utterance.rate = rate;
-    utterance.pitch = 1;
+    utterance.pitch = 0.75;
     utterance.volume = 1;
     utterance.voice = voice;
 
