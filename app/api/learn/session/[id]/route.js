@@ -5,6 +5,28 @@ import { authOptions } from "@/lib/auth";
 import { apiLogger } from "@/lib/logger";
 import { recordApiResponse } from "@/lib/monitoring";
 
+function normalizeListeningAnswer(value) {
+  if (Array.isArray(value)) return value;
+  if (typeof value !== "string") return [];
+
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return value
+      .split("|")
+      .map((part) => part.trim())
+      .filter(Boolean);
+  }
+}
+
+function arraysEqual(left, right) {
+  if (!Array.isArray(left) || !Array.isArray(right)) return false;
+  if (left.length !== right.length) return false;
+
+  return left.every((item, index) => item === right[index]);
+}
+
 /**
  * GET /api/learn/session/[id] - Get session details
  */
@@ -124,7 +146,16 @@ export async function POST(req, { params }) {
     // Process each answer
     for (const sq of session.questions) {
       const userAnswer = answers[sq.id];
-      const isCorrect = userAnswer === sq.snapshot.answer;
+      const isListening = session.method === "listening";
+      const expectedAnswer = isListening
+        ? normalizeListeningAnswer(sq.snapshot.answer)
+        : sq.snapshot.answer;
+      const submittedAnswer = isListening
+        ? normalizeListeningAnswer(userAnswer)
+        : userAnswer;
+      const isCorrect = isListening
+        ? arraysEqual(submittedAnswer, expectedAnswer)
+        : submittedAnswer === expectedAnswer;
 
       if (isCorrect) correctCount++;
 

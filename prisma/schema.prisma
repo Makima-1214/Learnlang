@@ -519,15 +519,13 @@ model VocabularyQuestion {
 }
 
 // (Speaking prompts removed) -- speaking feature deprecated
-// Listening exercises use audio + cloze text + answer options
+// Listening exercises use TTS + shuffled chunks + ordered answer
 model ListeningQuestion {
   id         String   @id @default(cuid())
   level      String
-  audioUrl   String   @db.Text
-  sentence   String   @db.Text
-  clozeText  String   @db.Text
-  options    Json
-  answer     String
+  chunks     Json
+  answer     Json
+  sentences  String   @db.Text
   createdAt  DateTime @default(now())
 
   @@index([level])

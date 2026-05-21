@@ -5,6 +5,22 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Navbar from "@/components/Navbar";
 import AudioPlayer from "@/components/AudioPlayer";
+import {
+  DndContext,
+  closestCenter,
+  useSensor,
+  useSensors,
+  PointerSensor,
+  KeyboardSensor,
+  useDroppable,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -60,11 +76,141 @@ function getMethodDisplay(method) {
   return methodConfig[method] || null;
 }
 
+function parseListeningAnswer(value) {
+  if (Array.isArray(value)) return value;
+  if (typeof value !== "string") return [];
+
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return value
+      .split("|")
+      .map((part) => part.trim())
+      .filter(Boolean);
+  }
+}
+
+function createListeningItems(question) {
+  const chunks = Array.isArray(question?.chunks) ? question.chunks : [];
+
+  return chunks.map((text, index) => ({
+    id: `${question?.sessionQuestionId || question?.questionId || "chunk"}-${index}`,
+    text,
+  }));
+}
+
+function shuffleListeningItems(items) {
+  const next = [...items];
+  for (let i = next.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [next[i], next[j]] = [next[j], next[i]];
+  }
+  return next;
+}
+
+function serializeListeningItems(items) {
+  return JSON.stringify(items.map((item) => item.text));
+}
+
+function buildListeningBoard(question, savedAnswer) {
+  const sourceItems = createListeningItems(question);
+  const savedTokens = parseListeningAnswer(savedAnswer);
+
+  if (savedTokens.length === 0) {
+    return { bank: shuffleListeningItems(sourceItems), answer: [] };
+  }
+
+  const usedIndexes = new Set();
+  const answer = savedTokens
+    .map((token) => {
+      const index = sourceItems.findIndex(
+        (item, itemIndex) => !usedIndexes.has(itemIndex) && item.text === token,
+      );
+
+      if (index === -1) return null;
+      usedIndexes.add(index);
+      return sourceItems[index];
+    })
+    .filter(Boolean);
+
+  const bank = sourceItems.filter((_, index) => !usedIndexes.has(index));
+
+  return { bank, answer };
+}
+
+function normalizeExpectedListeningAnswer(answer) {
+  const normalized = parseListeningAnswer(answer);
+  return normalized;
+}
+
+function formatListeningTokens(answer) {
+  return parseListeningAnswer(answer).join(" ");
+}
+
+function SortableListeningItem({ item, disabled, active, onActivate }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id, disabled });
+
+  return (
+    <button
+      ref={setNodeRef}
+      type="button"
+      {...attributes}
+      {...listeners}
+      onClick={() => {
+        if (!disabled) onActivate?.(item);
+      }}
+      className={`rounded-2xl border-2 px-4 py-3 text-sm font-semibold shadow-sm transition-all ${
+        disabled
+          ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
+          : active
+            ? "cursor-pointer border-blue-500 bg-blue-50 text-blue-700"
+            : "cursor-grab border-slate-300 bg-white text-slate-800 hover:-translate-y-0.5 hover:border-blue-300 hover:shadow"
+      } ${isDragging ? "opacity-50 ring-2 ring-blue-300" : ""}`}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+      }}
+    >
+      {item.text}
+    </button>
+  );
+}
+
+const LISTENING_BANK_ID = "listening-bank";
+const LISTENING_ANSWER_ID = "listening-answer";
+
+function ListeningDropZone({ id, className = "", children }) {
+  const { setNodeRef, isOver } = useDroppable({ id });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`${className} ${isOver ? "ring-2 ring-blue-300" : ""}`}
+    >
+      {children}
+    </div>
+  );
+}
+
 export default function MethodPracticeClient({ method }) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const methodStr = String(method || "").toLowerCase();
   const methodDisplay = getMethodDisplay(methodStr);
+  const listeningSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
 
   const [sessionData, setSessionData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -78,6 +224,8 @@ export default function MethodPracticeClient({ method }) {
   const [completed, setCompleted] = useState(false);
   const [results, setResults] = useState(null);
   const [showExitDialog, setShowExitDialog] = useState(false);
+  const [listeningBank, setListeningBank] = useState([]);
+  const [listeningAnswer, setListeningAnswer] = useState([]);
   const sessionIdRef = useRef(null);
 
   const getProgressStorageKey = (sessionId) =>
@@ -254,6 +402,42 @@ export default function MethodPracticeClient({ method }) {
               payload.data.questions[0] ||
               null;
 
+            const restoredCorrect = (() => {
+              if (
+                isMatchingProgress &&
+                typeof restoredProgress.correct !== "undefined"
+              ) {
+                return !!restoredProgress.correct;
+              }
+
+              if (
+                methodStr === "listening" &&
+                activeQuestion?.answer !== undefined &&
+                activeQuestion?.userAnswer !== undefined &&
+                activeQuestion?.userAnswer !== null
+              ) {
+                const expected = normalizeExpectedListeningAnswer(
+                  activeQuestion.answer,
+                );
+                const submitted = parseListeningAnswer(
+                  activeQuestion.userAnswer,
+                );
+                return (
+                  expected.length === submitted.length &&
+                  expected.every((item, index) => item === submitted[index])
+                );
+              }
+
+              if (
+                activeQuestion?.userAnswer !== undefined &&
+                activeQuestion?.userAnswer !== null
+              ) {
+                return activeQuestion.userAnswer === activeQuestion.answer;
+              }
+
+              return null;
+            })();
+
             setSessionData(payload.data);
             setCurrentIndex(nextCurrentIndex);
             setSelected(
@@ -262,15 +446,7 @@ export default function MethodPracticeClient({ method }) {
             setRevealed(
               isMatchingProgress ? !!restoredProgress.revealed : false,
             );
-            setCorrect(
-              isMatchingProgress &&
-                typeof restoredProgress.correct !== "undefined"
-                ? restoredProgress.correct
-                : activeQuestion?.userAnswer !== undefined &&
-                    activeQuestion?.userAnswer !== null
-                  ? activeQuestion.userAnswer === activeQuestion.answer
-                  : null,
-            );
+            setCorrect(restoredCorrect);
             setAnswers(nextAnswers);
           }
         }
@@ -290,6 +466,182 @@ export default function MethodPracticeClient({ method }) {
   const currentQuestion = sessionData?.questions[currentIndex];
   const total = sessionData?.session?.total || 0;
   const Icon = methodDisplay?.icon || Volume2;
+
+  useEffect(() => {
+    if (methodStr !== "listening" || !currentQuestion) return;
+
+    const restored = buildListeningBoard(
+      currentQuestion,
+      answers[currentQuestion.sessionQuestionId],
+    );
+
+    setListeningBank(restored.bank);
+    setListeningAnswer(restored.answer);
+  }, [
+    methodStr,
+    currentQuestion?.sessionQuestionId,
+    currentQuestion?.chunks,
+    answers[currentQuestion?.sessionQuestionId],
+  ]);
+
+  const persistListeningAnswer = (questionId, answerItems) => {
+    if (!questionId) return;
+
+    const serialized = serializeListeningItems(answerItems);
+    setAnswers((prev) => ({
+      ...prev,
+      [questionId]: serialized,
+    }));
+
+    if (sessionData?.session?.id) {
+      fetch(`/api/learn/session/${sessionData.session.id}/progress`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          updates: [
+            {
+              sessionQuestionId: questionId,
+              userAnswer: serialized,
+            },
+          ],
+        }),
+      }).catch((e) => console.warn("Listening autosave failed:", e));
+    }
+  };
+
+  const commitListeningBoard = (nextBank, nextAnswer) => {
+    setListeningBank(nextBank);
+    setListeningAnswer(nextAnswer);
+    persistListeningAnswer(currentQuestion?.sessionQuestionId, nextAnswer);
+  };
+
+  const handleListeningItemActivate = (item, fromContainer) => {
+    if (!currentQuestion || revealed) return;
+
+    if (fromContainer === LISTENING_BANK_ID) {
+      const nextBank = listeningBank.filter(
+        (current) => current.id !== item.id,
+      );
+      const nextAnswer = [...listeningAnswer, item];
+      commitListeningBoard(nextBank, nextAnswer);
+      return;
+    }
+
+    const nextAnswer = listeningAnswer.filter(
+      (current) => current.id !== item.id,
+    );
+    const nextBank = [...listeningBank, item];
+    commitListeningBoard(nextBank, nextAnswer);
+  };
+
+  const handleListeningDragEnd = ({ active, over }) => {
+    if (!over || !currentQuestion || revealed) return;
+    if (active.id === over.id) return;
+
+    const getContainer = (itemId) => {
+      if (itemId === LISTENING_BANK_ID) return LISTENING_BANK_ID;
+      if (itemId === LISTENING_ANSWER_ID) return LISTENING_ANSWER_ID;
+      if (listeningBank.some((item) => item.id === itemId)) {
+        return LISTENING_BANK_ID;
+      }
+      if (listeningAnswer.some((item) => item.id === itemId)) {
+        return LISTENING_ANSWER_ID;
+      }
+      return null;
+    };
+
+    const sourceContainer = getContainer(active.id);
+    const targetContainer = getContainer(over.id);
+
+    if (!sourceContainer || !targetContainer) return;
+
+    const sourceItems =
+      sourceContainer === LISTENING_BANK_ID ? listeningBank : listeningAnswer;
+    const targetItems =
+      targetContainer === LISTENING_BANK_ID ? listeningBank : listeningAnswer;
+
+    const sourceIndex = sourceItems.findIndex((item) => item.id === active.id);
+    const targetIndex = targetItems.findIndex((item) => item.id === over.id);
+
+    if (sourceIndex === -1) return;
+
+    let nextBank = listeningBank;
+    let nextAnswer = listeningAnswer;
+
+    const insertIntoTarget = (items, movedItem, index) => {
+      const safeIndex = index < 0 ? items.length : index;
+      return [
+        ...items.slice(0, safeIndex),
+        movedItem,
+        ...items.slice(safeIndex),
+      ];
+    };
+
+    if (sourceContainer === targetContainer) {
+      const reordered = arrayMove(
+        sourceItems,
+        sourceIndex,
+        targetIndex < 0 ? sourceItems.length - 1 : targetIndex,
+      );
+      if (sourceContainer === LISTENING_BANK_ID) {
+        nextBank = reordered;
+      } else {
+        nextAnswer = reordered;
+      }
+    } else {
+      const movedItem = sourceItems[sourceIndex];
+      const filteredSource = sourceItems.filter(
+        (item) => item.id !== active.id,
+      );
+      const insertIndex = targetIndex < 0 ? targetItems.length : targetIndex;
+      const nextTarget = insertIntoTarget(targetItems, movedItem, insertIndex);
+
+      if (sourceContainer === LISTENING_BANK_ID) {
+        nextBank = filteredSource;
+        nextAnswer = nextTarget;
+      } else {
+        nextAnswer = filteredSource;
+        nextBank = nextTarget;
+      }
+    }
+
+    commitListeningBoard(nextBank, nextAnswer);
+  };
+
+  const handleListeningCheck = () => {
+    if (!currentQuestion || revealed) return;
+
+    const expected = normalizeExpectedListeningAnswer(currentQuestion.answer);
+    const current = listeningAnswer.map((item) => item.text);
+    const isRight =
+      expected.length === current.length &&
+      expected.every((item, index) => item === current[index]);
+
+    const serialized = serializeListeningItems(listeningAnswer);
+
+    setSelected(serialized);
+    setCorrect(isRight);
+    setRevealed(true);
+    setAnswers((prev) => ({
+      ...prev,
+      [currentQuestion.sessionQuestionId]: serialized,
+    }));
+
+    if (sessionData?.session?.id) {
+      fetch(`/api/learn/session/${sessionData.session.id}/progress`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          updates: [
+            {
+              sessionQuestionId: currentQuestion.sessionQuestionId,
+              userAnswer: serialized,
+            },
+          ],
+        }),
+      }).catch((e) => console.warn("Listening check autosave failed:", e));
+    }
+  };
 
   useEffect(() => {
     if (!sessionData?.session?.id || completed) return;
@@ -721,56 +1073,160 @@ export default function MethodPracticeClient({ method }) {
                   <>
                     <div className="space-y-4">
                       <p className="text-sm text-slate-600 font-medium">
-                        Dengarkan audio di bawah:
+                        Dengarkan kalimatnya, lalu susun ulang kata-katanya.
                       </p>
                       <AudioPlayer
-                        audioUrl={currentQuestion.audioUrl}
-                        title="Listening Audio"
+                        text={currentQuestion.sentences}
+                        title="Listening Sentence"
+                        subtitle="Pilih normal untuk kecepatan biasa atau slow untuk versi lebih lambat"
                       />
                     </div>
-                    <div className="rounded-3xl border-2 border-slate-100 bg-gradient-to-br from-slate-50 to-white p-6 space-y-3">
-                      <p className="text-sm text-slate-500">
-                        Melengkapi kalimat:
-                      </p>
-                      <p className="text-xl font-bold text-slate-900">
-                        {currentQuestion.clozeText}
-                      </p>
-                      <div className="border-t-2 border-slate-200 pt-3 mt-4">
-                        <p className="text-xs text-slate-500">
-                          Kalimat lengkap:
+
+                    <DndContext
+                      sensors={listeningSensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleListeningDragEnd}
+                    >
+                      <div className="space-y-4">
+                        {/* Your Answer Section - Top */}
+                        <div className="rounded-3xl border-2 border-blue-200 bg-blue-50/60 p-5 space-y-4 shadow-sm">
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-bold tracking-wide text-slate-700 uppercase">
+                                Your Answer
+                              </p>
+                              <p className="text-xs text-slate-500 mt-1">
+                                Susun kata sesuai urutan kalimat yang kamu
+                                dengar
+                              </p>
+                            </div>
+                            <Badge variant="secondary" className="rounded-full">
+                              {listeningAnswer.length}/
+                              {
+                                normalizeExpectedListeningAnswer(
+                                  currentQuestion.answer,
+                                ).length
+                              }
+                            </Badge>
+                          </div>
+
+                          <SortableContext
+                            items={listeningAnswer.map((item) => item.id)}
+                          >
+                            <ListeningDropZone
+                              id={LISTENING_ANSWER_ID}
+                              className="flex flex-wrap content-start gap-3 min-h-28 rounded-2xl border-2 border-dashed border-blue-200 bg-white p-4"
+                            >
+                              {listeningAnswer.length > 0 ? (
+                                listeningAnswer.map((item) => (
+                                  <SortableListeningItem
+                                    key={item.id}
+                                    item={item}
+                                    disabled={revealed}
+                                    active={true}
+                                    onActivate={(word) =>
+                                      handleListeningItemActivate(
+                                        word,
+                                        LISTENING_ANSWER_ID,
+                                      )
+                                    }
+                                  />
+                                ))
+                              ) : (
+                                <p className="text-sm text-slate-400 self-center">
+                                  Tarik kata ke sini untuk membentuk jawaban.
+                                </p>
+                              )}
+                            </ListeningDropZone>
+                          </SortableContext>
+                        </div>
+
+                        {/* Word Bank Section - Bottom */}
+                        <div className="rounded-3xl border-2 border-slate-200 bg-white p-5 space-y-4 shadow-sm">
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-bold tracking-wide text-slate-700 uppercase">
+                                Word Bank
+                              </p>
+                              <p className="text-xs text-slate-500 mt-1">
+                                Tap atau drag kata ke jawaban
+                              </p>
+                            </div>
+                            <Badge variant="secondary" className="rounded-full">
+                              {listeningBank.length} kata
+                            </Badge>
+                          </div>
+
+                          <SortableContext
+                            items={listeningBank.map((item) => item.id)}
+                          >
+                            <ListeningDropZone
+                              id={LISTENING_BANK_ID}
+                              className="flex flex-wrap content-start gap-3 min-h-28 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-4"
+                            >
+                              {listeningBank.length > 0 ? (
+                                listeningBank.map((item) => (
+                                  <SortableListeningItem
+                                    key={item.id}
+                                    item={item}
+                                    disabled={revealed}
+                                    active={false}
+                                    onActivate={(word) =>
+                                      handleListeningItemActivate(
+                                        word,
+                                        LISTENING_BANK_ID,
+                                      )
+                                    }
+                                  />
+                                ))
+                              ) : (
+                                <p className="text-sm text-slate-400 self-center">
+                                  Semua kata sudah dipindahkan.
+                                </p>
+                              )}
+                            </ListeningDropZone>
+                          </SortableContext>
+                        </div>
+                      </div>
+                    </DndContext>
+
+                    {/* Unified Button and Feedback */}
+                    <Button
+                      type="button"
+                      className="w-full h-12 rounded-2xl text-base font-bold bg-emerald-600 hover:bg-emerald-700"
+                      onClick={!revealed ? handleListeningCheck : goNext}
+                      disabled={
+                        (!revealed && listeningAnswer.length === 0) ||
+                        submitting
+                      }
+                    >
+                      {submitting
+                        ? "Mengirim..."
+                        : !revealed
+                          ? "Periksa Jawaban"
+                          : currentIndex === total - 1
+                            ? "Selesaikan & Lihat Hasil"
+                            : "Soal Berikutnya"}
+                      {revealed && <ChevronRight className="ml-2 h-5 w-5" />}
+                    </Button>
+
+                    {revealed && (
+                      <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5 space-y-3">
+                        <p className="text-sm font-semibold text-slate-700">
+                          Kalimat benar
                         </p>
-                        <p className="text-sm text-slate-700 mt-1">
-                          {currentQuestion.sentence}
+                        <p className="text-base font-bold text-slate-900">
+                          {currentQuestion.sentences}
+                        </p>
+                        <p className="text-sm text-slate-600">
+                          Susunan jawaban:
+                          <span className="font-semibold text-slate-900">
+                            {" "}
+                            {listeningAnswer.map((item) => item.text).join(" ")}
+                          </span>
                         </p>
                       </div>
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {Object.entries(currentQuestion.options || {}).map(
-                        ([key, value]) => (
-                          <Button
-                            key={key}
-                            type="button"
-                            variant={
-                              selected === key
-                                ? revealed
-                                  ? correct
-                                    ? "default"
-                                    : "destructive"
-                                  : "outline"
-                                : "outline"
-                            }
-                            className="h-auto justify-start rounded-2xl px-5 py-4 text-left transition-all disabled:opacity-60 font-semibold"
-                            onClick={() => handleAnswer(key)}
-                            disabled={revealed}
-                          >
-                            <div className="flex items-center gap-3 w-full">
-                              <span className="font-black text-lg">{key}.</span>
-                              <span>{value}</span>
-                            </div>
-                          </Button>
-                        ),
-                      )}
-                    </div>
+                    )}
                   </>
                 )}
 
@@ -843,7 +1299,9 @@ export default function MethodPracticeClient({ method }) {
                       <p className="text-sm text-slate-700 mt-2">
                         Jawaban yang benar:{" "}
                         <span className="font-bold">
-                          {currentQuestion.answer}
+                          {methodStr === "listening"
+                            ? formatListeningTokens(currentQuestion.answer)
+                            : currentQuestion.answer}
                         </span>
                       </p>
                     )}
