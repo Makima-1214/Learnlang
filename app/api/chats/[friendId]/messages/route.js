@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { ApiResponse, jsonResponse } from "@/lib/api-response";
 import { apiLogger } from "@/lib/logger";
 import { awardDirectMessageAchievements } from "@/lib/achievements";
+import { emitNewPrivateMessage } from "@/lib/socket";
 
 /**
  * GET /api/chats/[friendId]/messages
@@ -57,19 +58,9 @@ export async function GET(req, { params }) {
       },
     });
 
-    // Mark messages as read
-    await prisma.privateMessage.updateMany({
-      where: {
-        senderId: friendId,
-        receiverId: userId,
-        isRead: false,
-        isDeleted: false,
-      },
-      data: {
-        isRead: true,
-        readAt: new Date(),
-      },
-    });
+    // Note: marking messages as read (and emitting receipts) is handled by
+    // the PATCH endpoint or realtime socket events. Do not update here so
+    // the client-side flow can reliably emit read receipts.
 
     const duration = Date.now() - startTime;
     apiLogger.logApiRequest(
@@ -156,7 +147,6 @@ export async function POST(req, { params }) {
 
     // Emit realtime message via socket
     try {
-      const { emitNewPrivateMessage } = await import("@/lib/socket");
       emitNewPrivateMessage(friendId, message);
     } catch (err) {
       console.error("Failed to emit message:", err);
@@ -187,6 +177,96 @@ export async function POST(req, { params }) {
     const duration = Date.now() - startTime;
     apiLogger.logApiRequest(
       "POST",
+      `/api/chats/[friendId]/messages`,
+      500,
+      duration,
+    );
+    return jsonResponse(ApiResponse.internalError(), 500);
+  }
+}
+
+/**
+ * PATCH /api/chats/[friendId]/messages
+ * Mark messages from a friend as read
+ */
+export async function PATCH(req, { params }) {
+  const startTime = Date.now();
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return jsonResponse(ApiResponse.unauthorized(), 401);
+    }
+
+    const userId = session.user.id;
+    const { friendId } = await params;
+
+    const friendship = await prisma.friendship.findFirst({
+      where: {
+        OR: [
+          { initiatorId: userId, friendId },
+          { initiatorId: friendId, friendId: userId },
+        ],
+      },
+    });
+
+    if (!friendship) {
+      return jsonResponse(ApiResponse.forbidden("Not friends"), 403);
+    }
+
+    // Find the message IDs to mark as read so we can emit per-message receipts
+    const messagesToMark = await prisma.privateMessage.findMany({
+      where: {
+        senderId: friendId,
+        receiverId: userId,
+        isRead: false,
+        isDeleted: false,
+      },
+      select: { id: true },
+    });
+
+    const now = new Date();
+    let updatedCount = 0;
+    if (messagesToMark.length > 0) {
+      const ids = messagesToMark.map((m) => m.id);
+      const updateResult = await prisma.privateMessage.updateMany({
+        where: { id: { in: ids } },
+        data: { isRead: true, readAt: now },
+      });
+      updatedCount = updateResult.count || messagesToMark.length;
+
+      try {
+        const { emitToRoom } = await import("@/lib/socket");
+        for (const m of messagesToMark) {
+          emitToRoom(`user:${friendId}`, "message-read-receipt", {
+            messageId: m.id,
+            readAt: now,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to emit read receipts:", err);
+      }
+    }
+
+    const duration = Date.now() - startTime;
+    apiLogger.logApiRequest(
+      "PATCH",
+      `/api/chats/[friendId]/messages`,
+      200,
+      duration,
+    );
+
+    return jsonResponse(
+      ApiResponse.success({
+        updatedCount,
+        readAt: now,
+      }),
+      200,
+    );
+  } catch (error) {
+    console.error("Mark messages read error:", error);
+    const duration = Date.now() - startTime;
+    apiLogger.logApiRequest(
+      "PATCH",
       `/api/chats/[friendId]/messages`,
       500,
       duration,

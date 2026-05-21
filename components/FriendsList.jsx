@@ -62,6 +62,48 @@ export default function FriendsList({
     };
   }, [socket, onConversationsUpdate, selectedFriendId]);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const updateFriendPresence = (friendId, patch) => {
+      onConversationsUpdate((prev) =>
+        prev.map((item) =>
+          item.friendId === friendId
+            ? {
+                ...item,
+                friend: {
+                  ...item.friend,
+                  ...patch,
+                },
+              }
+            : item,
+        ),
+      );
+    };
+
+    const handleOnline = ({ userId }) => {
+      updateFriendPresence(userId, { isOnline: true, isTyping: false });
+    };
+
+    const handleOffline = ({ userId, lastOnline }) => {
+      updateFriendPresence(userId, { isOnline: false, lastOnline });
+    };
+
+    const handleTyping = ({ userId, isTyping }) => {
+      updateFriendPresence(userId, { isTyping });
+    };
+
+    socket.on("friend-online", handleOnline);
+    socket.on("friend-offline", handleOffline);
+    socket.on("friend-typing", handleTyping);
+
+    return () => {
+      socket.off("friend-online", handleOnline);
+      socket.off("friend-offline", handleOffline);
+      socket.off("friend-typing", handleTyping);
+    };
+  }, [socket, onConversationsUpdate]);
+
   const formatTime = (date) => {
     if (!date) return "";
     const d = new Date(date);
@@ -146,6 +188,12 @@ export default function FriendsList({
                       </span>
                     )}
                   </div>
+                  <span
+                    className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white ${
+                      conv.friend.isOnline ? "bg-green-500" : "bg-gray-300"
+                    }`}
+                    title={conv.friend.isOnline ? "Online" : "Offline"}
+                  />
                   {conv.unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
                       {conv.unreadCount > 99 ? "99+" : conv.unreadCount}
@@ -165,7 +213,11 @@ export default function FriendsList({
                       </span>
                     )}
                   </div>
-                  {conv.lastMessage ? (
+                  {conv.friend.isTyping ? (
+                    <p className="text-sm font-medium text-primary truncate">
+                      Mengetik...
+                    </p>
+                  ) : conv.lastMessage ? (
                     <p
                       className={`text-sm truncate ${
                         conv.unreadCount > 0

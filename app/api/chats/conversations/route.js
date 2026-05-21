@@ -19,6 +19,8 @@ export async function GET(req) {
     const userId = session.user.id;
 
     // Get all friendships (both directions)
+    // Do not select presence fields from the DB. Presence is tracked in-memory
+    // (or Redis later) and exposed on `global.presenceStore`.
     const friendships = await prisma.friendship.findMany({
       where: {
         OR: [{ initiatorId: userId }, { friendId: userId }],
@@ -93,9 +95,18 @@ export async function GET(req) {
         const friendData =
           friend.initiatorId === userId ? friend.friend : friend.initiator;
 
+        // Merge presence from global.presenceStore if available
+        const presenceStore = global.presenceStore;
+        const presence = presenceStore?.get(friendData.id) || {};
+
         return {
           friendId,
-          friend: friendData,
+          friend: {
+            ...friendData,
+            isOnline: presence.isOnline || false,
+            lastOnline: presence.lastOnline || null,
+            isTyping: presence.isTyping || false,
+          },
           lastMessage,
           unreadCount,
         };

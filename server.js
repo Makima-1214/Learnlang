@@ -2,6 +2,55 @@ const { createServer } = require("http");
 const { parse } = require("url");
 const next = require("next");
 const { Server } = require("socket.io");
+const { PrismaClient } = require("@prisma/client");
+
+const prisma = global.prisma || new PrismaClient();
+
+if (process.env.NODE_ENV !== "production") {
+  global.prisma = prisma;
+}
+
+async function emitPresenceToFriends(userId, event, payload) {
+  const friendships = await prisma.friendship.findMany({
+    where: {
+      OR: [{ initiatorId: userId }, { friendId: userId }],
+    },
+    select: {
+      initiatorId: true,
+      friendId: true,
+    },
+  });
+
+  const friendIds = friendships.map((friendship) =>
+    friendship.initiatorId === userId
+      ? friendship.friendId
+      : friendship.initiatorId,
+  );
+
+  const io = global.io;
+  for (const friendId of friendIds) {
+    io?.to(`user:${friendId}`).emit(event, payload);
+  }
+}
+
+// Temporary in-memory presence store. Later replace with Redis for multi-process.
+const presenceStore = new Map();
+
+function setPresence(userId, data) {
+  const existing = presenceStore.get(userId) || {};
+  presenceStore.set(userId, { ...existing, ...data });
+}
+
+function getPresence(userId) {
+  return presenceStore.get(userId) || null;
+}
+
+function removePresence(userId) {
+  presenceStore.delete(userId);
+}
+
+// Expose presenceStore for API routes to read (temporary; replace with Redis later)
+global.presenceStore = presenceStore;
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
@@ -72,6 +121,7 @@ app.prepare().then(() => {
       try {
         const userId = payload?.userId || payload;
         if (userId) {
+          socket.data.userId = userId;
           socket.join(`user:${userId}`);
           console.log(`Socket ${socket.id} joined user:${userId}`);
         }
@@ -97,7 +147,110 @@ app.prepare().then(() => {
         .emit("user-typing", { user, isTyping: false });
     });
 
+    // Presence tracking for private chat
+    socket.on("user-online", ({ userId, username }) => {
+      try {
+        const now = new Date();
+        setPresence(userId, {
+          isOnline: true,
+          lastOnline: now,
+          isTyping: false,
+          username,
+        });
+        emitPresenceToFriends(userId, "friend-online", {
+          userId,
+          username,
+          isOnline: true,
+          lastOnline: now,
+        });
+        console.log(`User ${userId} is now online`);
+      } catch (err) {
+        console.error(
+          "Error setting user online status in presence store:",
+          err,
+        );
+      }
+    });
+
+    socket.on("user-offline", ({ userId }) => {
+      try {
+        const now = new Date();
+        setPresence(userId, { isOnline: false, lastOnline: now });
+        emitPresenceToFriends(userId, "friend-offline", {
+          userId,
+          lastOnline: now,
+          isOnline: false,
+        });
+        console.log(`User ${userId} is now offline`);
+      } catch (err) {
+        console.error(
+          "Error setting user offline status in presence store:",
+          err,
+        );
+      }
+    });
+
+    // Typing indicator for private chat
+    socket.on("private-typing-start", ({ userId, friendId }) => {
+      try {
+        setPresence(userId, { isTyping: true });
+      } catch (err) {
+        console.error("Error updating typing state in presence store:", err);
+      }
+      socket
+        .to(`user:${friendId}`)
+        .emit("friend-typing", { userId, isTyping: true });
+    });
+
+    socket.on("private-typing-stop", ({ userId, friendId }) => {
+      try {
+        setPresence(userId, { isTyping: false });
+      } catch (err) {
+        console.error("Error updating typing state in presence store:", err);
+      }
+      socket
+        .to(`user:${friendId}`)
+        .emit("friend-typing", { userId, isTyping: false });
+    });
+
+    // Message read receipt
+    socket.on("message-read", async ({ messageId, senderId, receiverId }) => {
+      try {
+        const now = new Date();
+        await prisma.privateMessage.update({
+          where: { id: messageId },
+          data: {
+            isRead: true,
+            readAt: now,
+          },
+        });
+        io.to(`user:${senderId}`).emit("message-read-receipt", {
+          messageId,
+          readAt: now,
+        });
+        console.log(
+          `Message ${messageId} marked as read by user ${receiverId}`,
+        );
+      } catch (err) {
+        console.error("Error marking message as read:", err);
+      }
+    });
+
     socket.on("disconnect", () => {
+      if (socket.data.userId) {
+        const uid = socket.data.userId;
+        try {
+          const now = new Date();
+          setPresence(uid, { isOnline: false, lastOnline: now });
+          emitPresenceToFriends(uid, "friend-offline", {
+            userId: uid,
+            lastOnline: now,
+            isOnline: false,
+          });
+        } catch (err) {
+          console.error("Disconnect presence update failed:", err);
+        }
+      }
       console.log("Client disconnected:", socket.id);
     });
   });

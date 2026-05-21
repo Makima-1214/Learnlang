@@ -33,16 +33,62 @@ export default function ChatsClient({ initialUserId = null }) {
 
   const loadConversations = async () => {
     try {
-      const res = await fetch("/api/messages/list", { cache: "no-store" });
-      if (!res.ok) return;
-      const data = await res.json();
-      const mapped = (data?.data?.conversations || []).map((item) => ({
-        friendId: item.user.id,
-        friend: item.user,
-        lastMessage: item.lastMessage,
-        unreadCount: item.unreadCount,
+      const [friendsResponse, conversationsResponse] = await Promise.all([
+        fetch("/api/friends?type=friends", { cache: "no-store" }),
+        fetch("/api/chats/conversations", { cache: "no-store" }),
+      ]);
+
+      const friendsData = friendsResponse.ok
+        ? await friendsResponse.json()
+        : null;
+      const conversationsData = conversationsResponse.ok
+        ? await conversationsResponse.json()
+        : null;
+
+      const friends = (friendsData?.data?.users || []).map((user) => ({
+        friendId: user.id,
+        friend: user,
+        lastMessage: null,
+        unreadCount: 0,
       }));
+
+      const conversationMap = new Map(
+        (conversationsData?.data?.conversations || []).map((item) => [
+          item.friendId,
+          item,
+        ]),
+      );
+
+      const merged = friends.map((friend) => {
+        const match = conversationMap.get(friend.friendId);
+        return match
+          ? {
+              ...friend,
+              friend: {
+                ...friend.friend,
+                ...match.friend,
+              },
+              lastMessage: match.lastMessage,
+              unreadCount: match.unreadCount,
+            }
+          : friend;
+      });
+
+      const conversationOnly = (conversationsData?.data?.conversations || [])
+        .filter(
+          (item) => !merged.some((friend) => friend.friendId === item.friendId),
+        )
+        .map((item) => ({
+          friendId: item.friendId,
+          friend: item.friend,
+          lastMessage: item.lastMessage,
+          unreadCount: item.unreadCount,
+        }));
+
+      const mapped = [...merged, ...conversationOnly];
+
       setConversations(mapped);
+
       if (initialUserId) {
         setSelectedFriendId(initialUserId);
       } else if (mapped.length > 0) {
@@ -62,7 +108,7 @@ export default function ChatsClient({ initialUserId = null }) {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="flex h-[calc(100vh-4rem)] bg-white flex-col md:flex-row max-w-6xl mx-auto border-x border-gray-200">
+      <div className="flex min-h-0 h-[calc(100vh-4rem)] bg-white flex-col md:flex-row max-w-6xl mx-auto border-x border-gray-200">
         <div className="md:hidden flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-white">
           <h2 className="text-lg font-semibold">Pesan</h2>
           <button
@@ -74,7 +120,7 @@ export default function ChatsClient({ initialUserId = null }) {
         </div>
 
         <div
-          className={`${isSidebarOpen ? "block" : "hidden"} w-full md:w-96 border-r border-gray-200 bg-white overflow-hidden md:block`}
+          className={`${isSidebarOpen ? "block" : "hidden"} min-h-0 w-full md:w-96 border-r border-gray-200 bg-white overflow-hidden md:block`}
         >
           <FriendsList
             conversations={conversations}
@@ -91,7 +137,7 @@ export default function ChatsClient({ initialUserId = null }) {
         </div>
 
         <div
-          className={`${isSidebarOpen ? "hidden md:block" : "block"} flex-1 bg-white overflow-hidden`}
+          className={`${isSidebarOpen ? "hidden md:block" : "block"} min-h-0 flex-1 bg-white overflow-hidden`}
         >
           {selectedFriendId ? (
             <ChatWindow
