@@ -3,504 +3,430 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
-import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import LoadingScreen from "@/components/LoadingScreen";
 import { motion } from "framer-motion";
-import {
-  GraduationCap,
-  Brain,
-  TrendingUp,
-  Shield,
-  Sparkles,
-  BookOpen,
-  Target,
-  CheckCircle2,
-  ArrowRight,
-  Globe2,
-  Zap,
-} from "lucide-react";
+
+// Import modular, high-fidelity components
+import HeroMascotIllustration from "@/components/HeroMascotIllustration";
+import GamificationIllustration from "@/components/GamificationIllustration";
+import AIMascot from "@/components/AIMascot";
+import DuolingoGame from "@/components/DuolingoGame";
+import InteractivePathMap from "@/components/InteractivePathMap";
+import AIReviewIllustration from "@/components/AIReviewIllustration";
+import LeaderboardIllustration from "@/components/LeaderboardIllustration";
+import AnimatedText from "@/components/AnimatedText";
+
+// ==========================================
+//   STUNNING BESPOKE CUSTOM VECTOR SVG ICONS
+// ==========================================
+
+const GameControllerIcon = () => (
+  <svg className="w-10 h-10 text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="3" y="6" width="18" height="12" rx="4" fill="rgba(16,185,129,0.1)" stroke="currentColor" strokeWidth="2" />
+    <path d="M7 12h4M9 10v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <circle cx="14.5" cy="12" r="1" fill="currentColor" />
+    <circle cx="17" cy="10" r="1" fill="currentColor" />
+    <circle cx="17" cy="14" r="1" fill="currentColor" />
+  </svg>
+);
+
+const CompassIcon = () => (
+  <svg className="w-12 h-12 text-[#6366F1] drop-shadow-[0_0_8px_rgba(99,102,241,0.3)] animate-pulse" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" strokeDasharray="4 2" className="opacity-55" />
+    <circle cx="12" cy="12" r="6" stroke="#10B981" strokeWidth="1.5" />
+    <path d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z" fill="#6366F1" stroke="#4F46E5" strokeWidth="1.5" strokeLinejoin="round" />
+    <circle cx="12" cy="12" r="1.5" fill="white" />
+  </svg>
+);
+
+const TrophyBadgeIcon = () => (
+  <svg className="w-12 h-12 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 9H4.5A1.5 1.5 0 0 1 3 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <path d="M18 9h1.5A1.5 1.5 0 0 0 21 7.5V6a1.5 1.5 0 0 0-1.5-1.5h-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <path d="M8 3h8v8a4 4 0 0 1-8 0V3z" fill="rgba(245,158,11,0.1)" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+    <path d="M12 15v4M9 19h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
+const RobotBadgeIcon = () => (
+  <svg className="w-12 h-12 text-[#1CB0F6] drop-shadow-[0_0_8px_rgba(28,176,246,0.3)]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="5" y="7" width="14" height="11" rx="3" fill="rgba(28,176,246,0.1)" stroke="currentColor" strokeWidth="2" />
+    <path d="M9 12h.01M15 12h.01" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    <path d="M12 3v4M8 3h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
+const CrownBadgeIcon = () => (
+  <svg className="w-12 h-12 text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.3)]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M2 4l3 12h14l3-12-6 5-4-4-4 4-6-5z" fill="rgba(234,179,8,0.1)" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+    <path d="M5 20h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+  </svg>
+);
+
+const HeartBadgeIcon = () => (
+  <svg className="w-12 h-12 text-rose-500 drop-shadow-[0_0_8px_rgba(244,63,94,0.3)]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="6" y="3" width="12" height="18" rx="3" fill="rgba(244,63,94,0.1)" stroke="currentColor" strokeWidth="2" />
+    <path d="M9 3h6M12 3v3M9 10h6M9 14h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <circle cx="12" cy="18" r="1.5" fill="currentColor" />
+  </svg>
+);
 
 export default function LandingPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [mascotMood, setMascotMood] = useState("neutral");
 
-  useEffect(() => {
-    if (status === "authenticated") {
-      // Optionally redirect to /learn if user is already logged in
-    }
-  }, [status, router]);
-
-  const features = [
-    {
-      icon: <Globe2 className="h-8 w-8" />,
-      title: "2 Mode Belajar",
-      description:
-        "English → Indonesian dan Indonesian → English. Pilih mode sesuai kebutuhan Anda.",
-      gradient: "from-green-400 to-emerald-400",
-    },
-    {
-      icon: <Brain className="h-8 w-8" />,
-      title: "Evaluasi AI",
-      description:
-        "Dapatkan penilaian instant dengan skor 0-100 dan feedback detail dari AI.",
-      gradient: "from-teal-400 to-green-400",
-    },
-    {
-      icon: <TrendingUp className="h-8 w-8" />,
-      title: "Tracking Progress",
-      description:
-        "Pantau perkembangan belajar Anda dengan statistik dan riwayat lengkap.",
-      gradient: "from-emerald-400 to-green-500",
-    },
-    {
-      icon: <Target className="h-8 w-8" />,
-      title: "3 Tingkat Kesulitan",
-      description:
-        "Mulai dari level mudah hingga sulit, sesuaikan dengan kemampuan Anda.",
-      gradient: "from-lime-400 to-green-400",
-    },
-    {
-      icon: <Sparkles className="h-8 w-8" />,
-      title: "Feedback Konstruktif",
-      description:
-        "Dapatkan penjelasan detail tentang kesalahan dan cara memperbaikinya.",
-      gradient: "from-green-300 to-emerald-400",
-    },
-    {
-      icon: <Shield className="h-8 w-8" />,
-      title: "Data Aman",
-      description:
-        "Semua progress Anda tersimpan aman di database dan dapat diakses kapan saja.",
-      gradient: "from-teal-300 to-green-400",
-    },
-  ];
-
-  const benefits = [
-    "Gratis tanpa biaya tersembunyi",
-    "Langsung mulai tanpa setup rumit",
-    "Akses dari mana saja, kapan saja",
-    "Personal learning path",
-  ];
-
-  const stats = [
-    { value: "100%", label: "Gratis", icon: <Sparkles className="h-5 w-5" /> },
-    { value: "AI", label: "Powered", icon: <Brain className="h-5 w-5" /> },
-    { value: "24/7", label: "Available", icon: <Zap className="h-5 w-5" /> },
-  ];
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-    },
-  };
-
-  if (status === "loading") {
-    return <LoadingScreen fullPage={true} />;
-  }
+  if (status === "loading") return <LoadingScreen fullPage={true} />;
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-green-50 via-white to-green-50">
+    <div className="min-h-screen bg-white text-gray-800 font-[family-name:var(--font-nunito)] selection:bg-[#818CF8] selection:text-white">
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        .duo-btn {
+          border-bottom-width: 4px;
+          transition: all 0.1s ease;
+        }
+        .duo-btn:hover {
+          transform: translateY(-2px);
+          border-bottom-width: 6px;
+        }
+        .duo-btn:active {
+          transform: translateY(4px);
+          border-bottom-width: 0px;
+        }
+        
+        .cloud-bg {
+          position: absolute;
+          background: white;
+          border-radius: 999px;
+          opacity: 0.7;
+          border: 3px solid #E2E8F0;
+        }
+      `}} />
+
       <Navbar />
 
-      {/* Hero Section */}
-      <main className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 pt-20 pb-16 sm:pt-24 sm:pb-20">
-          <div className="text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <Badge className="mb-4 px-4 py-1.5 text-sm">
-                <Sparkles className="h-3 w-3 mr-1 inline" />
-                Powered by AI Technology
-              </Badge>
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6">
-                <span className="bg-linear-to-r from-primary via-green-600 to-emerald-600 bg-clip-text text-transparent">
-                  Sistem Pembelajaran
-                </span>
-                <br />
-                <span className="text-gray-900">Bahasa Inggris dengan AI</span>
-              </h1>
-              <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-                Tingkatkan kemampuan bahasa Inggris Anda dengan latihan
-                terjemahan interaktif yang dinilai oleh AI. Gratis, mudah, dan
-                efektif!
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                <Button asChild size="lg" className="text-lg px-8 group">
-                  <Link href="/register">
-                    Mulai Belajar Gratis
-                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  size="lg"
-                  variant="outline"
-                  className="text-lg px-8"
-                >
-                  <Link href="/about">Pelajari Lebih Lanjut</Link>
-                </Button>
-              </div>
-            </motion.div>
+      {/* Cloud Decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="cloud-bg w-48 h-16 top-24 -left-12 shadow-sm animate-[bounce_4s_infinite]" />
+        <div className="cloud-bg w-64 h-20 top-40 -right-16 shadow-sm animate-[bounce_5s_infinite]" />
+      </div>
 
-            {/* Stats */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="flex flex-wrap justify-center gap-8 mb-16"
-            >
-              {stats.map((stat, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <div className="bg-primary/10 p-2 rounded-lg text-primary">
-                    {stat.icon}
-                  </div>
-                  <div className="text-left">
-                    <div className="text-2xl font-bold text-primary">
-                      {stat.value}
-                    </div>
-                    <div className="text-sm text-gray-600">{stat.label}</div>
-                  </div>
-                </div>
-              ))}
-            </motion.div>
-          </div>
-        </div>
+      {/* ==========================================
+          1. HERO SECTION
+         ========================================== */}
+      <section className="max-w-7xl mx-auto px-6 pt-8 pb-12 lg:pt-12 lg:pb-16">
+        <div className="grid lg:grid-cols-12 gap-16 items-center">
 
-        {/* Decorative elements */}
-        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl -z-10"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-green-500/5 rounded-full blur-3xl -z-10"></div>
-      </main>
+          <div className="lg:col-span-7 text-center lg:text-left z-10 space-y-8">
+            <h1 className="text-5xl sm:text-7xl font-black text-gray-950 leading-[1.1] tracking-tight">
+              Cara Pintar, Cepat & <br />
+              <AnimatedText /> Belajar <br />
+              Bahasa Inggris!
+            </h1>
 
-      {/* Features Section */}
-      <section className="py-20 px-4 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl font-bold mb-4">Fitur Unggulan</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Semua yang Anda butuhkan untuk meningkatkan kemampuan bahasa
-              Inggris
+            <p className="text-xl sm:text-2xl text-[#78909C] font-bold max-w-xl mx-auto lg:mx-0 leading-relaxed">
+              Platform interaktif yang menggabungkan asyiknya bermain game dengan koreksi kecerdasan buatan (AI) secara instan.
             </p>
-          </motion.div>
 
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
-          >
-            {features.map((feature, index) => (
-              <motion.div key={index} variants={itemVariants}>
-                <Card className="h-full hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/20 group">
-                  <CardHeader>
-                    <div
-                      className={`w-16 h-16 bg-linear-to-br ${feature.gradient} rounded-xl flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform`}
-                    >
-                      {feature.icon}
-                    </div>
-                    <CardTitle className="text-xl">{feature.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="text-base">
-                      {feature.description}
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Benefits Section */}
-      <section className="py-20 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl font-bold mb-4">
-              Kenapa Memilih LernLang?
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Platform pembelajaran bahasa Inggris yang dirancang untuk
-              kesuksesan Anda
-            </p>
-          </motion.div>
-
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Image */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="relative"
-            >
-              <div className="aspect-square rounded-2xl overflow-hidden shadow-2xl">
-                <img
-                  src="/banner_learnlang.png"
-                  alt="LernLang Platform"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              {/* Decorative element */}
-              <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-primary/10 rounded-full blur-2xl -z-10"></div>
-            </motion.div>
-
-            {/* Content */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="space-y-6"
-            >
-              <div>
-                <h3 className="text-2xl font-bold mb-4 text-primary">
-                  Pembelajaran yang Efektif dan Menyenangkan
-                </h3>
-                <p className="text-gray-600 leading-relaxed mb-6">
-                  LernLang dirancang khusus untuk membantu Anda menguasai bahasa
-                  Inggris dengan cara yang interaktif dan personal. Menggunakan
-                  teknologi AI terkini, kami memberikan feedback real-time yang
-                  akurat dan membantu Anda belajar dari setiap kesalahan.
-                </p>
-                <p className="text-gray-600 leading-relaxed mb-6">
-                  Dengan sistem evaluasi yang canggih, Anda tidak hanya
-                  mendapatkan skor, tetapi juga pemahaman mendalam tentang
-                  struktur bahasa, grammar, dan konteks penggunaan kata yang
-                  tepat. Setiap latihan dirancang untuk meningkatkan kemampuan
-                  Anda secara bertahap.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                {benefits.map((benefit, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: 20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.1 * index }}
-                    className="flex items-center gap-3 bg-green-50 rounded-lg p-4"
-                  >
-                    <CheckCircle2 className="h-6 w-6 text-primary shrink-0" />
-                    <span className="text-gray-700 font-medium">{benefit}</span>
-                  </motion.div>
-                ))}
-              </div>
-
-              <div className="pt-4">
-                <Button asChild size="lg" className="text-lg px-8">
-                  <Link href="/register">
-                    Mulai Belajar Sekarang
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                </Button>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section className="py-20 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl font-bold mb-4">Cara Mudah Memulai</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Hanya 3 langkah untuk mulai belajar bahasa Inggris
-            </p>
-          </motion.div>
-
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid md:grid-cols-3 gap-8"
-          >
-            {[
-              {
-                step: "1",
-                title: "Daftar Gratis",
-                description:
-                  "Buat akun dalam hitungan detik tanpa biaya apapun",
-                icon: <GraduationCap className="h-8 w-8" />,
-              },
-              {
-                step: "2",
-                title: "Pilih Mode",
-                description: "Tentukan mode dan tingkat kesulitan yang sesuai",
-                icon: <Target className="h-8 w-8" />,
-              },
-              {
-                step: "3",
-                title: "Mulai Belajar",
-                description: "Latihan dan dapatkan feedback instant dari AI",
-                icon: <BookOpen className="h-8 w-8" />,
-              },
-            ].map((item, index) => (
-              <motion.div
-                key={index}
-                variants={itemVariants}
-                className="text-center relative"
-              >
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-primary text-white rounded-full text-2xl font-bold mb-6">
-                  {item.step}
-                </div>
-                {index < 2 && (
-                  <div className="hidden md:block absolute top-8 left-1/2 w-full h-0.5 bg-primary/20"></div>
-                )}
-                <div className="mb-4 text-primary flex justify-center">
-                  {item.icon}
-                </div>
-                <h3 className="text-xl font-bold mb-2">{item.title}</h3>
-                <p className="text-gray-600">{item.description}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-4 bg-linear-to-br from-green-50 to-emerald-50">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <h2 className="text-4xl font-bold mb-6">
-              Siap Meningkatkan Bahasa Inggris Anda?
-            </h2>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-              Bergabunglah sekarang dan mulai perjalanan belajar Anda hari ini!
-            </p>
-            <Button asChild size="lg" className="text-lg px-8 group">
-              <Link href="/register">
-                Daftar Sekarang - Gratis!
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start max-w-md">
+              <Link href="/register" className="w-full">
+                <button className="w-full py-5 bg-[#6366F1] hover:bg-[#818CF8] text-white border-b-6 border-[#4338CA] rounded-2xl font-black text-xl duo-btn flex items-center justify-center gap-3 shadow-md">
+                  MULAI SEKARANG ➔
+                </button>
               </Link>
-            </Button>
-          </motion.div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-5 z-10">
+            <HeroMascotIllustration />
+          </div>
+
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div className="col-span-2">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="relative w-8 h-8">
-                  <Image
-                    src="/learnlang.png"
-                    alt="LernLang Logo"
-                    fill
-                    className="object-contain"
-                  />
-                </div>
-                <span className="text-xl font-bold">LernLang</span>
-              </div>
-              <p className="text-gray-400 mb-4">
-                Platform belajar bahasa Inggris dengan teknologi AI terdepan.
-                Gratis, mudah, dan efektif.
-              </p>
+      {/* ==========================================
+          STATS SECTION (SOCIAL PROOF)
+         ========================================== */}
+      {/* <section className="max-w-6xl mx-auto px-6 pb-20">
+        <div className="bg-white border-4 border-gray-200 rounded-3xl p-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-center shadow-[0_6px_0_#E2E8F0] relative overflow-hidden">
+          <div className="space-y-1">
+            <h3 className="text-4xl font-black text-[#6366F1]">10,000+</h3>
+            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">Kalimat Teranalisis AI</p>
+          </div>
+          <div className="border-t-2 md:border-t-0 md:border-x-2 border-gray-100 py-4 md:py-0 space-y-1">
+            <h3 className="text-4xl font-black text-emerald-500">99.8%</h3>
+            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">Koreksi Grammar Presisi</p>
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-4xl font-black text-amber-500">24/7</h3>
+            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">Mentor AI Aktif Menemani</p>
+          </div>
+        </div>
+      </section> */}
+
+      {/* ==========================================
+          2. THE PLAYGROUND (Mini-game)
+         ========================================== */}
+      <section className="bg-[#F0F7FF] border-y-2 border-gray-200 py-24 px-6 relative">
+        <div className="max-w-6xl mx-auto flex flex-col items-center">
+
+          <div className="text-center mb-12 flex flex-col items-center gap-2">
+            <GameControllerIcon />
+            <h2 className="text-3xl sm:text-5xl font-black text-gray-950 mb-2">Coba Fitur Detektif AI!</h2>
+            <p className="text-lg text-[#0288D1] font-bold">Temukan 1 kata yang salah secara grammar, dan lihat penjelasan cerdas dari AI</p>
+          </div>
+
+          <div className="w-full grid lg:grid-cols-12 gap-12 items-center">
+            <div className="lg:col-span-4 flex items-center justify-center">
+              <AIMascot mood={mascotMood} />
             </div>
-            <div>
-              <h3 className="font-bold mb-4">Navigasi</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li>
-                  <Link href="/" className="hover:text-white transition-colors">
-                    Beranda
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/about"
-                    className="hover:text-white transition-colors"
-                  >
-                    Tentang
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/contact"
-                    className="hover:text-white transition-colors"
-                  >
-                    Kontak
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-bold mb-4">Akun</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li>
-                  <Link
-                    href="/login"
-                    className="hover:text-white transition-colors"
-                  >
-                    Masuk
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/register"
-                    className="hover:text-white transition-colors"
-                  >
-                    Daftar
-                  </Link>
-                </li>
-              </ul>
+            <div className="lg:col-span-8 w-full">
+              <DuolingoGame onResult={(mood) => setMascotMood(mood)} />
             </div>
           </div>
-          <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
-            <p>LernLang © 2026 - Belajar Bahasa Inggris dengan AI</p>
+
+        </div>
+      </section>
+
+      {/* ==========================================
+          3. VISUAL LEARNING TREE (Path Map)
+         ========================================== */}
+      <section className="py-24 px-6 relative">
+        <div className="max-w-6xl mx-auto flex flex-col items-center">
+
+          <div className="text-center mb-16 flex flex-col items-center gap-2">
+            <CompassIcon />
+            <h2 className="text-3xl sm:text-5xl font-black text-gray-950 mb-2">Jalur Belajar Yang Rapi</h2>
+            <p className="text-lg text-[#78909C] font-bold">Klik tombol angka di peta untuk mengintip materi kuis kami!</p>
+          </div>
+
+          <InteractivePathMap />
+
+        </div>
+      </section>
+
+      {/* ==========================================
+          4. STORYTELLING ALTERNATING SECTIONS
+         ========================================== */}
+
+      {/* Section A: Belajar Sambil Bermain (Tech battery themed) */}
+      <section className="bg-white border-y-2 border-gray-200 py-24 px-6 relative">
+        <div className="max-w-6xl mx-auto grid lg:grid-cols-12 gap-16 items-center">
+          <div className="lg:col-span-5 order-last lg:order-first">
+            <GamificationIllustration />
+          </div>
+          <div className="lg:col-span-7">
+            <div className="flex items-center gap-3 mb-6">
+              <TrophyBadgeIcon />
+              <span className="text-xs font-black bg-[#E0E7FF] text-[#3730A3] px-3.5 py-1.5 rounded-full uppercase tracking-wider border-2 border-[#A5B4FC]">Tantangan Seru</span>
+            </div>
+            <h2 className="text-4xl sm:text-5xl font-black text-gray-950 mb-6 leading-tight">
+              Kumpulkan Streak Harian & Jaga Sisa Energi!
+            </h2>
+            <p className="text-lg text-[#78909C] font-bold leading-relaxed mb-6">
+              Di LearnLang, setiap kebiasaan baikmu akan dihargai. Jaga keaktifan belajarmu dengan mengumpulkan Streak harian. Rasakan ketegangan mempertahankan sisa daya baterai (energy) di setiap kuis sulit!
+            </p>
+            <p className="text-base text-gray-500 font-bold leading-relaxed">
+              Sistem gamifikasi cerdas ini membuat belajar tidak lagi menjadi beban, melainkan hiburan seru yang melatih fokusmu setiap harinya.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Section B: AI Evaluator */}
+      <section className="py-24 px-6 relative">
+        <div className="max-w-6xl mx-auto grid lg:grid-cols-12 gap-16 items-center">
+          <div className="lg:col-span-7">
+            <div className="flex items-center gap-3 mb-6">
+              <RobotBadgeIcon />
+              <span className="text-xs font-black bg-[#E1F5FE] text-[#0277BD] px-3.5 py-1.5 rounded-full uppercase tracking-wider border-2 border-[#81D4FA]">Teknologi Cerdas</span>
+            </div>
+            <h2 className="text-4xl sm:text-5xl font-black text-gray-950 mb-6 leading-tight">
+              Evaluasi AI Instan & Penjelasan Super Detail
+            </h2>
+            <p className="text-lg text-[#78909C] font-bold leading-relaxed mb-6">
+              Salah menyusun kalimat bahasa Inggris? Tenang! Sistem kecerdasan buatan (AI) kami akan langsung memeriksa letak kesalahanmu secara detail dan memberikan saran perbaikan grammar yang tepat.
+            </p>
+            <p className="text-base text-gray-500 font-bold leading-relaxed">
+              Bukan cuma menyalahkan, AI kami menjelaskan struktur kalimat yang benar sehingga kamu bisa belajar dari kesalahan secara mendalam dan cepat pintar.
+            </p>
+          </div>
+          <div className="lg:col-span-5">
+            <AIReviewIllustration />
+          </div>
+        </div>
+      </section>
+
+      {/* Section C: Leaderboard */}
+      <section className="bg-white border-y-2 border-gray-200 py-24 px-6 relative">
+        <div className="max-w-6xl mx-auto grid lg:grid-cols-12 gap-16 items-center">
+          <div className="lg:col-span-5 order-last lg:order-first">
+            <LeaderboardIllustration />
+          </div>
+          <div className="lg:col-span-7">
+            <div className="flex items-center gap-3 mb-6">
+              <CrownBadgeIcon />
+              <span className="text-xs font-black bg-[#FFFDE7] text-[#F57F17] px-3.5 py-1.5 rounded-full uppercase tracking-wider border-2 border-[#FFF59D]">Sosial & Kompetisi</span>
+            </div>
+            <h2 className="text-4xl sm:text-5xl font-black text-gray-950 mb-6 leading-tight">
+              Kompetisi Sehat di Papan Peringkat Global
+            </h2>
+            <p className="text-lg text-[#78909C] font-bold leading-relaxed mb-6">
+              Kumpulkan poin dari setiap penyelesaian pelajaran dan raih peringkat teratas di papan klasemen! Diskusi terbuka di forum kian mempermudah kamu bertukar tips dan trik belajar bersama pelajar lainnya.
+            </p>
+            <p className="text-base text-gray-500 font-bold leading-relaxed">
+              Dengan interaksi sosial yang dinamis, motivasi belajarmu akan terus terjaga bersama komunitas yang suportif.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          5. FUN TESTIMONIALS (Premium hovering cards)
+         ========================================== */}
+      <section className="py-24 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16 flex flex-col items-center gap-2">
+            <HeartBadgeIcon />
+            <h2 className="text-4xl font-black text-gray-950 mb-2">Disukai Banyak Pelajar Seru</h2>
+            <p className="text-lg text-[#78909C] font-bold">Inilah pengalaman asyik mereka yang sudah belajar bersama kami.</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <motion.div
+              whileHover={{ y: -8, boxShadow: "0 20px 25px -5px rgba(99, 102, 241, 0.15), 0 10px 10px -5px rgba(99, 102, 241, 0.1)" }}
+              className="bg-white border-3 border-b-6 border-gray-200 hover:border-[#6366F1]/40 p-6 rounded-2xl flex flex-col justify-between transition-all duration-300"
+            >
+              <p className="font-bold text-gray-600 mb-6 italic">"Awalnya saya benci belajar grammar. Tapi game kuis di LearnLang bikin semuanya jadi adiktif!"</p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-emerald-400 rounded-full flex items-center justify-center text-white font-bold">R</div>
+                <div>
+                  <h4 className="font-black text-sm text-gray-900">Raka S.</h4>
+                  <p className="text-xs text-gray-400 font-bold">Pelajar</p>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ y: -8, boxShadow: "0 20px 25px -5px rgba(99, 102, 241, 0.15), 0 10px 10px -5px rgba(99, 102, 241, 0.1)" }}
+              className="bg-white border-3 border-b-6 border-gray-200 hover:border-[#6366F1]/40 p-6 rounded-2xl flex flex-col justify-between transition-all duration-300"
+            >
+              <p className="font-bold text-gray-600 mb-6 italic">"Penjelasan AI sangat membantu memahami struktur tenses secara presisi, mirip guru les privat!"</p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-400 rounded-full flex items-center justify-center text-white font-bold">A</div>
+                <div>
+                  <h4 className="font-black text-sm text-gray-900">Amelia D.</h4>
+                  <p className="text-xs text-gray-400 font-bold">Siswa SMA</p>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ y: -8, boxShadow: "0 20px 25px -5px rgba(99, 102, 241, 0.15), 0 10px 10px -5px rgba(99, 102, 241, 0.1)" }}
+              className="bg-white border-3 border-b-6 border-gray-200 hover:border-[#6366F1]/40 p-6 rounded-2xl flex flex-col justify-between transition-all duration-300"
+            >
+              <p className="font-bold text-gray-600 mb-6 italic">"Desain webnya super lucu dan bersahabat! Tidak bikin stres layaknya platform belajar biasa."</p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-purple-400 rounded-full flex items-center justify-center text-white font-bold">T</div>
+                <div>
+                  <h4 className="font-black text-sm text-gray-900">Taufik H.</h4>
+                  <p className="text-xs text-gray-400 font-bold">Karyawan</p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          6. MASSIVE BOLD CTA
+         ========================================== */}
+      <section className="max-w-5xl mx-auto px-6 py-12">
+        <div className="bg-gradient-to-r from-[#6366F1] to-[#818CF8] rounded-[2.5rem] p-12 text-center border-4 border-b-12 border-[#4338CA] shadow-md relative overflow-hidden">
+          <div className="relative z-10 flex flex-col items-center">
+            {/* Mascot header inside CTA */}
+            <motion.svg
+              animate={{ y: [0, -6, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              width="90"
+              height="90"
+              viewBox="0 0 160 160"
+              className="mb-4 drop-shadow-md"
+            >
+              <rect x="30" y="40" width="100" height="80" rx="20" fill="white" />
+              <motion.g
+                animate={{ rotate: [0, -5, 5, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                style={{ transformOrigin: "80px 40px" }}
+              >
+                <rect x="50" y="60" width="60" height="30" rx="8" fill="#1E1B4B" />
+                <ellipse cx="60" cy="80" rx="3" ry="2" fill="#FF8A80" opacity="0.8" />
+                <ellipse cx="100" cy="80" rx="3" ry="2" fill="#FF8A80" opacity="0.8" />
+                <circle cx="70" cy="75" r="5" fill="#10B981" />
+                <circle cx="90" cy="75" r="5" fill="#10B981" />
+              </motion.g>
+              <line x1="80" y1="40" x2="80" y2="20" stroke="white" strokeWidth="6" strokeLinecap="round" />
+              <circle cx="80" cy="15" r="8" fill="#FBBF24" />
+            </motion.svg>
+            <h2 className="text-4xl sm:text-6xl font-black text-white mb-6">Kuasai Bahasa dengan AI! 🚀</h2>
+            <p className="text-xl text-[#F1FFF8] font-bold mb-10 max-w-xl mx-auto">
+              Daftar gratis selamanya. Dapatkan akses penuh ke sistem koreksi AI sekarang juga!
+            </p>
+            <Link href="/register">
+              <button className="px-12 py-5 bg-white text-[#6366F1] border-b-6 border-gray-300 hover:border-gray-400 rounded-2xl font-black text-2xl active:translate-y-[4px] active:border-b-0 shadow-lg">
+                DAFTAR SEKARANG! 🚀
+              </button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          7. PLAYFUL FOOTER
+         ========================================== */}
+      <footer className="bg-white border-t-2 border-gray-200 pt-16 pb-8 px-6 mt-16">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-12 mb-12">
+          <div className="md:col-span-2">
+            <Link href="/" className="flex items-center gap-3 mb-4 group">
+              <svg className="w-10 h-10 group-hover:scale-110 transition-transform duration-200 drop-shadow-sm" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="15" y="20" width="70" height="70" rx="16" fill="#6366F1" />
+                <rect x="15" y="20" width="70" height="60" rx="16" fill="#818CF8" />
+                <line x1="50" y1="20" x2="50" y2="8" stroke="#4338CA" strokeWidth="5" strokeLinecap="round" />
+                <circle cx="50" cy="8" r="5" fill="#FBBF24" />
+                <circle cx="10" cy="50" r="7" fill="#4338CA" />
+                <circle cx="90" cy="50" r="7" fill="#4338CA" />
+                <rect x="25" y="35" width="50" height="25" rx="6" fill="#1E1B4B" />
+                <ellipse cx="32" cy="53" rx="3.5" ry="2" fill="#FF8A80" opacity="0.8" />
+                <ellipse cx="68" cy="53" rx="3.5" ry="2" fill="#FF8A80" opacity="0.8" />
+                <circle cx="40" cy="47" r="4.5" fill="#10B981" />
+                <circle cx="60" cy="47" r="4.5" fill="#10B981" />
+              </svg>
+              <span className="text-2xl font-black text-gray-900 tracking-tight">
+                Learn<span className="text-[#6366F1]">Lang</span>
+              </span>
+            </Link>
+            <p className="text-[#78909C] font-bold max-w-sm leading-relaxed">
+              Membuat belajar bahasa Inggris menyenangkan layaknya bermain game. Cerdas, menyenangkan, dan gratis selamanya!
+            </p>
+          </div>
+          <div>
+            <h4 className="font-black text-gray-900 mb-4 text-lg">Eksplor</h4>
+            <ul className="space-y-3 font-bold text-[#78909C]">
+              <li><Link href="/learn" className="hover:text-[#6366F1] transition-colors">Modul Belajar</Link></li>
+              <li><Link href="/quiz" className="hover:text-[#6366F1] transition-colors">Game Seru</Link></li>
+              <li><Link href="/blogs" className="hover:text-[#6366F1] transition-colors">Cerita & Artikel</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-black text-gray-900 mb-4 text-lg">Info</h4>
+            <ul className="space-y-3 font-bold text-[#78909C]">
+              <li><Link href="/about" className="hover:text-[#6366F1] transition-colors">Tentang Kami</Link></li>
+              <li><Link href="/contact" className="hover:text-[#6366F1] transition-colors">Hubungi Kami</Link></li>
+              <li><Link href="/login" className="hover:text-[#6366F1] transition-colors">Masuk Akun</Link></li>
+            </ul>
           </div>
         </div>
       </footer>

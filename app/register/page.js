@@ -3,17 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { motion } from "framer-motion";
+import { ArrowLeft, Eye, EyeOff, AlertCircle, Bird, PartyPopper, Rocket, Gift, Gamepad2, Bot, Trophy, MessageCircle } from "lucide-react";
+import HeroMascotIllustration from "@/components/HeroMascotIllustration";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -25,42 +17,33 @@ export default function RegisterPage() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
     if (formData.password !== formData.confirmPassword) {
-      setError("Password tidak cocok");
+      setError("Password tidak cocok. Periksa kembali! 🔑");
       return;
     }
-
     if (formData.password.length < 6) {
-      setError("Password minimal 6 karakter");
+      setError("Password minimal 6 karakter ya! 💪");
       return;
     }
-
     setLoading(true);
-
     try {
-      const response = await fetch("/api/auth/register", {
+      const res = await fetch("/api/auth/register", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: formData.name,
           email: formData.email,
           password: formData.password,
         }),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Registrasi gagal");
-      }
-
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Registrasi gagal");
       router.push("/login?registered=true");
     } catch (err) {
       setError(err.message);
@@ -69,114 +52,227 @@ export default function RegisterPage() {
     }
   };
 
+  const features = [
+    { icon: <Gamepad2 className="w-6 h-6 text-white" />, text: "Mini-game interaktif setiap hari" },
+    { icon: <Bot className="w-6 h-6 text-white" />, text: "Koreksi grammar AI secara instan" },
+    { icon: <Trophy className="w-6 h-6 text-white" />, text: "Papan peringkat & streak harian" },
+    { icon: <MessageCircle className="w-6 h-6 text-white" />, text: "Forum diskusi komunitas aktif" },
+  ];
+
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <div className="max-w-md w-full">
-        {/* Logo/Title */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">LernLang</h1>
-          <p className="text-muted-foreground">Buat akun baru</p>
-        </div>
+    <div className="min-h-screen bg-[#FFFDF9] font-[family-name:var(--font-nunito)] relative overflow-hidden">
+      {/* Cloud decorations */}
+      <div className="absolute top-20 -left-12 w-56 h-16 bg-white rounded-full border-2 border-gray-200 opacity-70 animate-[bounce_6s_ease-in-out_infinite] pointer-events-none z-0" />
+      <div className="absolute top-48 -right-16 w-64 h-20 bg-white rounded-full border-2 border-gray-200 opacity-70 animate-[bounce_8s_ease-in-out_infinite] pointer-events-none z-0" />
+      <div className="absolute bottom-24 -left-8 w-40 h-14 bg-white rounded-full border-2 border-gray-200 opacity-50 pointer-events-none z-0" />
 
-        {/* Register Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Registrasi</CardTitle>
-            <CardDescription>Daftar untuk mulai belajar bahasa</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {error && (
-              <Alert variant="destructive" className="mb-6">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+      {/* Back to home */}
+      <div className="absolute top-6 left-6 z-20">
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-gray-500 hover:text-[#6366F1] font-black text-sm transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" /> Beranda
+        </Link>
+      </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nama Lengkap</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  placeholder="John Doe"
-                  required
-                />
+      {/* Mobile logo */}
+      <div className="absolute top-5 right-6 lg:hidden z-20">
+        <span className="text-2xl font-black text-[#6366F1]">LernLang</span>
+      </div>
+
+      <div className="min-h-screen flex">
+        {/* ── LEFT: Register form ─────────────────── */}
+        <div className="flex-1 flex items-center justify-center px-6 py-16">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45 }}
+            className="w-full max-w-[440px]"
+          >
+            {/* Mobile mascot */}
+            <div className="lg:hidden flex justify-center mb-6">
+              <div className="w-20 h-20 bg-[#6366F1] rounded-3xl flex items-center justify-center shadow-lg border-b-4 border-[#4338CA]">
+                <Bird className="w-10 h-10 text-white" />
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  placeholder="email@example.com"
-                  required
-                />
+            {/* Heading */}
+            <div className="mb-8">
+              <div className="inline-flex items-center gap-2 bg-[#E0E7FF] border-2 border-[#A5B4FC] rounded-full px-4 py-1.5 mb-4">
+                <Gift className="w-4 h-4 text-[#3730A3]" />
+                <span className="text-[#3730A3] font-black text-xs uppercase tracking-wider">
+                  Gratis Selamanya
+                </span>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      confirmPassword: e.target.value,
-                    })
-                  }
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-
-              <Button type="submit" disabled={loading} className="w-full">
-                {loading ? "Memproses..." : "Daftar"}
-              </Button>
-            </form>
-
-            <div className="mt-6 text-center text-sm">
-              <p className="text-muted-foreground">
+              <h1 className="text-4xl font-black text-gray-950 leading-tight">
+                Daftar &amp; Mulai
+                <br />
+                <span className="text-[#6366F1] inline-flex items-center gap-2">Petualangan! <Rocket className="w-8 h-8" /></span>
+              </h1>
+              <p className="text-gray-500 font-bold mt-3 text-base">
                 Sudah punya akun?{" "}
                 <Link
                   href="/login"
-                  className="text-primary font-semibold hover:underline"
+                  className="text-[#6366F1] hover:text-[#4338CA] font-black underline underline-offset-2"
                 >
-                  Login di sini
+                  Masuk di sini →
                 </Link>
               </p>
             </div>
-          </CardContent>
-        </Card>
 
-        <div className="mt-6 text-center">
-          <Link
-            href="/"
-            className="text-sm text-muted-foreground hover:text-primary font-medium"
-          >
-            ← Kembali ke halaman utama
-          </Link>
+            {/* Error banner */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-3 bg-[#FFE5E5] border-2 border-[#FF4D4D] rounded-2xl px-4 py-3 mb-6"
+              >
+                <AlertCircle className="w-6 h-6 text-[#C62828]" />
+                <p className="text-[#C62828] font-bold text-sm leading-snug">{error}</p>
+              </motion.div>
+            )}
+
+            {/* Form card */}
+            <div className="bg-white border-2 border-gray-200 rounded-3xl shadow-[0_8px_0_#E2E8F0] p-8">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Name */}
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-widest text-gray-500 mb-2">
+                    Nama Lengkap
+                  </label>
+                  <input
+                    id="name"
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="John Doe"
+                    className="w-full px-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-2xl font-bold text-gray-800 placeholder-gray-300 focus:outline-none focus:border-[#6366F1] focus:bg-white focus:ring-4 focus:ring-[#6366F1]/10 transition-all text-sm"
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-widest text-gray-500 mb-2">
+                    Alamat Email
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="email@example.com"
+                    className="w-full px-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-2xl font-bold text-gray-800 placeholder-gray-300 focus:outline-none focus:border-[#6366F1] focus:bg-white focus:ring-4 focus:ring-[#6366F1]/10 transition-all text-sm"
+                  />
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-widest text-gray-500 mb-2">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="password"
+                      type={showPass ? "text" : "password"}
+                      required
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      placeholder="Min. 6 karakter"
+                      className="w-full px-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-2xl font-bold text-gray-800 placeholder-gray-300 focus:outline-none focus:border-[#6366F1] focus:bg-white focus:ring-4 focus:ring-[#6366F1]/10 transition-all text-sm pr-14"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPass(!showPass)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#6366F1] transition-colors text-lg"
+                    >
+                      {showPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-widest text-gray-500 mb-2">
+                    Konfirmasi Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="confirmPassword"
+                      type={showConfirm ? "text" : "password"}
+                      required
+                      value={formData.confirmPassword}
+                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                      placeholder="Ulangi password"
+                      className="w-full px-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-2xl font-bold text-gray-800 placeholder-gray-300 focus:outline-none focus:border-[#6366F1] focus:bg-white focus:ring-4 focus:ring-[#6366F1]/10 transition-all text-sm pr-14"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm(!showConfirm)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#6366F1] transition-colors text-lg"
+                    >
+                      {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-4 bg-[#6366F1] hover:bg-[#818CF8] disabled:opacity-60 disabled:cursor-not-allowed text-white font-black text-lg rounded-2xl border-b-4 border-[#4338CA] hover:border-b-[6px] active:border-b-0 active:translate-y-1 transition-all duration-100 shadow-sm flex items-center justify-center gap-2 mt-2"
+                >
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                      </svg>
+                      Mendaftar...
+                    </>
+                  ) : (
+                    <span className="flex items-center gap-2">DAFTAR SEKARANG <PartyPopper className="w-5 h-5" /></span>
+                  )}
+                </button>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* ── RIGHT: Green mascot panel ─────────────────── */}
+        <div className="hidden lg:flex w-[45%] bg-[#6366F1] flex-col items-center justify-center relative overflow-hidden px-10">
+          <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#818CF8] rounded-full opacity-50" />
+          <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-[#4338CA] rounded-full opacity-40" />
+          <div className="absolute top-1/3 -left-10 w-36 h-36 bg-[#818CF8] rounded-full opacity-60" />
+
+          <div className="relative z-10 text-center">
+            <HeroMascotIllustration />
+
+            <h2 className="text-4xl font-black text-white mt-4 drop-shadow-sm leading-tight">
+              Bergabung Sekarang!
+            </h2>
+            <p className="text-white/85 font-bold text-lg mt-3 max-w-xs mx-auto leading-relaxed">
+              Belajar bahasa Inggris jadi seru, gratis, dan pintar bersama AI!
+            </p>
+
+            {/* Features list */}
+            <div className="mt-8 space-y-3 text-left max-w-xs mx-auto">
+              {features.map((f, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.15 + i * 0.1, duration: 0.4 }}
+                  className="flex items-center gap-3 bg-white/20 backdrop-blur-sm rounded-2xl px-4 py-3"
+                >
+                  <div className="flex-shrink-0">{f.icon}</div>
+                  <span className="font-bold text-white text-sm">{f.text}</span>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
