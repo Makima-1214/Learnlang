@@ -25,6 +25,7 @@ import {
   Share2,
   Copy,
   Check,
+  MessageSquare,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
@@ -149,6 +150,31 @@ export default function PublicProfilePage() {
     }
   };
 
+  const getAchievementStyle = (badgeColor) => {
+    switch (badgeColor) {
+      case "green":
+        return "bg-green-50 border-green-200 text-green-700";
+      case "yellow":
+        return "bg-yellow-50 border-yellow-200 text-yellow-700";
+      case "orange":
+        return "bg-orange-50 border-orange-200 text-orange-700";
+      case "red":
+        return "bg-red-50 border-red-200 text-red-700";
+      case "purple":
+        return "bg-purple-50 border-purple-200 text-purple-700";
+      case "pink":
+        return "bg-pink-50 border-pink-200 text-pink-700";
+      case "cyan":
+        return "bg-cyan-50 border-cyan-200 text-cyan-700";
+      case "emerald":
+        return "bg-emerald-50 border-emerald-200 text-emerald-700";
+      case "gold":
+        return "bg-amber-50 border-amber-200 text-amber-700";
+      default:
+        return "bg-blue-50 border-blue-200 text-blue-700";
+    }
+  };
+
   if (loading) return <LoadingScreen />;
 
   if (notFound) {
@@ -222,9 +248,20 @@ export default function PublicProfilePage() {
                     <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
                       {user?.name}
                     </h1>
-                    <p className="text-base sm:text-lg text-gray-500 font-medium">
-                      @{user?.username}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
+                      <p className="text-base sm:text-lg text-gray-500 font-medium">
+                        @{user?.username}
+                      </p>
+                      {user?.viewerRelationship?.isFriend && (
+                        <Badge className="bg-green-100 text-green-700 border-0">
+                          🤝 Teman
+                        </Badge>
+                      )}
+                      {!user?.viewerRelationship?.isFriend &&
+                        user?.viewerRelationship?.isFollowing && (
+                          <Badge variant="outline">Mengikuti</Badge>
+                        )}
+                    </div>
                   </div>
 
                   {user?.bio && (
@@ -274,6 +311,29 @@ export default function PublicProfilePage() {
                       </Button>
                     </div>
                   </div>
+
+                  <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-2">
+                    <Badge variant="secondary">
+                      {user?.followersCount || 0} Pengikut
+                    </Badge>
+                    <Badge variant="secondary">
+                      {user?.followingCount || 0} Mengikuti
+                    </Badge>
+                    <Badge variant="secondary">
+                      {user?.friendshipCount || 0} Teman
+                    </Badge>
+                  </div>
+
+                  {user?.viewerRelationship?.isFriend && (
+                    <div className="pt-2 flex justify-center sm:justify-start">
+                      <Link href={`/chats?userId=${user.id}`}>
+                        <Button className="gap-2">
+                          <MessageSquare className="w-4 h-4" />
+                          Chat Teman
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -417,37 +477,42 @@ export default function PublicProfilePage() {
               </CardContent>
             </Card>
 
-            {/* Mode Breakdown */}
+            {/* Learning Methods Breakdown */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <BookOpen className="w-4 h-4" />
-                  Mode Latihan
+                  Metode Belajar
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {[
                   {
-                    key: "EN_ID",
-                    label: "Inggris → Indonesia",
-                    icon: "🇬🇧 → 🇮🇩",
+                    key: "vocabulary",
+                    label: "Vocabulary",
+                    icon: "📚",
                   },
                   {
-                    key: "ID_EN",
-                    label: "Indonesia → Inggris",
-                    icon: "🇮🇩 → 🇬🇧",
+                    key: "listening",
+                    label: "Listening",
+                    icon: "🎧",
                   },
-                ].map((mode) => {
-                  const count = user?.stats?.modeBreakdown?.[mode.key] || 0;
+                  {
+                    key: "grammar",
+                    label: "Grammar",
+                    icon: "✏️",
+                  },
+                ].map((method) => {
+                  const count = user?.stats?.methodBreakdown?.[method.key] || 0;
                   return (
                     <div
-                      key={mode.key}
+                      key={method.key}
                       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="text-lg">{mode.icon}</span>
+                        <span className="text-lg">{method.icon}</span>
                         <span className="font-medium text-sm">
-                          {mode.label}
+                          {method.label}
                         </span>
                       </div>
                       <Badge variant="secondary" className="font-bold">
@@ -468,63 +533,116 @@ export default function PublicProfilePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    {
-                      icon: "🎯",
-                      title: "Pemula",
-                      desc: "1 latihan",
-                      unlocked: (user?.stats?.totalExercises || 0) >= 1,
-                    },
-                    {
-                      icon: "📚",
-                      title: "Rajin",
-                      desc: "10 latihan",
-                      unlocked: (user?.stats?.totalExercises || 0) >= 10,
-                    },
-                    {
-                      icon: "🏆",
-                      title: "Juara",
-                      desc: "50 latihan",
-                      unlocked: (user?.stats?.totalExercises || 0) >= 50,
-                    },
-                    {
-                      icon: "💯",
-                      title: "Sempurna",
-                      desc: "Skor rata-rata 90+",
-                      unlocked: (user?.stats?.averageScore || 0) >= 90,
-                    },
-                    {
-                      icon: "⭐",
-                      title: "Bintang",
-                      desc: "5 jawaban benar",
-                      unlocked: (user?.stats?.correctCount || 0) >= 5,
-                    },
-                    {
-                      icon: "🔥",
-                      title: "Legenda",
-                      desc: "100 latihan",
-                      unlocked: (user?.stats?.totalExercises || 0) >= 100,
-                    },
-                  ].map((achievement) => (
-                    <div
-                      key={achievement.title}
-                      className={`p-3 rounded-lg border text-center transition-all ${
-                        achievement.unlocked
-                          ? "bg-white border-primary/30 shadow-sm"
-                          : "bg-gray-100 border-gray-200 opacity-50"
-                      }`}
-                    >
-                      <span className="text-2xl">{achievement.icon}</span>
-                      <p className="font-medium text-sm mt-1">
-                        {achievement.title}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {achievement.desc}
-                      </p>
+                {user?.achievementSummary ? (
+                  <div className="space-y-4">
+                    {/* Summary Stats */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="rounded-lg border bg-gradient-to-br from-blue-50 to-white p-2 text-center">
+                        <p className="text-lg font-bold text-blue-600">
+                          {user.achievementSummary.count || 0}
+                        </p>
+                        <p className="text-xs text-gray-600">Terbuka</p>
+                      </div>
+                      <div className="rounded-lg border bg-gradient-to-br from-amber-50 to-white p-2 text-center">
+                        <p className="text-lg font-bold text-amber-600">
+                          {user.achievementSummary.totalPoints || 0}
+                        </p>
+                        <p className="text-xs text-gray-600">Poin</p>
+                      </div>
+                      <div className="rounded-lg border bg-gradient-to-br from-emerald-50 to-white p-2 text-center">
+                        <p className="text-lg font-bold text-emerald-600">
+                          {user.achievementSummary.percentage || 0}%
+                        </p>
+                        <p className="text-xs text-gray-600">Progres</p>
+                      </div>
                     </div>
-                  ))}
-                </div>
+
+                    {/* Progress Bar */}
+                    <div>
+                      <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                        <span>Progres</span>
+                        <span>
+                          {user.achievementSummary.unlocked || 0}/
+                          {user.achievementSummary.total || 0}
+                        </span>
+                      </div>
+                      <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-primary to-emerald-500"
+                          style={{
+                            width: `${user.achievementSummary.percentage || 0}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Unlocked Achievements */}
+                    {user.achievements && user.achievements.length > 0 ? (
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-gray-600 mb-1">
+                          Dicapai ({user.achievements.length})
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
+                          {user.achievements.map((ach) => (
+                            <div
+                              key={ach.type}
+                              className={`rounded-lg border p-2.5 text-xs shadow-sm ${getAchievementStyle(ach.badgeColor)}`}
+                            >
+                              <div className="flex items-start gap-2">
+                                <span className="text-base leading-none">
+                                  {ach.icon || "🎯"}
+                                </span>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <p className="font-semibold truncate">
+                                      {ach.title}
+                                    </p>
+                                    <Badge
+                                      variant="secondary"
+                                      className="ml-auto shrink-0 text-[10px] px-1.5 py-0"
+                                    >
+                                      +{ach.points}
+                                    </Badge>
+                                  </div>
+                                  <p className="mt-1 line-clamp-2 text-[11px] text-gray-600">
+                                    {ach.description}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {/* Next Achievements */}
+                    {user.achievementSummary.nextAchievements &&
+                    user.achievementSummary.nextAchievements.length > 0 ? (
+                      <div className="space-y-1 border-t pt-2">
+                        <p className="text-xs font-medium text-gray-600 mb-1">
+                          Berikutnya
+                        </p>
+                        {user.achievementSummary.nextAchievements
+                          .slice(0, 2)
+                          .map((ach) => (
+                            <div
+                              key={ach.type}
+                              className="text-xs p-2 rounded bg-gray-50/50 flex items-center gap-2 opacity-60"
+                            >
+                              <span>{ach.icon || "🎯"}</span>
+                              <span className="font-medium truncate">
+                                {ach.title}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    Belum ada data pencapaian
+                  </p>
+                )}
               </CardContent>
             </Card>
 

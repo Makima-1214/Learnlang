@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import Image from "next/image";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,6 +22,8 @@ import {
   ClipboardList, LogOut, Menu, X, User, MessageSquare
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSocket } from "@/lib/socket-provider";
+import NotificationBell from "@/components/NotificationBell";
 
 // ==========================================
 //   BESPOKE PLAYFUL VECTOR NAV ICONS
@@ -78,6 +81,19 @@ export default function Navbar() {
 
   const user = session?.user;
   const isAdmin = user?.role === "ADMIN";
+  const { socket } = useSocket();
+  const [friendRequestCount, setFriendRequestCount] = useState(0);
+
+  useEffect(() => {
+    if (!socket) return;
+    const handler = (payload) => {
+      setFriendRequestCount((c) => c + 1);
+    };
+    socket.on("friend-request", handler);
+    return () => {
+      socket.off("friend-request", handler);
+    };
+  }, [socket]);
 
   const publicNavItems = [
     { name: "Beranda", href: "/", icon: <HomeIcon /> },
@@ -132,23 +148,33 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* Profile Dropdown */}
+            {/* Bell Icon - Notifications */}
+            {user && <NotificationBell />}
+
+            {/* Profile Dropdown - Show only for authenticated users */}
             {user && (
               <DropdownMenu>
                 <DropdownMenuTrigger className="focus:outline-none">
-                  <div className="flex items-center gap-3 bg-white border-2 border-b-4 border-gray-200 pl-4 pr-1 py-1 rounded-full cursor-pointer hover:bg-gray-50 active:translate-y-[2px] active:border-b-2 transition-all">
+                  <div className="relative flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
                     <div className="text-right hidden sm:block">
                       <p className="text-sm font-black text-gray-800">{user?.name}</p>
                       <p className="text-xs font-black text-[#6366F1]">
                         {isAdmin ? "Admin" : "Pelajar"}
                       </p>
                     </div>
-                    <Avatar className="w-8 h-8 border-2 border-white shadow-sm">
-                      <AvatarImage src={user?.avatar} alt={user?.name} />
-                      <AvatarFallback className="bg-[#6366F1] text-white font-black text-xs">
-                        {getInitials(user?.name)}
-                      </AvatarFallback>
-                    </Avatar>
+                    <div className="relative">
+                      <Avatar>
+                        <AvatarImage src={user?.avatar} alt={user?.name} />
+                        <AvatarFallback className="bg-primary text-primary-foreground">
+                          {getInitials(user?.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      {friendRequestCount > 0 && (
+                        <span className="absolute -top-2 -right-2 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                          {friendRequestCount}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 rounded-2xl border-2 border-b-4 border-gray-200 shadow-xl p-2 font-[family-name:var(--font-nunito)]">
@@ -176,6 +202,20 @@ export default function Navbar() {
 
                   <DropdownMenuItem asChild className="rounded-xl hover:bg-[#F9F0FF] focus:bg-[#F9F0FF] cursor-pointer font-black text-gray-700 mb-2">
                     <Link href="/diskusi"><MessageSquare className="mr-2 h-4 w-4 text-purple-500" /> Forum Diskusi</Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem asChild>
+                    <Link href="/chats" className="cursor-pointer">
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      Chats
+                    </Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem asChild>
+                    <Link href="/friends" className="cursor-pointer">
+                      <Users className="mr-2 h-4 w-4" />
+                      Cari Teman
+                    </Link>
                   </DropdownMenuItem>
 
                   {isAdmin && (

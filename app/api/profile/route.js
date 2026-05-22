@@ -24,7 +24,6 @@ export async function GET() {
         createdAt: true,
         _count: {
           select: {
-            histories: true,
             comments: true,
             reactions: true,
           },
@@ -36,23 +35,65 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Get learning stats
-    const stats = await prisma.history.aggregate({
-      where: { userId: session.user.id },
-      _avg: { score: true },
+    const [followersCount, followingCount, friendshipCount] = await Promise.all(
+      [
+        prisma.follow.count({
+          where: { followingId: session.user.id },
+        }),
+        prisma.follow.count({
+          where: { followerId: session.user.id },
+        }),
+        prisma.friendship.count({
+          where: {
+            OR: [
+              { initiatorId: session.user.id },
+              { friendId: session.user.id },
+            ],
+          },
+        }),
+      ],
+    );
+
+    // Get learning stats from completed LearningSession records
+    const completedSessions = await prisma.learningSession.findMany({
+      where: { userId: session.user.id, status: "COMPLETED" },
+      select: { id: true, score: true, total: true, method: true },
+    });
+
+    const totalExercises = completedSessions.length;
+    const averageScore = totalExercises
+      ? Math.round(
+          completedSessions.reduce((s, cs) => s + (cs.score || 0), 0) /
+            totalExercises || 0,
+        )
+      : 0;
+
+    const correctCount = completedSessions.filter(
+      (s) => typeof s.score === "number" && s.score === s.total,
+    ).length;
+
+    // Get learning method breakdown from learning sessions (completed)
+    const methodStats = await prisma.learningSession.groupBy({
+      by: ["method"],
+      where: { userId: session.user.id, status: "COMPLETED" },
       _count: { id: true },
     });
 
-    const correctCount = await prisma.history.count({
-      where: { userId: session.user.id, status: "BENAR" },
-    });
+    const methodBreakdown = methodStats.reduce((acc, m) => {
+      acc[m.method] = m._count.id;
+      return acc;
+    }, {});
 
     return NextResponse.json({
       ...user,
+      followersCount,
+      followingCount,
+      friendshipCount,
       stats: {
-        totalExercises: stats._count.id,
-        averageScore: Math.round(stats._avg.score || 0),
+        totalExercises,
+        averageScore,
         correctCount,
+        methodBreakdown,
       },
     });
   } catch (error) {

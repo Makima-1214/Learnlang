@@ -22,15 +22,46 @@ model User {
   role      Role     @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+    // Presence tracking for real-time features
+    isOnline  Boolean   @default(false)
+    lastOnline DateTime @default(now())
+    isTyping  Boolean   @default(false)
   
-  histories History[]
-  blogs     Blog[]
-  comments  Comment[]
-  reactions Reaction[]
-  quizzes   Quiz[]
-  quizResults QuizResult[]
-  rooms     Room[]
-  messages  Message[]
+  // histories removed - use learningSessions for completed session records
+  blogs         Blog[]
+  comments      Comment[]
+  reactions     Reaction[]
+  quizzes       Quiz[]
+  quizResults   QuizResult[]
+  rooms         Room[]
+  messages      Message[]
+  
+  // Friend relationships
+  followers     Follow[]  @relation("follower")
+  following     Follow[]  @relation("following")
+  friendsInitiated Friendship[] @relation("initiator")
+  friendsReceived  Friendship[] @relation("friend")
+  
+  // Friend Requests
+  friendRequestsSent FriendRequest[] @relation("sender")
+  friendRequestsReceived FriendRequest[] @relation("receiver")
+  
+  // Blocked Users
+  blockedUsers BlockedUser[] @relation("blocker")
+  blockedByUsers BlockedUser[] @relation("blocked")
+  
+  // Private Messages
+  sentMessages PrivateMessage[] @relation("sender")
+  receivedMessages PrivateMessage[] @relation("receiver")
+  
+  // Activity Feed
+  activities Activity[]
+  // Notifications inbox
+  notifications Notification[]
+  // Achievements
+  achievements Achievement[]
+  // Learning Sessions
+  learningSessions LearningSession[]
   
   @@map("users")
 }
@@ -40,28 +71,7 @@ enum Role {
   ADMIN
 }
 
-// History model to store learning progress
-model History {
-  id                 String   @id @default(cuid())
-  userId             String
-  mode               Mode     // EN_ID or ID_EN
-  sourceLanguage     String   // "en" or "id"
-  targetLanguage     String   // "id" or "en"
-  sourceSentence     String   @db.Text
-  userTranslation    String   @db.Text
-  correctTranslation String   @db.Text
-  score              Int
-  status             Status
-  feedback           String   @db.Text
-  difficulty         Difficulty
-  createdAt          DateTime @default(now())
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@index([userId])
-  @@index([createdAt])
-  @@map("histories")
-}
+// History model removed. Keep learning_sessions as canonical source of completed exercises.
 
 enum Mode {
   EN_ID  // English to Indonesian
@@ -241,4 +251,320 @@ model Message {
   @@index([userId])
   @@index([createdAt])
   @@map("messages")
+}
+// Follow model - tracks who follows whom
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String   // User who follows
+  followingId String   // User being followed
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId]) // A user can only follow another once
+  @@index([followerId])
+  @@index([followingId])
+  @@map("follows")
+}
+
+// Friendship model - tracks mutual friendships (both follow each other)
+model Friendship {
+  id         String   @id @default(cuid())
+  initiatorId String  // User who initiated the friendship (or first to follow)
+  friendId   String   // The friend
+  createdAt  DateTime @default(now())
+
+  initiator User @relation("initiator", fields: [initiatorId], references: [id], onDelete: Cascade)
+  friend    User @relation("friend", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([initiatorId, friendId]) // A friendship only exists once between two users
+  @@index([initiatorId])
+  @@index([friendId])
+  @@map("friendships")
+}
+
+// Friend Request model - tracks pending friend requests
+model FriendRequest {
+  id         String   @id @default(cuid())
+  senderId   String   // User sending request
+  receiverId String   // User receiving request
+  status     RequestStatus @default(PENDING)
+  createdAt  DateTime @default(now())
+  respondedAt DateTime?
+
+  sender   User @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId]) // Only one request between two users
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([status])
+  @@map("friend_requests")
+}
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+// Blocked User model - tracks blocked relationships
+model BlockedUser {
+  id        String   @id @default(cuid())
+  blockerId String   // User who blocked
+  blockedId String   // User being blocked
+  reason    String?  @db.Text
+  createdAt DateTime @default(now())
+
+  blocker User @relation("blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId]) // A user can only block another once
+  @@index([blockerId])
+  @@index([blockedId])
+  @@map("blocked_users")
+}
+
+// Private Message model - direct messaging between friends
+model PrivateMessage {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  content    String   @db.Text
+  attachmentUrl String? @db.Text
+  attachmentName String? @db.Text
+  attachmentType String? @db.Text
+  attachmentSize Int?
+  attachmentCaption String? @db.Text
+  createdAt  DateTime @default(now())
+  isRead     Boolean  @default(false)
+  readAt     DateTime?
+  isDeleted  Boolean  @default(false)
+
+  sender   User @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([createdAt])
+  @@map("private_messages")
+}
+
+// Activity Feed model - tracks user activities
+model Activity {
+  id        String   @id @default(cuid())
+  userId    String
+  type      ActivityType // "lesson_completed", "quiz_passed", "blog_published", "friend_added"
+  title     String
+  description String? @db.Text
+  metadata  String?  @db.LongText // Store additional data as JSON string
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([type])
+  @@map("activities")
+}
+
+enum ActivityType {
+  LESSON_COMPLETED
+  QUIZ_PASSED
+  BLOG_PUBLISHED
+  BLOG_COMMENTED
+  FRIEND_ADDED
+  FRIEND_ACCEPTED
+}
+
+enum NotificationType {
+  // Social/Friends
+  FOLLOW
+  FRIEND_REQUEST
+  FRIEND_REQUEST_ACCEPTED
+  FRIEND_ADDED
+  UNFOLLOW
+  
+  // Blog/Content
+  BLOG_COMMENT
+  BLOG_COMMENT_REPLY
+  BLOG_REACTION
+  BLOG_PUBLISHED
+  
+  // Quiz/Learning
+  QUIZ_CREATED
+  QUIZ_SHARED
+  QUIZ_RESULT
+  LESSON_COMPLETED
+  
+  // Chat/Messages
+  MESSAGE_RECEIVED
+  GROUP_MESSAGE
+  
+  // Discussion
+  ROOM_MESSAGE
+  ROOM_CREATED
+  
+  // System
+  SYSTEM
+  ANNOUNCEMENT
+}
+
+// Notification model - persistent user inbox
+model Notification {
+  id          String           @id @default(cuid())
+  userId      String           // recipient
+  type        NotificationType @default(SYSTEM)
+  title       String
+  description String?          @db.Text
+  icon        String?          @db.Text // icon name or emoji
+  link        String?          @db.Text // optional link for action
+  isRead      Boolean          @default(false)
+  metadata    String?          @db.LongText // JSON string for additional data
+  createdAt   DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([type])
+  @@map("notifications")
+}
+
+enum AchievementType {
+  // Social Achievements
+  FIRST_FRIEND          // Add first friend
+  FRIEND_MASTER        // Have 10+ friends
+  SOCIAL_BUTTERFLY     // Have 50+ followers
+  
+  // Learning Achievements
+  FIRST_LESSON         // Complete first lesson
+  LEARNING_STREAK_7    // Complete 7 consecutive days
+  LEARNING_STREAK_30   // Complete 30 consecutive days
+  POLYGLOT             // Complete 100 lessons total
+  LANGUAGE_EXPERT      // Complete 500 lessons total
+  
+  // Quiz Achievements
+  FIRST_QUIZ           // Complete first quiz
+  QUIZ_MASTER          // Score 100% on 5 quizzes
+  QUIZ_WIZARD          // Complete 50 quizzes
+  PERFECT_SCORE        // Get perfect score on any quiz
+  
+  // Blogging Achievements
+  FIRST_BLOG           // Publish first blog post
+  BLOGGER              // Publish 5 blog posts
+  VIRAL_POST           // Get 100+ reactions on a post
+  COMMENTATOR          // Leave 50 comments
+  
+  // Engagement Achievements
+  EARLY_BIRD           // Join first discussion room
+  COMMUNITY_HELPER     // Help 10 people (reactions/comments)
+  CONTENT_CREATOR      // Create content across 3+ features
+  ROOM_CREATOR         // Create first discussion room
+  ROOM_HOST            // Create 3 discussion rooms
+  DM_STARTER           // Send first private message
+  COMMUNITY_VOICE      // Send 25 room messages
+  LEGENDARY            // Reach 1000+ achievement points
+}
+
+model Achievement {
+  id             String          @id @default(cuid())
+  userId         String
+  type           AchievementType
+  title          String
+  description    String?         @db.Text
+  icon           String?         @db.Text      // emoji or icon name
+  badgeColor     String?         @default("blue") // color for badge display
+  points         Int             @default(10)  // XP points for achievement
+  unlockedAt     DateTime        @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type])  // Each user can only unlock each achievement once
+  @@index([userId])
+  @@index([type])
+  @@index([unlockedAt])
+  @@map("achievements")
+}
+
+// Vocabulary questions for DB-sourced multiple-choice exercises
+model VocabularyQuestion {
+  id        String   @id @default(cuid())
+  level     String   // CEFR level, e.g., "A1"
+  question  String   @db.Text
+  options   Json     // JSON object { A: string, B: string, C: string, D: string }
+  answer    String   // one of A|B|C|D
+  skill     String   // e.g., "vocabulary", "grammar"
+  createdAt DateTime @default(now())
+
+  @@index([level])
+  @@index([skill])
+  @@map("vocabulary_questions")
+}
+
+// (Speaking prompts removed) -- speaking feature deprecated
+// Listening exercises use TTS + shuffled chunks + ordered answer
+model ListeningQuestion {
+  id         String   @id @default(cuid())
+  level      String
+  chunks     Json
+  answer     Json
+  sentences  String   @db.Text
+  createdAt  DateTime @default(now())
+
+  @@index([level])
+  @@map("listening_questions")
+}
+
+// Grammar exercises show a sentence with one wrong word to replace
+model GrammarQuestion {
+  id          String   @id @default(cuid())
+  level       String
+  sentence    String   @db.Text
+  words       Json
+  wrongIndex  Int
+  choices     Json
+  answer      String
+  createdAt   DateTime @default(now())
+
+  @@index([level])
+  @@map("grammar_questions")
+}
+
+// Persistent learning session and per-session questions
+model LearningSession {
+  id          String   @id @default(cuid())
+  userId      String?  // optional for anonymous sessions
+  method      String   // e.g., "vocabulary", "listening", "grammar"
+  level       String
+  total       Int
+  score       Int?
+  status      String?  // e.g., "IN_PROGRESS", "COMPLETED"
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+
+  questions   SessionQuestion[]
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([method])
+  @@map("learning_sessions")
+}
+
+model SessionQuestion {
+  id           String   @id @default(cuid())
+  sessionId    String
+  questionId   String   // original question id from its table
+  questionType String   // which model it came from
+  snapshot     Json     // snapshot of question (options, text) at time of session
+  userAnswer   String?
+  isCorrect    Boolean?
+  order        Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  session LearningSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@map("session_questions")
 }

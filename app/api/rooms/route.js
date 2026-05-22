@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { awardRoomAchievements } from "@/lib/achievements";
 
 // GET - Get all rooms
 export async function GET() {
@@ -76,6 +77,12 @@ export async function POST(request) {
         },
       },
     });
+
+    try {
+      await awardRoomAchievements(session.user.id);
+    } catch (achievementError) {
+      console.error("Failed to award room achievements:", achievementError);
+    }
 
     return NextResponse.json(room, { status: 201 });
   } catch (error) {

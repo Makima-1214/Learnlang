@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  getAchievementProgress,
+  getUserAchievements,
+} from "@/lib/achievements";
 
 // GET - Get public user profile by username
 export async function GET(request, { params }) {
   try {
     const { username } = await params;
+    const session = await getServerSession(authOptions);
 
     const user = await prisma.user.findUnique({
       where: { username },
@@ -29,64 +36,154 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Get learning stats
-    const stats = await prisma.history.aggregate({
-      where: { userId: user.id },
-      _avg: { score: true },
-      _count: { id: true },
-    });
+    const [followersCount, followingCount, friendshipCount] = await Promise.all(
+      [
+        prisma.follow.count({
+          where: { followingId: user.id },
+        }),
+        prisma.follow.count({
+          where: { followerId: user.id },
+        }),
+        prisma.friendship.count({
+          where: {
+            OR: [{ initiatorId: user.id }, { friendId: user.id }],
+          },
+        }),
+      ],
+    );
 
-    const correctCount = await prisma.history.count({
-      where: { userId: user.id, status: "BENAR" },
-    });
+    let viewerRelationship = {
+      isFollowing: false,
+      isFriend: false,
+    };
 
-    const almostCorrectCount = await prisma.history.count({
-      where: { userId: user.id, status: "HAMPIR_BENAR" },
-    });
+    if (session?.user?.id && session.user.id !== user.id) {
+      const [followRecord, friendRecord] = await Promise.all([
+        prisma.follow.findUnique({
+          where: {
+            followerId_followingId: {
+              followerId: session.user.id,
+              followingId: user.id,
+            },
+          },
+        }),
+        prisma.friendship.findFirst({
+          where: {
+            OR: [
+              {
+                initiatorId: session.user.id,
+                friendId: user.id,
+              },
+              {
+                initiatorId: user.id,
+                friendId: session.user.id,
+              },
+            ],
+          },
+        }),
+      ]);
 
-    // Get difficulty breakdown
-    const difficultyStats = await prisma.history.groupBy({
-      by: ["difficulty"],
-      where: { userId: user.id },
-      _count: { id: true },
-    });
+      viewerRelationship = {
+        isFollowing: !!followRecord,
+        isFriend: !!friendRecord,
+      };
+    }
 
-    // Get mode breakdown (EN_ID vs ID_EN)
-    const modeStats = await prisma.history.groupBy({
-      by: ["mode"],
-      where: { userId: user.id },
-      _count: { id: true },
-    });
-
-    // Get recent activity (last 5)
-    const recentActivity = await prisma.history.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
-      take: 5,
+    // Get learning stats from LearningSession (completed)
+    const completedSessions = await prisma.learningSession.findMany({
+      where: { userId: user.id, status: "COMPLETED" },
       select: {
-        mode: true,
+        id: true,
         score: true,
-        status: true,
-        difficulty: true,
+        total: true,
+        method: true,
         createdAt: true,
+        level: true,
       },
+      orderBy: { createdAt: "desc" },
     });
+
+    const totalExercises = completedSessions.length;
+    const averageScore = totalExercises
+      ? Math.round(
+          completedSessions.reduce((s, cs) => s + (cs.score || 0), 0) /
+            totalExercises || 0,
+        )
+      : 0;
+
+    const correctCount = completedSessions.filter(
+      (s) => typeof s.score === "number" && s.score === s.total,
+    ).length;
+
+    // Define 'almost correct' as >=60% and <100%
+    const almostCorrectCount = completedSessions.filter((s) => {
+      if (typeof s.score !== "number" || !s.total) return false;
+      const pct = (s.score / s.total) * 100;
+      return pct >= 60 && pct < 100;
+    }).length;
+
+    // Difficulty breakdown - use 'level' as proxy
+    const difficultyStats = await prisma.learningSession.groupBy({
+      by: ["level"],
+      where: { userId: user.id, status: "COMPLETED" },
+      _count: { id: true },
+    });
+
+    // Mode breakdown no longer applicable (old EN_ID/ID_EN), return empty
+    const modeStats = [];
+
+    // Get learning method breakdown from learning sessions
+    const methodStats = await prisma.learningSession.groupBy({
+      by: ["method"],
+      where: { userId: user.id, status: "COMPLETED" },
+      _count: { id: true },
+    });
+
+    const methodBreakdown = methodStats.reduce((acc, m) => {
+      acc[m.method] = m._count.id;
+      return acc;
+    }, {});
+
+    // Get recent activity (last 5) from learning sessions
+    const recentActivity = completedSessions.slice(0, 5).map((s) => ({
+      method: s.method,
+      score: s.score,
+      total: s.total,
+      level: s.level,
+      createdAt: s.createdAt,
+    }));
+
+    const [achievementData, achievementProgress] = await Promise.all([
+      getUserAchievements(user.id),
+      getAchievementProgress(user.id),
+    ]);
 
     return NextResponse.json({
       ...user,
+      followersCount,
+      followingCount,
+      friendshipCount,
+      viewerRelationship,
       stats: {
-        totalExercises: stats._count.id,
-        averageScore: Math.round(stats._avg.score || 0),
+        totalExercises,
+        averageScore,
         correctCount,
         almostCorrectCount,
         difficultyBreakdown: difficultyStats.reduce((acc, d) => {
-          acc[d.difficulty] = d._count.id;
+          acc[d.level] = d._count.id;
           return acc;
         }, {}),
-        modeBreakdown: modeStats.reduce((acc, m) => {
-          acc[m.mode] = m._count.id;
-          return acc;
-        }, {}),
+        modeBreakdown: {},
+        methodBreakdown,
+      },
+      achievements: achievementData.achievements,
+      achievementSummary: {
+        count: achievementData.count,
+        totalPoints: achievementData.totalPoints,
+        unlocked: achievementProgress.unlocked,
+        total: achievementProgress.total,
+        percentage: achievementProgress.percentage,
+        nextAchievements: achievementProgress.nextAchievements,
       },
       recentActivity,
     });

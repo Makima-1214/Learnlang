@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { emitNewMessage } from "@/lib/socket";
+import { awardDirectMessageAchievements } from "@/lib/achievements";
 
 // GET - Get messages for a room
 export async function GET(request, { params }) {
@@ -109,6 +110,15 @@ export async function POST(request, { params }) {
 
     // Emit real-time event
     emitNewMessage(roomId, message);
+
+    try {
+      await awardDirectMessageAchievements(session.user.id);
+    } catch (achievementError) {
+      console.error(
+        "Failed to award room message achievements:",
+        achievementError,
+      );
+    }
 
     return NextResponse.json(message, { status: 201 });
   } catch (error) {
