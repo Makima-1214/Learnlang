@@ -1,8 +1,12 @@
 "use client";
 
 import Link from "next/link";
+<<<<<<< HEAD
 import Image from "next/image";
 import { useEffect, useState } from "react";
+=======
+import { useState, useEffect } from "react";
+>>>>>>> 3eb3d27027f6d2bdb49b6cc6118ee56598d56492
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -24,6 +28,51 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useSocket } from "@/lib/socket-provider";
 import NotificationBell from "@/components/NotificationBell";
+
+// ==========================================
+//   BESPOKE PLAYFUL VECTOR NAV ICONS
+// ==========================================
+
+const HomeIcon = () => (
+  <svg className="w-5 h-5 transition-transform duration-100 group-hover:scale-110" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3 10.1818L12 3L21 10.1818V20C21 20.5523 20.5523 21 20 21H14V14H10V21H4C3.44772 21 3 20.5523 3 20V10.1818Z" fill="#6366F1" stroke="#4338CA" strokeWidth="2.5" strokeLinejoin="round" />
+  </svg>
+);
+
+const BlogIcon = () => (
+  <svg className="w-5 h-5 transition-transform duration-100 group-hover:scale-110" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 19.5C4 18.837 4.26339 18.2011 4.73223 17.7322C5.20107 17.2634 5.83696 17 6.5 17H20V3H6.5C5.57174 3 4.6815 3.36875 4.02513 4.02513C3.36875 4.6815 3 5.57174 3 6.5V19.5C3 20.4283 3.36875 21.3185 4.02513 21.9749C4.6815 22.6313 5.57174 23 6.5 23H20V19.5H4Z" fill="#FF9600" stroke="#E65100" strokeWidth="2.5" strokeLinejoin="round" />
+  </svg>
+);
+
+const AboutIcon = () => (
+  <svg className="w-5 h-5 transition-transform duration-100 group-hover:scale-110" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M9 21H15M9 18H15M12 2C7.58 2 4 5.58 4 10C4 12.5 5.14 14.74 6.94 16.24C7.6 16.78 8 17.58 8 18.42V19C8 20.1 8.9 21 10 21H14C15.1 21 16 20.1 16 19V18.42C16 17.58 16.4 16.78 17.06 16.24C18.86 14.74 20 12.5 20 10C20 5.58 16.42 2 12 2Z" fill="#FFD54F" stroke="#FFB300" strokeWidth="2.5" strokeLinejoin="round" />
+  </svg>
+);
+
+const ContactIcon = () => (
+  <svg className="w-5 h-5 transition-transform duration-100 group-hover:scale-110" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="3" y="4" width="18" height="15" rx="3" fill="#1CB0F6" stroke="#0288D1" strokeWidth="2.5" />
+    <path d="M3 6L12 12L21 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const MascotLogo = () => (
+  <svg className="w-10 h-10 group-hover:scale-110 transition-transform duration-200 drop-shadow-sm" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="15" y="20" width="70" height="70" rx="16" fill="#6366F1" />
+    <rect x="15" y="20" width="70" height="60" rx="16" fill="#818CF8" />
+    <line x1="50" y1="20" x2="50" y2="8" stroke="#4338CA" strokeWidth="5" strokeLinecap="round" />
+    <circle cx="50" cy="8" r="5" fill="#FBBF24" />
+    <circle cx="10" cy="50" r="7" fill="#4338CA" />
+    <circle cx="90" cy="50" r="7" fill="#4338CA" />
+    <rect x="25" y="35" width="50" height="25" rx="6" fill="#1E1B4B" />
+    <ellipse cx="32" cy="53" rx="3.5" ry="2" fill="#FF8A80" opacity="0.8" />
+    <ellipse cx="68" cy="53" rx="3.5" ry="2" fill="#FF8A80" opacity="0.8" />
+    <circle cx="40" cy="47" r="4.5" fill="#10B981" />
+    <circle cx="60" cy="47" r="4.5" fill="#10B981" />
+  </svg>
+);
 
 // ==========================================
 //   BESPOKE PLAYFUL VECTOR NAV ICONS
@@ -148,6 +197,7 @@ export default function Navbar() {
               </div>
             )}
 
+<<<<<<< HEAD
             {/* Bell Icon - Notifications */}
             {user && <NotificationBell />}
 
@@ -156,12 +206,20 @@ export default function Navbar() {
               <DropdownMenu>
                 <DropdownMenuTrigger className="focus:outline-none">
                   <div className="relative flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
+=======
+            {/* Profile Dropdown */}
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger className="focus:outline-none">
+                  <div className="flex items-center gap-3 bg-white border-2 border-b-4 border-gray-200 pl-4 pr-1 py-1 rounded-full cursor-pointer hover:bg-gray-50 active:translate-y-[2px] active:border-b-2 transition-all">
+>>>>>>> 3eb3d27027f6d2bdb49b6cc6118ee56598d56492
                     <div className="text-right hidden sm:block">
                       <p className="text-sm font-black text-gray-800">{user?.name}</p>
                       <p className="text-xs font-black text-[#6366F1]">
                         {isAdmin ? "Admin" : "Pelajar"}
                       </p>
                     </div>
+<<<<<<< HEAD
                     <div className="relative">
                       <Avatar>
                         <AvatarImage src={user?.avatar} alt={user?.name} />
@@ -175,6 +233,14 @@ export default function Navbar() {
                         </span>
                       )}
                     </div>
+=======
+                    <Avatar className="w-8 h-8 border-2 border-white shadow-sm">
+                      <AvatarImage src={user?.avatar} alt={user?.name} />
+                      <AvatarFallback className="bg-[#6366F1] text-white font-black text-xs">
+                        {getInitials(user?.name)}
+                      </AvatarFallback>
+                    </Avatar>
+>>>>>>> 3eb3d27027f6d2bdb49b6cc6118ee56598d56492
                   </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 rounded-2xl border-2 border-b-4 border-gray-200 shadow-xl p-2 font-[family-name:var(--font-nunito)]">
@@ -190,6 +256,7 @@ export default function Navbar() {
                   
                   <DropdownMenuItem asChild className="rounded-xl hover:bg-[#F1FFF8] focus:bg-[#F1FFF8] cursor-pointer font-black text-gray-700 mb-1">
                     <Link href="/learn"><GraduationCap className="mr-2 h-4 w-4 text-[#6366F1]" /> Belajar</Link>
+<<<<<<< HEAD
                   </DropdownMenuItem>
 
                   <DropdownMenuItem asChild className="rounded-xl hover:bg-[#E1F5FE] focus:bg-[#E1F5FE] cursor-pointer font-black text-gray-700 mb-1">
@@ -216,6 +283,20 @@ export default function Navbar() {
                       <Users className="mr-2 h-4 w-4" />
                       Cari Teman
                     </Link>
+=======
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem asChild className="rounded-xl hover:bg-[#E1F5FE] focus:bg-[#E1F5FE] cursor-pointer font-black text-gray-700 mb-1">
+                    <Link href="/quiz"><FileText className="mr-2 h-4 w-4 text-[#1cb0f6]" /> Quiz & Game</Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem asChild className="rounded-xl hover:bg-amber-50 focus:bg-amber-50 cursor-pointer font-black text-gray-700 mb-1">
+                    <Link href="/history"><History className="mr-2 h-4 w-4 text-amber-500" /> Riwayat Belajar</Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem asChild className="rounded-xl hover:bg-[#F9F0FF] focus:bg-[#F9F0FF] cursor-pointer font-black text-gray-700 mb-2">
+                    <Link href="/diskusi"><MessageSquare className="mr-2 h-4 w-4 text-purple-500" /> Forum Diskusi</Link>
+>>>>>>> 3eb3d27027f6d2bdb49b6cc6118ee56598d56492
                   </DropdownMenuItem>
 
                   {isAdmin && (
