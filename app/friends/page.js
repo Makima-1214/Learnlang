@@ -3,25 +3,12 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Navbar from "@/components/Navbar";
+import DashboardLayout from "@/components/DashboardLayout";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  AlertCircle,
-  Users,
-  Heart,
-  Search,
-  Mail,
-  MessageSquare,
-  Loader2,
-  UserPlus,
-  Inbox,
-} from "lucide-react";
 import Link from "next/link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
@@ -30,6 +17,69 @@ import {
   syncFollowStateAcrossCollections,
   removeUserFromRecommendations,
 } from "@/lib/friends-utils";
+import { motion } from "framer-motion";
+
+// ==================================================
+// CUSTOM SVG ICONS — hand-drawn game style
+// ==================================================
+
+const SparkleIcon = () => (
+  <svg className="w-4 h-4 text-yellow-300 animate-pulse" viewBox="0 0 16 16" fill="none">
+    <path d="M8 0L9.5 5.5L15 7L9.5 8.5L8 14L6.5 8.5L1 7L6.5 5.5L8 0Z" fill="currentColor" />
+  </svg>
+);
+
+const SearchIcon = () => (
+  <svg className="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8"></circle>
+    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+);
+
+const HeartFilledIcon = () => (
+  <svg className="w-3.5 h-3.5 text-red-500 fill-red-500 animate-bounce" viewBox="0 0 24 24">
+    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+  </svg>
+);
+
+const MailIcon = () => (
+  <svg className="w-4 h-4 text-[#14B8A6]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+    <polyline points="22,6 12,13 2,6"></polyline>
+  </svg>
+);
+
+const FriendsBadgeIllustration = () => (
+  <svg className="w-16 h-16 drop-shadow-md" viewBox="0 0 80 80" fill="none">
+    {/* Head 1 */}
+    <circle cx="28" cy="35" r="12" fill="#E2E8F0" stroke="#0F766E" strokeWidth="3.5" />
+    {/* Body 1 */}
+    <path d="M12 58c0-8 6-12 16-12s16 4 16 12v3H12v-3z" fill="#0D9488" stroke="#0F766E" strokeWidth="3.5" />
+    {/* Head 2 */}
+    <circle cx="52" cy="35" r="12" fill="#E2E8F0" stroke="#0F766E" strokeWidth="3.5" />
+    {/* Body 2 */}
+    <path d="M36 58c0-8 6-12 16-12s16 4 16 12v3H36v-3z" fill="#2DD4BF" stroke="#0F766E" strokeWidth="3.5" strokeLinejoin="round" />
+    {/* Sparkle */}
+    <path d="M40 18l1.5 3 3 .5-2 2 .5 3-3-2-3 2 .5-3-2-2 3-.5 1.5-3z" fill="#F59E0B" />
+  </svg>
+);
+
+const EmptyInboxIcon = () => (
+  <svg className="w-20 h-20 mx-auto mb-4 drop-shadow-md" viewBox="0 0 80 80" fill="none">
+    <rect x="15" y="20" width="50" height="40" rx="8" fill="#F0FDF4" stroke="#10B981" strokeWidth="3" />
+    <path d="M15 28l25 15 25-15" stroke="#10B981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="40" cy="50" r="8" fill="#E8F5E9" />
+  </svg>
+);
+
+const LoaderIcon = () => (
+  <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none">
+    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+  </svg>
+);
+
+// ==================================================
 
 export default function FriendsPage() {
   const { data: session, status } = useSession();
@@ -154,7 +204,7 @@ export default function FriendsPage() {
   const handleSearch = async (e) => {
     e.preventDefault();
     if (searchQuery.length < 2) {
-      setError("Search query must be at least 2 characters");
+      setError("Masukkan minimal 2 karakter pencarian");
       return;
     }
 
@@ -218,15 +268,11 @@ export default function FriendsPage() {
       }
       const data = await response.json();
 
-      // Update follow status
       setFollowingIds((prev) => new Set([...prev, userId]));
       syncFollowStateAcrossLists(userId, true);
 
-      // UX polish: if action is done from recommendations context,
-      // remove the item instantly from recommendation cards.
       setRecommendations((prev) => removeUserFromRecommendations(prev, userId));
 
-      // Refresh current tab
       if (activeTab === "search") loadFriends();
       else if (activeTab === "recommendations") loadRecommendations();
       else if (activeTab === "followers") loadFollowers();
@@ -262,7 +308,6 @@ export default function FriendsPage() {
         throw new Error(fail?.error?.message || "Failed to unfollow");
       }
 
-      // Update follow status
       setFollowingIds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(userId);
@@ -270,7 +315,6 @@ export default function FriendsPage() {
       });
       syncFollowStateAcrossLists(userId, false);
 
-      // Refresh current tab
       if (activeTab === "search") loadFriends();
       else if (activeTab === "recommendations") loadRecommendations();
       else if (activeTab === "followers") loadFollowers();
@@ -286,29 +330,34 @@ export default function FriendsPage() {
   };
 
   const FriendCard = ({ user, isFriend }) => (
-    <Card className="hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+    <Card
+      className="border-4 border-b-8 border-gray-200 rounded-3xl overflow-hidden hover:border-[#14B8A6]/70 transition-all duration-200 bg-white"
+      style={{ borderBottomColor: '#E5E7EB' }}
+    >
       <CardContent className="pt-6">
-        <div className="flex items-start gap-3 sm:gap-4">
-          <Avatar className="w-12 h-12">
+        <div className="flex items-start gap-4">
+          <Avatar className="w-14 h-14 border-2 border-[#14B8A6]">
             <AvatarImage src={user.avatar} alt={user.name} />
-            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+            <AvatarFallback className="font-black bg-teal-100 text-teal-600">
+              {user.name.charAt(0).toUpperCase()}
+            </AvatarFallback>
           </Avatar>
 
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold text-sm truncate">{user.name}</h3>
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <h3 className="font-black text-gray-950 text-base truncate">{user.name}</h3>
               {isFriend && (
-                <Badge variant="outline" className="text-xs">
-                  <Heart className="w-3 h-3 mr-1 fill-red-500 text-red-500" />
+                <span className="inline-flex items-center gap-1 rounded-xl bg-red-50 px-2.5 py-1 text-[10px] font-black uppercase text-red-600 border border-red-200">
+                  <HeartFilledIcon />
                   Teman
-                </Badge>
+                </span>
               )}
             </div>
             {user.username && (
-              <p className="text-xs text-gray-500 mb-2">@{user.username}</p>
+              <p className="text-xs font-bold text-gray-400 mb-2">@{user.username}</p>
             )}
             {user.bio && (
-              <p className="text-xs text-gray-600 line-clamp-2 mb-3">
+              <p className="text-xs font-bold text-gray-500 line-clamp-2 mb-3 leading-relaxed">
                 {user.bio}
               </p>
             )}
@@ -319,35 +368,36 @@ export default function FriendsPage() {
                   href={`/chats?userId=${user.id}`}
                   className="w-full sm:w-1/2"
                 >
-                  <Button size="sm" variant="ghost" className="w-full gap-2">
-                    <MessageSquare className="w-4 h-4" />
-                    Chat
-                  </Button>
+                  <button className="w-full py-2 bg-indigo-50 border-2 border-indigo-200 text-[#4F46E5] hover:bg-indigo-100 rounded-2xl font-black text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm">
+                    💬 Chat
+                  </button>
                 </Link>
               )}
 
-              <Button
-                size="sm"
-                variant={followingIds.has(user.id) ? "outline" : "default"}
+              <button
                 onClick={() =>
                   followingIds.has(user.id)
                     ? handleUnfollow(user.id)
                     : handleFollow(user.id)
                 }
-                className={isFriend ? "w-full sm:w-1/2" : "w-full"}
+                className={`py-2 px-4 rounded-2xl font-black text-xs transition-all duration-100 flex items-center justify-center gap-1.5 shadow-sm ${
+                  followingIds.has(user.id)
+                    ? "bg-white border-2 border-gray-200 text-gray-600 hover:bg-gray-50"
+                    : "bg-[#14B8A6] hover:bg-[#2DD4BF] text-white border-b-4 border-[#0D9488]"
+                } ${isFriend ? "w-full sm:w-1/2" : "w-full"}`}
                 disabled={actionLoadingUserId === user.id}
               >
                 {actionLoadingUserId === user.id ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <LoaderIcon />
                     Memproses...
                   </>
                 ) : followingIds.has(user.id) ? (
-                  "Mengikuti"
+                  "Batal Ikuti"
                 ) : (
                   "Ikuti"
                 )}
-              </Button>
+              </button>
             </div>
           </div>
         </div>
@@ -356,37 +406,32 @@ export default function FriendsPage() {
   );
 
   const EmptyState = ({ title, description, actionLabel, onAction }) => (
-    <Card>
-      <CardContent className="py-10 text-center">
-        <div className="mx-auto mb-3 w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-          <Inbox className="w-6 h-6 text-gray-500" />
-        </div>
-        <h3 className="text-sm font-semibold text-gray-800 mb-1">{title}</h3>
-        <p className="text-sm text-gray-500 mb-4">{description}</p>
+    <Card className="border-4 border-b-8 border-gray-200 rounded-3xl p-8 bg-white text-center shadow-sm">
+      <CardContent className="py-6 flex flex-col items-center">
+        <EmptyInboxIcon />
+        <h3 className="text-xl font-black text-gray-900 mb-2">{title}</h3>
+        <p className="text-sm font-bold text-gray-500 mb-6 max-w-xs">{description}</p>
         {actionLabel && onAction && (
-          <Button
-            variant="outline"
-            size="sm"
+          <button
             onClick={onAction}
-            className="gap-2"
+            className="px-5 py-3.5 bg-[#14B8A6] hover:bg-[#2DD4BF] text-white border-b-4 border-[#0D9488] rounded-2xl font-black text-sm duo-btn flex items-center justify-center gap-2 shadow-sm"
           >
-            <UserPlus className="w-4 h-4" />
             {actionLabel}
-          </Button>
+          </button>
         )}
       </CardContent>
     </Card>
   );
 
   const LoadingCard = () => (
-    <Card>
-      <CardContent className="pt-6">
+    <Card className="border-4 border-gray-200 rounded-3xl p-6 bg-white shadow-sm">
+      <CardContent className="pt-0">
         <div className="flex gap-4">
-          <Skeleton className="w-12 h-12 rounded-full" />
+          <Skeleton className="w-14 h-14 rounded-full" />
           <div className="flex-1">
-            <Skeleton className="h-4 w-32 mb-2" />
-            <Skeleton className="h-3 w-24 mb-3" />
-            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-5 w-36 mb-2 rounded-xl" />
+            <Skeleton className="h-4 w-24 mb-3 rounded-xl" />
+            <Skeleton className="h-10 w-full rounded-2xl" />
           </div>
         </div>
       </CardContent>
@@ -395,8 +440,8 @@ export default function FriendsPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        Loading...
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-lg font-black text-[#14B8A6] animate-pulse">Memuat Pengguna...</div>
       </div>
     );
   }
@@ -406,249 +451,293 @@ export default function FriendsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <DashboardLayout>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        .cloud-bg {
+          position: absolute;
+          background: white;
+          border-radius: 999px;
+          opacity: 0.7;
+          border: 3px solid #E2E8F0;
+        }
+        .duo-btn {
+          border-bottom-width: 4px;
+          transition: all 0.1s ease;
+        }
+        .duo-btn:hover {
+          transform: translateY(-2px);
+          border-bottom-width: 6px;
+        }
+        .duo-btn:active {
+          transform: translateY(4px);
+          border-bottom-width: 0px;
+        }
+      `}} />
 
-      <div className="container mx-auto px-3 sm:px-4 py-5 sm:py-8 max-w-3xl">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold mb-2 flex items-center gap-2">
-                <Users className="w-8 h-8" />
-                Cari Teman
-              </h1>
-              <p className="text-gray-600">
-                Temukan dan ikuti teman-teman baru
-              </p>
-            </div>
-            <Link href="/friends/requests">
-              <Button variant="outline" className="gap-2 w-full sm:w-auto">
-                <Mail className="w-4 h-4" />
-                Inbox Permintaan
-              </Button>
-            </Link>
-          </div>
+      <div className="min-h-[calc(100vh-4rem)] bg-white relative w-full font-[family-name:var(--font-nunito)]">
+
+        {/* Cloud Decorations */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+          <div className="cloud-bg w-48 h-16 top-12 -left-12 shadow-sm animate-[bounce_4s_infinite]" />
+          <div className="cloud-bg w-64 h-20 top-32 -right-16 shadow-sm animate-[bounce_5s_infinite]" />
         </div>
 
-        {/* Error Alert */}
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 flex flex-col gap-8 relative z-10">
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          {/* Sticky Search + Tabs */}
-          <div className="sticky top-16 z-20 bg-gray-50/95 backdrop-blur-sm pt-1 pb-3 mb-3">
-            <Card className="mb-3 shadow-sm border-gray-200">
-              <CardContent className="pt-4 pb-4">
-                <form
-                  onSubmit={handleSearch}
-                  className="flex flex-col sm:flex-row gap-2"
-                >
-                  <Input
-                    placeholder="Cari nama atau username..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button
-                    type="submit"
-                    size="icon"
-                    disabled={loading || searchQuery.length < 2}
-                  >
-                    {loading && activeTab === "search" ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Search className="w-4 h-4" />
-                    )}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+          {/* ── Hero Banner — Gamified ── */}
+          <motion.section
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="overflow-hidden rounded-3xl bg-gradient-to-r from-[#0D9488] to-[#14B8A6] p-8 sm:p-10 text-white shadow-xl border-4 border-b-8 border-[#0F766E] relative"
+          >
+            <div className="flex flex-col gap-5 relative z-10">
+              <div className="inline-flex items-center gap-2 rounded-xl bg-white/20 backdrop-blur-sm px-4 py-2 text-sm font-black text-white border-2 border-white/30 shadow-sm w-fit uppercase tracking-wider">
+                👥 Temukan Komunitas
+              </div>
 
-            {/* Tabs */}
-            <div className="overflow-x-auto pb-1">
-              <TabsList className="inline-flex w-max min-w-full gap-1 p-1">
-                <TabsTrigger
-                  value="search"
-                  className="min-w-[92px] transition-all duration-200 data-[state=active]:shadow-sm data-[state=active]:scale-[1.02]"
-                >
-                  Cari
-                </TabsTrigger>
-                <TabsTrigger
-                  value="recommendations"
-                  className="min-w-[120px] transition-all duration-200 data-[state=active]:shadow-sm data-[state=active]:scale-[1.02]"
-                >
-                  Rekomendasi
-                </TabsTrigger>
-                <TabsTrigger
-                  value="friends"
-                  className="min-w-[92px] transition-all duration-200 data-[state=active]:shadow-sm data-[state=active]:scale-[1.02]"
-                >
-                  Teman
-                </TabsTrigger>
-                <TabsTrigger
-                  value="followers"
-                  className="min-w-[100px] transition-all duration-200 data-[state=active]:shadow-sm data-[state=active]:scale-[1.02]"
-                >
-                  Pengikut
-                </TabsTrigger>
-                <TabsTrigger
-                  value="following"
-                  className="min-w-[104px] transition-all duration-200 data-[state=active]:shadow-sm data-[state=active]:scale-[1.02]"
-                >
-                  Mengikuti
-                </TabsTrigger>
-              </TabsList>
+              <div className="max-w-2xl flex items-center justify-between gap-6">
+                <div>
+                  <h1 className="text-4xl sm:text-5xl font-black tracking-tight mb-4 drop-shadow-md leading-tight">
+                    Cari Teman Belajar!
+                  </h1>
+                  <p className="text-lg sm:text-xl text-white/90 font-bold leading-relaxed max-w-xl">
+                    Temukan rekan belajar bahasa Inggris di seluruh Indonesia, ikuti aktivitas mereka, dan berlombalah menjadi nomor satu!
+                  </p>
+                </div>
+                <div className="hidden sm:block">
+                  <FriendsBadgeIllustration />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-4 mt-2">
+                {[
+                  ["Teman", "Belajar Bareng"],
+                  ["Inbox", "Request Masuk"],
+                  ["Koneksi", "100% Interaktif"],
+                ].map(([value, label]) => (
+                  <div key={label} className="rounded-2xl border-4 border-[#0F766E] bg-white text-[#0F766E] px-5 py-3 shadow-[0_4px_0_#0F766E] transform hover:-translate-y-1 active:translate-y-1 active:shadow-none transition-all cursor-default">
+                    <div className="text-xl font-black leading-none mb-1">{value}</div>
+                    <div className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{label}</div>
+                  </div>
+                ))}
+              </div>
             </div>
+          </motion.section>
+
+          {/* ── Inbox / Actions Header ── */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <h2 className="text-3xl font-black text-gray-950 flex items-center gap-3">
+              Cari Teman Baru
+            </h2>
+            <Link href="/friends/requests" className="w-full sm:w-auto">
+              <button className="px-5 py-3.5 bg-white border-2 border-gray-200 hover:bg-gray-50 text-gray-700 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 shadow-sm w-full">
+                <MailIcon />
+                Inbox Permintaan
+              </button>
+            </Link>
           </div>
 
-          {/* Search Results */}
-          <TabsContent value="search" className="mt-6">
-            {loading ? (
-              <div className="grid gap-4">
-                {[...Array(3)].map((_, i) => (
-                  <LoadingCard key={i} />
-                ))}
-              </div>
-            ) : searchResults.length > 0 ? (
-              <div className="grid gap-4">
-                {searchResults.map((user) => (
-                  <FriendCard
-                    key={user.id}
-                    user={user}
-                    isFriend={user.isFriend}
-                  />
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title={
-                  hasSearched ? "Tidak ada hasil pencarian" : "Cari teman baru"
-                }
-                description={
-                  hasSearched
-                    ? "Coba kata kunci lain (nama atau username)."
-                    : "Masukkan minimal 2 karakter untuk mulai mencari teman."
-                }
-                actionLabel="Lihat rekomendasi"
-                onAction={() => setActiveTab("recommendations")}
-              />
-            )}
-          </TabsContent>
+          {/* Error Alert */}
+          {error && (
+            <Alert variant="destructive" className="rounded-2xl border-2 border-red-200 bg-red-50 text-red-700">
+              <AlertDescription className="font-bold">{error}</AlertDescription>
+            </Alert>
+          )}
 
-          {/* Recommendations */}
-          <TabsContent value="recommendations" className="mt-6">
-            {loading ? (
-              <div className="grid gap-4">
-                {[...Array(3)].map((_, i) => (
-                  <LoadingCard key={i} />
-                ))}
-              </div>
-            ) : recommendations.length > 0 ? (
-              <div className="grid gap-4">
-                {recommendations.map((user) => (
-                  <FriendCard
-                    key={user.id}
-                    user={user}
-                    isFriend={user.isFriend}
-                  />
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title="Belum ada rekomendasi"
-                description="Kami belum menemukan pengguna yang cocok untuk Anda saat ini."
-                actionLabel="Cari manual"
-                onAction={() => setActiveTab("search")}
-              />
-            )}
-          </TabsContent>
+          {/* ── Sticky search & Tabs selection ── */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col gap-6">
+            <div className="flex flex-col gap-4">
+              {/* Search Card Container */}
+              <Card className="border-4 border-gray-200 rounded-3xl overflow-hidden bg-white shadow-sm">
+                <CardContent className="p-4">
+                  <form onSubmit={handleSearch} className="flex gap-2">
+                    <Input
+                      placeholder="Cari nama lengkap atau @username..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="flex-1 rounded-2xl border-2 border-gray-200 px-4 py-3 font-bold text-gray-900"
+                    />
+                    <button
+                      type="submit"
+                      disabled={loading || searchQuery.length < 2}
+                      className="p-3 bg-[#14B8A6] hover:bg-[#2DD4BF] text-white rounded-2xl font-black text-sm flex items-center justify-center border-b-4 border-[#0D9488]"
+                    >
+                      <SearchIcon />
+                    </button>
+                  </form>
+                </CardContent>
+              </Card>
 
-          {/* Friends */}
-          <TabsContent value="friends" className="mt-6">
-            {loading ? (
-              <div className="grid gap-4">
-                {[...Array(3)].map((_, i) => (
-                  <LoadingCard key={i} />
-                ))}
+              {/* Tabs selection header */}
+              <div className="overflow-x-auto pb-1">
+                <TabsList className="inline-flex w-max min-w-full gap-2 p-1.5 bg-gray-100 rounded-2xl border border-gray-200">
+                  {[
+                    ["search", "Cari"],
+                    ["recommendations", "Rekomendasi"],
+                    ["friends", "Teman"],
+                    ["followers", "Pengikut"],
+                    ["following", "Mengikuti"],
+                  ].map(([val, label]) => (
+                    <TabsTrigger
+                      key={val}
+                      value={val}
+                      className="px-5 py-2.5 rounded-xl text-sm font-black text-gray-500 transition-all data-[state=active]:bg-[#14B8A6] data-[state=active]:text-white data-[state=active]:shadow-md"
+                    >
+                      {label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
               </div>
-            ) : friends.length > 0 ? (
-              <div className="grid gap-4">
-                {friends.map((user) => (
-                  <FriendCard key={user.id} user={user} isFriend={true} />
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title="Belum punya teman"
-                description="Mulai ikuti pengguna lain, lalu jika saling follow kalian akan jadi teman."
-                actionLabel="Lihat rekomendasi"
-                onAction={() => setActiveTab("recommendations")}
-              />
-            )}
-          </TabsContent>
+            </div>
 
-          {/* Followers */}
-          <TabsContent value="followers" className="mt-6">
-            {loading ? (
-              <div className="grid gap-4">
-                {[...Array(3)].map((_, i) => (
-                  <LoadingCard key={i} />
-                ))}
-              </div>
-            ) : followers.length > 0 ? (
-              <div className="grid gap-4">
-                {followers.map((user) => (
-                  <FriendCard
-                    key={user.id}
-                    user={user}
-                    isFriend={user.isFriend}
+            {/* Contents tab views */}
+            <div className="grid gap-6">
+              {/* Search view */}
+              <TabsContent value="search" className="mt-0 outline-none flex flex-col gap-4">
+                {loading ? (
+                  <div className="grid gap-4">
+                    {[...Array(3)].map((_, i) => (
+                      <LoadingCard key={i} />
+                    ))}
+                  </div>
+                ) : searchResults.length > 0 ? (
+                  <div className="grid gap-4">
+                    {searchResults.map((user) => (
+                      <FriendCard
+                        key={user.id}
+                        user={user}
+                        isFriend={user.isFriend}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState
+                    title={hasSearched ? "Tidak ada hasil" : "Cari teman baru"}
+                    description={
+                      hasSearched
+                        ? "Coba gunakan kata kunci lain."
+                        : "Ketik minimal 2 karakter di atas dan tekan enter untuk mulai mencari."
+                    }
+                    actionLabel="Lihat rekomendasi"
+                    onAction={() => setActiveTab("recommendations")}
                   />
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title="Belum ada pengikut"
-                description="Ketika ada pengguna yang mengikuti Anda, daftar ini akan terisi."
-                actionLabel="Cari teman"
-                onAction={() => setActiveTab("search")}
-              />
-            )}
-          </TabsContent>
+                )}
+              </TabsContent>
 
-          {/* Following */}
-          <TabsContent value="following" className="mt-6">
-            {loading ? (
-              <div className="grid gap-4">
-                {[...Array(3)].map((_, i) => (
-                  <LoadingCard key={i} />
-                ))}
-              </div>
-            ) : following.length > 0 ? (
-              <div className="grid gap-4">
-                {following.map((user) => (
-                  <FriendCard
-                    key={user.id}
-                    user={user}
-                    isFriend={user.isFriend}
+              {/* Recommendations view */}
+              <TabsContent value="recommendations" className="mt-0 outline-none flex flex-col gap-4">
+                {loading ? (
+                  <div className="grid gap-4">
+                    {[...Array(3)].map((_, i) => (
+                      <LoadingCard key={i} />
+                    ))}
+                  </div>
+                ) : recommendations.length > 0 ? (
+                  <div className="grid gap-4">
+                    {recommendations.map((user) => (
+                      <FriendCard
+                        key={user.id}
+                        user={user}
+                        isFriend={user.isFriend}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState
+                    title="Rekomendasi kosong"
+                    description="Belum ada rekomendasi teman untukmu saat ini."
+                    actionLabel="Cari manual"
+                    onAction={() => setActiveTab("search")}
                   />
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title="Belum mengikuti siapa pun"
-                description="Ikuti pengguna untuk membangun koneksi belajar Anda."
-                actionLabel="Lihat rekomendasi"
-                onAction={() => setActiveTab("recommendations")}
-              />
-            )}
-          </TabsContent>
-        </Tabs>
+                )}
+              </TabsContent>
+
+              {/* Friends view */}
+              <TabsContent value="friends" className="mt-0 outline-none flex flex-col gap-4">
+                {loading ? (
+                  <div className="grid gap-4">
+                    {[...Array(3)].map((_, i) => (
+                      <LoadingCard key={i} />
+                    ))}
+                  </div>
+                ) : friends.length > 0 ? (
+                  <div className="grid gap-4">
+                    {friends.map((user) => (
+                      <FriendCard key={user.id} user={user} isFriend={true} />
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState
+                    title="Belum memiliki teman"
+                    description="Mulai ikuti pengguna lain. Jika mereka mengikuti balik, kamu akan otomatis berteman!"
+                    actionLabel="Temukan teman"
+                    onAction={() => setActiveTab("recommendations")}
+                  />
+                )}
+              </TabsContent>
+
+              {/* Followers view */}
+              <TabsContent value="followers" className="mt-0 outline-none flex flex-col gap-4">
+                {loading ? (
+                  <div className="grid gap-4">
+                    {[...Array(3)].map((_, i) => (
+                      <LoadingCard key={i} />
+                    ))}
+                  </div>
+                ) : followers.length > 0 ? (
+                  <div className="grid gap-4">
+                    {followers.map((user) => (
+                      <FriendCard
+                        key={user.id}
+                        user={user}
+                        isFriend={user.isFriend}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState
+                    title="Belum memiliki pengikut"
+                    description="Ketika pengguna lain mulai mengikutimu, mereka akan tampil di sini."
+                    actionLabel="Cari teman"
+                    onAction={() => setActiveTab("search")}
+                  />
+                )}
+              </TabsContent>
+
+              {/* Following view */}
+              <TabsContent value="following" className="mt-0 outline-none flex flex-col gap-4">
+                {loading ? (
+                  <div className="grid gap-4">
+                    {[...Array(3)].map((_, i) => (
+                      <LoadingCard key={i} />
+                    ))}
+                  </div>
+                ) : following.length > 0 ? (
+                  <div className="grid gap-4">
+                    {following.map((user) => (
+                      <FriendCard
+                        key={user.id}
+                        user={user}
+                        isFriend={user.isFriend}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState
+                    title="Belum mengikuti siapa pun"
+                    description="Ikuti pengguna menarik lainnya untuk melihat aktivitas belajar mereka."
+                    actionLabel="Temukan pengguna"
+                    onAction={() => setActiveTab("recommendations")}
+                  />
+                )}
+              </TabsContent>
+            </div>
+          </Tabs>
+
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

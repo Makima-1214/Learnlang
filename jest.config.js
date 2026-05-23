@@ -1,8 +1,13 @@
-/**
- * Jest configuration for testing
- */
+const nextJest = require("next/jest");
 
-module.exports = {
+const createJestConfig = nextJest({
+  // Provide the path to your Next.js app to load next.config.js and .env files in your test environment
+  dir: "./",
+});
+
+// Add any custom config to be passed to Jest
+/** @type {import('jest').Config} */
+const customJestConfig = {
   testEnvironment: "node",
   roots: ["<rootDir>"],
   testMatch: ["**/__tests__/**/*.test.js", "**/*.test.js"],
@@ -21,11 +26,11 @@ module.exports = {
       statements: 50,
     },
   },
-  transform: {
-    "^.+\\.jsx?$": ["babel-jest", { configFile: "./babel.config.js" }],
-  },
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
   },
 };
+
+// createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
+module.exports = createJestConfig(customJestConfig);

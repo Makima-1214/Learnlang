@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import Navbar from "@/components/Navbar";
+import DashboardLayout from "@/components/DashboardLayout";
 import LoadingScreen from "@/components/LoadingScreen";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -180,9 +180,7 @@ export default function ProfilePage() {
   if (!session) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-
+    <DashboardLayout>
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -494,6 +492,6 @@ export default function ProfilePage() {
           </p>
         </div>
       </footer>
-    </div>
+    </DashboardLayout>
   );
 }

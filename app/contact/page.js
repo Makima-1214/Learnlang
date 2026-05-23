@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -138,7 +137,6 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-green-50 to-white">
-      <Navbar />
 
       {/* Hero Section */}
       <section className="pt-32 pb-16 px-4">

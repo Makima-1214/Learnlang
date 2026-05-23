@@ -265,7 +265,7 @@ app.prepare().then(() => {
     })
     .listen(port, () => {
       console.log(
-        `> Ready on http://${hostname}:${port} as ${dev ? "development" : process.env.NODE_ENV}`,
+        `> Ready on http://${hostname}:${port} as ${dev ? "development" : "production"}`,
       );
     });
 });

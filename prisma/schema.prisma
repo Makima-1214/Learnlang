@@ -60,6 +60,8 @@ model User {
   notifications Notification[]
   // Achievements
   achievements Achievement[]
+  // Daily Missions
+  dailyMissions DailyMission[]
   // Learning Sessions
   learningSessions LearningSession[]
   
@@ -486,6 +488,36 @@ model Achievement {
   @@index([type])
   @@index([unlockedAt])
   @@map("achievements")
+}
+
+// Daily Mission model - tracks user's daily mission progress
+model DailyMission {
+  id          String   @id @default(cuid())
+  userId      String
+  type        DailyMissionType // e.g., "LEARN_15_MIN", "COMPLETE_QUIZ"
+  title       String
+  description String?  @db.Text
+  target      Int      // e.g., 15 for minutes, 1 for quiz
+  progress    Int      @default(0)
+  completed   Boolean  @default(false)
+  reward      Int      @default(10) // XP reward
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("daily_missions")
+}
+
+enum DailyMissionType {
+  LEARN_15_MIN     // Complete 15 minutes of learning
+  COMPLETE_QUIZ    // Complete at least one quiz
+  MAKE_FRIEND      // Add a friend
+  WRITE_COMMENT    // Leave a comment on blog/discussion
+  STREAK_MAINTAIN  // Maintain learning streak
 }
 
 // Vocabulary questions for DB-sourced multiple-choice exercises

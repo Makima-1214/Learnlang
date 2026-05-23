@@ -4,7 +4,6 @@ import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Navbar from "@/components/Navbar";
 import {
   Card,
   CardContent,
@@ -81,8 +80,6 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen">
-      <Navbar user={session.user} />
-
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Dashboard Admin</h1>

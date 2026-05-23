@@ -1,6 +1,5 @@
 "use client";
 
-import Navbar from "@/components/Navbar";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
@@ -39,7 +38,6 @@ const stats = [
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-white text-gray-800 font-[family-name:var(--font-nunito)]">
-      <Navbar />
 
       {/* ═══════════════════════════════════
           1. HERO — Warm Editorial

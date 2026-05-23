@@ -49,7 +49,7 @@ export class ErrorBoundary extends React.Component {
               Terjadi kesalahan yang tidak terduga. Silakan coba lagi.
             </p>
 
-            {process.env.NODE_ENV === "development" && (
+            {process.env.NODE_ENV === "production" && (
               <details className="text-xs bg-gray-100 p-3 rounded mb-4 max-h-40 overflow-auto">
                 <summary className="font-bold cursor-pointer mb-2">
                   Error Details

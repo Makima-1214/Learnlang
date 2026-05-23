@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
-import Navbar from "@/components/Navbar";
 import LoadingScreen from "@/components/LoadingScreen";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -135,7 +134,6 @@ export default function TakeQuizPage() {
   if (result) {
     return (
       <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-green-50">
-        <Navbar />
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -255,8 +253,6 @@ export default function TakeQuizPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-blue-50">
-      <Navbar />
-
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">

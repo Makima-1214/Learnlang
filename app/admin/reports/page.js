@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Navbar from "@/components/Navbar";
 import LoadingScreen from "@/components/LoadingScreen";
 import {
   Card,
@@ -77,7 +76,6 @@ export default function ReportsPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-green-50 via-white to-green-50">
-      <Navbar />
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Navbar from "@/components/Navbar";
 import {
   Card,
   CardContent,
@@ -97,7 +96,6 @@ export default function FriendRequestsPage() {
   if (loading || status === "loading") {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
         <main className="max-w-4xl mx-auto p-4 sm:p-6 space-y-4">
           {[1, 2, 3].map((item) => (
             <Skeleton key={item} className="h-36 w-full rounded-xl" />
@@ -111,7 +109,6 @@ export default function FriendRequestsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
       <main className="max-w-4xl mx-auto p-4 sm:p-6">
         <div className="mb-6 flex items-center justify-between gap-4">
           <div>

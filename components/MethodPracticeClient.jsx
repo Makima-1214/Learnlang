@@ -3,7 +3,9 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import Navbar from "@/components/Navbar";
+import { motion, AnimatePresence } from "framer-motion";
+import AIMascot from "@/components/AIMascot";
+import DashboardLayout from "@/components/DashboardLayout";
 import AudioPlayer from "@/components/AudioPlayer";
 import {
   DndContext,
@@ -92,7 +94,11 @@ function parseListeningAnswer(value) {
 }
 
 function createListeningItems(question) {
-  const chunks = Array.isArray(question?.chunks) ? question.chunks : [];
+  let chunks = question?.chunks || [];
+  if (typeof chunks === 'string') {
+    try { chunks = JSON.parse(chunks); } catch { chunks = []; }
+  }
+  if (!Array.isArray(chunks)) chunks = [];
 
   return chunks.map((text, index) => ({
     id: `${question?.sessionQuestionId || question?.questionId || "chunk"}-${index}`,
@@ -814,7 +820,11 @@ export default function MethodPracticeClient({ method }) {
 
   const sentenceTokens = useMemo(() => {
     if (!currentQuestion || methodStr !== "grammar") return [];
-    return Array.isArray(currentQuestion.words) ? currentQuestion.words : [];
+    let words = currentQuestion.words;
+    if (typeof words === 'string') {
+      try { words = JSON.parse(words); } catch { words = []; }
+    }
+    return Array.isArray(words) ? words : [];
   }, [currentQuestion, methodStr]);
 
   const formatTime = (seconds) => {
@@ -829,8 +839,8 @@ export default function MethodPracticeClient({ method }) {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="text-lg text-slate-600">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-[#F0F7FF]">
+        <div className="text-xl font-black text-[#6366F1] animate-pulse">Memuat...</div>
       </div>
     );
   }
@@ -839,500 +849,420 @@ export default function MethodPracticeClient({ method }) {
 
   if (!methodDisplay) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        <Navbar user={session.user} />
-        <main className="mx-auto max-w-4xl px-4 py-12">
-          <Alert variant="destructive">
-            <AlertDescription>Metode belajar tidak ditemukan.</AlertDescription>
-          </Alert>
-          <Button
-            className="mt-4 rounded-2xl"
-            onClick={() => router.push("/learn")}
-          >
-            Kembali
-          </Button>
-        </main>
-      </div>
+      <DashboardLayout>
+        <div className="min-h-screen bg-[#F0F7FF] flex items-center justify-center">
+          <div className="bg-white border-4 border-b-8 border-gray-200 rounded-3xl p-8 text-center shadow-lg">
+            <p className="font-black text-gray-900 mb-4 text-lg">Metode belajar tidak ditemukan.</p>
+            <button
+              className="px-6 py-3 bg-[#6366F1] border-2 border-b-4 border-[#4338CA] text-white rounded-2xl font-black hover:bg-[#818CF8] active:translate-y-[4px] active:border-b-0 transition-all"
+              onClick={() => router.push("/learn")}
+            >
+              ← Kembali ke Menu
+            </button>
+          </div>
+        </div>
+      </DashboardLayout>
     );
   }
 
   // Results view
   if (completed && results) {
+    const pct = results.session.percentage;
+    const resultMood = pct >= 60 ? "happy" : "wrong";
+    const isWin = pct >= 60;
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-purple-50">
-        <Navbar user={session.user} />
-        <main className="mx-auto max-w-2xl px-4 py-16">
-          <div className="rounded-3xl bg-white p-8 shadow-xl">
-            {/* Score Display */}
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 mb-6">
-                <div className="text-5xl font-black text-white">
-                  {results.session.percentage}%
+      <DashboardLayout>
+        <div className="min-h-screen bg-gradient-to-br from-[#F0F7FF] via-[#EEF2FF] to-[#F5F3FF] font-[family-name:var(--font-nunito)] flex items-center justify-center p-4">
+          <style dangerouslySetInnerHTML={{ __html: `.duo-btn{border-bottom-width:4px;transition:all 0.1s ease}.duo-btn:hover{transform:translateY(-2px);border-bottom-width:6px}.duo-btn:active{transform:translateY(4px);border-bottom-width:0px}` }} />
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="w-full max-w-md"
+          >
+            <div className="bg-white border-2 border-b-[6px] border-gray-200 rounded-[2rem] overflow-hidden shadow-2xl">
+              {/* Result Header */}
+              <div className={`px-8 pt-10 pb-8 text-center relative overflow-hidden ${
+                isWin ? "bg-gradient-to-br from-emerald-400 via-teal-500 to-emerald-600" :
+                "bg-gradient-to-br from-rose-400 via-red-500 to-rose-600"
+              }`}>
+                <div className="absolute inset-0 opacity-10">
+                  {isWin ? <div className="text-[120px] leading-none text-center select-none">🏆</div> : <div className="text-[120px] leading-none text-center select-none">🔄</div>}
+                </div>
+                <div className="relative">
+                  <div className="flex justify-center mb-4"><AIMascot mood={resultMood} /></div>
+                  <h2 className="text-2xl font-black text-white drop-shadow-md mb-1">
+                    {pct >= 80 ? "Luar Biasa! 🎉" : pct >= 60 ? "Bagus Sekali! 👍" : pct >= 40 ? "Tingkatkan Lagi 💪" : "Ayo Coba Lagi 🔄"}
+                  </h2>
+                  <p className="text-white/80 text-sm font-semibold">
+                    {isWin ? "Kamu berhasil menyelesaikan latihan ini!" : "Jangan menyerah, terus berlatih!"}
+                  </p>
                 </div>
               </div>
-              <p className="text-4xl font-bold text-slate-900 mb-2">
-                {results.session.percentage >= 80
-                  ? "Luar Biasa! 🎉"
-                  : results.session.percentage >= 60
-                    ? "Bagus! 👍"
-                    : results.session.percentage >= 40
-                      ? "Cukup, Tingkatkan Lagi 💪"
-                      : "Coba Lagi 🔄"}
-              </p>
+              <div className="p-6">
+                {/* Score circle */}
+                <div className="flex justify-center mb-6">
+                  <div className={`w-28 h-28 rounded-full border-[6px] flex flex-col items-center justify-center shadow-inner ${
+                    isWin ? "border-emerald-400 bg-emerald-50" : "border-rose-400 bg-rose-50"
+                  }`}>
+                    <span className={`text-4xl font-black leading-none ${
+                      isWin ? "text-emerald-600" : "text-rose-600"
+                    }`}>{pct}%</span>
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider mt-0.5">Skor</span>
+                  </div>
+                </div>
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                  {[
+                    ["✅", `${results.session.score}/${results.session.total}`, "Benar"],
+                    ["🎯", `${pct}%`, "Akurasi"],
+                    ["⚡", methodDisplay.badge, "Mode"]
+                  ].map(([emoji, val, label]) => (
+                    <div key={label} className="bg-gray-50 border-2 border-gray-100 rounded-2xl p-3 text-center">
+                      <div className="text-xl mb-0.5">{emoji}</div>
+                      <div className="font-black text-gray-800 text-base">{val}</div>
+                      <div className="text-[9px] font-black text-gray-400 uppercase tracking-wide">{label}</div>
+                    </div>
+                  ))}
+                </div>
+                {/* Actions */}
+                <div className="flex gap-3 flex-col sm:flex-row">
+                  <button
+                    className="duo-btn flex-1 py-3.5 bg-gradient-to-r from-[#6366F1] to-[#818CF8] text-white border-2 border-b-4 border-[#4338CA] rounded-2xl font-black text-sm shadow-md"
+                    onClick={() => router.push("/learn")}
+                  >← Kembali ke Menu</button>
+                  <button
+                    className="duo-btn flex-1 py-3.5 bg-white text-gray-600 border-2 border-b-4 border-gray-200 rounded-2xl font-black text-sm"
+                    onClick={() => window.location.reload()}
+                  >Ulang ↺</button>
+                </div>
+              </div>
             </div>
-
-            {/* Summary Results: only accuracy and time spent (no per-question answers) */}
-            <div className="space-y-3 mb-8">
-              <h3 className="text-lg font-bold text-slate-900 mb-2">
-                Ringkasan Hasil
-              </h3>
-              <p className="text-sm text-slate-600">
-                Akurasi:{" "}
-                <span className="font-bold text-blue-600">
-                  {results.session.percentage}%
-                </span>
-              </p>
-              <p className="text-sm text-slate-600">
-                Benar:{" "}
-                <span className="font-bold">{results.session.score}</span> dari{" "}
-                <span className="font-bold">{results.session.total}</span> soal
-              </p>
-              <p className="text-sm text-slate-600">
-                Waktu pengerjaan:{" "}
-                <span className="font-bold">
-                  {(() => {
-                    const created = results.session.createdAt
-                      ? new Date(results.session.createdAt).getTime()
-                      : null;
-                    const completedAt = results.session.completedAt
-                      ? new Date(results.session.completedAt).getTime()
-                      : null;
-                    const secs =
-                      created && completedAt
-                        ? Math.max(
-                            0,
-                            Math.round((completedAt - created) / 1000),
-                          )
-                        : 0;
-                    return formatTime(secs);
-                  })()}
-                </span>
-              </p>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3 flex-col sm:flex-row">
-              <Button
-                className="flex-1 rounded-2xl h-12 text-base font-bold"
-                onClick={() => router.push("/learn")}
-              >
-                Kembali ke Menu
-              </Button>
-              <Button
-                variant="outline"
-                className="flex-1 rounded-2xl h-12 text-base font-bold"
-                onClick={() => window.location.reload()}
-              >
-                Ulang Latihan
-              </Button>
-            </div>
-          </div>
-        </main>
-      </div>
+          </motion.div>
+        </div>
+      </DashboardLayout>
     );
   }
 
+  const mascotMood = revealed ? (correct ? "happy" : "wrong") : "neutral";
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-white">
-      <Navbar user={session.user} />
-
-      <main className="mx-auto max-w-4xl px-4 py-8">
-        <div className="mb-8 flex items-center justify-between gap-3">
-          <Button
-            variant="ghost"
-            onClick={handleBackWithConfirmation}
-            className="rounded-full hover:bg-slate-100"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Kembali
-          </Button>
-          <Badge className="rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2">
-            {methodDisplay.badge}
-          </Badge>
+    <DashboardLayout>
+      <div className="flex-1 flex flex-col h-screen overflow-hidden bg-gradient-to-br from-[#F0F7FF] via-[#EEF2FF] to-[#F5F3FF] font-[family-name:var(--font-nunito)]">
+        <style dangerouslySetInnerHTML={{ __html: `
+          .duo-btn{border-bottom-width:4px;transition:all 0.1s ease}
+          .duo-btn:hover{transform:translateY(-2px);border-bottom-width:6px}
+          .duo-btn:active{transform:translateY(4px);border-bottom-width:0px}
+          .cloud-bg{position:absolute;background:white;border-radius:999px;opacity:0.7;border:3px solid #E2E8F0}
+          
+          /* Prevent page scrolling and cap heights */
+          body {
+            overflow: hidden !important;
+          }
+          main {
+            height: calc(100vh - 56px - 80px) !important;
+            max-height: calc(100vh - 56px - 80px) !important;
+            overflow: hidden !important;
+            padding-bottom: 0 !important;
+          }
+          @media (min-width: 768px) {
+            main {
+              height: calc(100vh - 24px) !important;
+              max-height: calc(100vh - 24px) !important;
+              padding-bottom: 0 !important;
+            }
+          }
+        `}} />
+        <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+          <div className="cloud-bg w-48 h-16 top-12 -left-12 shadow-sm animate-[bounce_4s_infinite]" />
+          <div className="cloud-bg w-64 h-20 top-32 -right-16 shadow-sm animate-[bounce_5s_infinite]" />
         </div>
 
-        {/* Exit Confirmation Dialog */}
-        <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Keluar dari Latihan?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Jika Anda keluar sekarang, semua progress latihan akan hilang
-                dan tidak bisa dipulihkan. Apakah Anda yakin ingin melanjutkan?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div className="flex gap-3 justify-end">
-              <AlertDialogCancel
-                onClick={handleCancelExit}
-                className="rounded-lg"
-              >
-                Batal
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleConfirmExit}
-                className="bg-red-600 hover:bg-red-700 rounded-lg"
-              >
-                Keluar & Hapus Progress
-              </AlertDialogAction>
+        <div className="max-w-5xl w-full mx-auto px-3 sm:px-6 py-3 md:py-4 relative z-10 flex-1 flex flex-col min-h-0 overflow-hidden">
+          <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Keluar dari Latihan?</AlertDialogTitle>
+                <AlertDialogDescription>Progress latihan akan hilang jika kamu keluar. Apakah kamu yakin?</AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="flex gap-3 justify-end">
+                <AlertDialogCancel onClick={handleCancelExit} className="rounded-lg">Batal</AlertDialogCancel>
+                <AlertDialogAction onClick={handleConfirmExit} className="bg-red-600 hover:bg-red-700 rounded-lg">Keluar &amp; Hapus Progress</AlertDialogAction>
+              </div>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          {/* Top bar */}
+          <div className="flex items-center gap-3 mb-4 bg-white/80 backdrop-blur-sm rounded-2xl p-2.5 border-2 border-white shadow-sm shrink-0">
+            <button onClick={handleBackWithConfirmation} className="duo-btn flex items-center gap-1.5 px-3 py-2 bg-white border-2 border-b-4 border-gray-200 rounded-xl font-black text-gray-600 text-xs hover:bg-gray-50 shrink-0">
+              <ArrowLeft className="w-3.5 h-3.5" /> Keluar
+            </button>
+            <div className="flex-1 space-y-2">
+              <div className="flex justify-between text-[11px] font-black text-gray-400">
+                <span className="text-[#6366F1]">Soal {currentIndex + 1}</span>
+                <span>dari {total}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: total }).map((_, i) => (
+                  <div key={i} className={`h-2 flex-1 rounded-full transition-all duration-300 ${
+                    i < currentIndex ? 'bg-[#10B981]' :
+                    i === currentIndex ? 'bg-gradient-to-r from-[#6366F1] to-[#818CF8] animate-pulse' :
+                    'bg-gray-200'
+                  }`} />
+                ))}
+              </div>
             </div>
-          </AlertDialogContent>
-        </AlertDialog>
-
-        {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-semibold text-slate-700">
-              Soal {currentIndex + 1} dari {total}
-            </p>
-            <p className="text-xs text-slate-500">
-              {Math.round(progressPercent)}%
-            </p>
+            <div className="shrink-0 px-2.5 py-1.5 bg-[#EEF2FF] border-2 border-[#C7D2FE] rounded-xl text-[10px] font-black text-[#6366F1] uppercase tracking-wider">{methodDisplay.badge}</div>
           </div>
-          <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
-            <div
-              className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-300"
-              style={{ width: `${progressPercent}%` }}
-            />
+
+          {/* Section heading */}
+          <div className="text-center mb-4 shrink-0">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-100 rounded-2xl shadow-sm mb-3">
+              <span className="text-lg">{methodStr === "vocabulary" ? "🔤" : methodStr === "listening" ? "🎧" : "🔍"}</span>
+              <span className="font-black text-gray-600 text-sm">
+                {methodStr === "vocabulary" && "Pilih arti kata yang tepat"}
+                {methodStr === "listening" && "Susun kata yang kamu dengar"}
+                {methodStr === "grammar" && "Temukan kata yang salah"}
+              </span>
+            </div>
           </div>
-        </div>
 
-        <div>
-          {loading && (
-            <Card className="border-0 shadow-sm">
-              <CardHeader>
-                <Skeleton className="h-8 w-48" />
-                <Skeleton className="h-4 w-72" />
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Skeleton className="h-28 w-full rounded-2xl" />
-                <Skeleton className="h-12 w-full rounded-2xl" />
-                <Skeleton className="h-12 w-full rounded-2xl" />
-              </CardContent>
-            </Card>
-          )}
-
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+          {loading && <div className="flex justify-center py-20"><div className="text-xl font-black text-[#6366F1] animate-pulse">Memuat soal...</div></div>}
+          {error && <div className="bg-red-50 border-4 border-red-300 rounded-3xl p-6 text-center"><p className="font-black text-red-700">{error}</p></div>}
 
           {!loading && !error && currentQuestion && sessionData && (
-            <Card className="border-0 shadow-lg">
-              <CardContent className="pt-8 space-y-6">
-                {/* Vocabulary */}
-                {methodStr === "vocabulary" && (
-                  <>
-                    <div className="rounded-3xl border-2 border-slate-100 bg-gradient-to-br from-slate-50 to-white p-6">
-                      <p className="text-center text-2xl font-bold text-slate-900">
-                        {currentQuestion.question}
-                      </p>
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {Object.entries(currentQuestion.options || {}).map(
-                        ([key, value]) => (
-                          <Button
-                            key={key}
-                            type="button"
-                            variant={
-                              selected === key
-                                ? revealed
-                                  ? correct
-                                    ? "default"
-                                    : "destructive"
-                                  : "outline"
-                                : "outline"
-                            }
-                            className="h-auto justify-start rounded-2xl px-5 py-4 text-left transition-all disabled:opacity-60 text-base font-semibold"
-                            onClick={() => handleAnswer(key)}
-                            disabled={revealed}
-                          >
-                            <div className="flex items-center gap-3 w-full">
-                              <span className="font-black text-lg">{key}.</span>
-                              <span>{value}</span>
-                            </div>
-                          </Button>
-                        ),
-                      )}
-                    </div>
-                  </>
-                )}
-
-                {/* Listening */}
-                {methodStr === "listening" && (
-                  <>
-                    <div className="space-y-4">
-                      <p className="text-sm text-slate-600 font-medium">
-                        Dengarkan kalimatnya, lalu susun ulang kata-katanya.
-                      </p>
-                      <AudioPlayer
-                        text={currentQuestion.sentences}
-                        title="Listening Sentence"
-                        subtitle="Pilih normal untuk kecepatan biasa atau slow untuk versi lebih lambat"
-                      />
-                    </div>
-
-                    <DndContext
-                      sensors={listeningSensors}
-                      collisionDetection={closestCenter}
-                      onDragEnd={handleListeningDragEnd}
+            <div className="grid lg:grid-cols-12 gap-6 items-stretch flex-1 min-h-0 overflow-hidden pb-1">
+              {/* Mascot column */}
+              <div className="hidden lg:flex lg:col-span-4 flex-col items-center justify-center gap-4 bg-white/50 border-2 border-white/80 rounded-3xl p-6 shadow-sm h-full">
+                <AIMascot mood={mascotMood} />
+                <AnimatePresence>
+                  {revealed && (
+                    <motion.div
+                      key={`feedback-${currentIndex}`}
+                      initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      className="w-full rounded-2xl p-4 border-2 text-center bg-white shadow-sm"
+                      style={{ borderColor: correct ? "#A8E6CF" : "#EA2B2B" }}
                     >
-                      <div className="space-y-4">
-                        {/* Your Answer Section - Top */}
-                        <div className="rounded-3xl border-2 border-blue-200 bg-blue-50/60 p-5 space-y-4 shadow-sm">
-                          <div className="flex items-center justify-between gap-3">
-                            <div>
-                              <p className="text-sm font-bold tracking-wide text-slate-700 uppercase">
-                                Your Answer
-                              </p>
-                              <p className="text-xs text-slate-500 mt-1">
-                                Susun kata sesuai urutan kalimat yang kamu
-                                dengar
-                              </p>
-                            </div>
-                            <Badge variant="secondary" className="rounded-full">
-                              {listeningAnswer.length}/
-                              {
-                                normalizeExpectedListeningAnswer(
-                                  currentQuestion.answer,
-                                ).length
-                              }
-                            </Badge>
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-white font-black text-sm" style={{ backgroundColor: correct ? "#10B981" : "#EA2B2B" }}>{correct ? "✓" : "✗"}</div>
+                        <span className="font-black text-sm" style={{ color: correct ? "#059669" : "#C62828" }}>{correct ? "Analisis AI Tepat!" : "Bukan yang itu!"}</span>
+                      </div>
+                      <p className="text-xs font-bold leading-relaxed" style={{ color: correct ? "#047857" : "#E53935" }}>
+                        {correct ? "Jawaban kamu benar! 👍" : methodStr === "listening" ? `Jawaban benar: ${formatListeningTokens(currentQuestion.answer)}` : `Jawaban benar: ${currentQuestion.answer}`}
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Question panel */}
+              <div className="col-span-12 lg:col-span-8 flex flex-col h-full min-h-0">
+                <div className="bg-white border-2 border-b-[6px] border-gray-200 rounded-3xl p-4 sm:p-6 shadow-sm flex-1 flex flex-col min-h-0 overflow-hidden">
+                  {/* Scrollable contents inside the card */}
+                  <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+                    {/* Instruction badge */}
+                    <div className="bg-[#E0E7FF] border-2 border-[#818CF8] rounded-2xl p-3 mb-4 flex items-center gap-3 shrink-0">
+                      <div className="shrink-0 block lg:hidden">
+                        {/* Mini Mascot on Mobile */}
+                        <div className="w-12 h-12 rounded-xl bg-white border-2 border-[#818CF8] overflow-hidden flex items-center justify-center relative shrink-0">
+                          <div className="scale-[0.3] w-48 h-48 absolute flex items-center justify-center origin-center">
+                            <AIMascot mood={mascotMood} />
                           </div>
-
-                          <SortableContext
-                            items={listeningAnswer.map((item) => item.id)}
-                          >
-                            <ListeningDropZone
-                              id={LISTENING_ANSWER_ID}
-                              className="flex flex-wrap content-start gap-3 min-h-28 rounded-2xl border-2 border-dashed border-blue-200 bg-white p-4"
-                            >
-                              {listeningAnswer.length > 0 ? (
-                                listeningAnswer.map((item) => (
-                                  <SortableListeningItem
-                                    key={item.id}
-                                    item={item}
-                                    disabled={revealed}
-                                    active={true}
-                                    onActivate={(word) =>
-                                      handleListeningItemActivate(
-                                        word,
-                                        LISTENING_ANSWER_ID,
-                                      )
-                                    }
-                                  />
-                                ))
-                              ) : (
-                                <p className="text-sm text-slate-400 self-center">
-                                  Tarik kata ke sini untuk membentuk jawaban.
-                                </p>
-                              )}
-                            </ListeningDropZone>
-                          </SortableContext>
-                        </div>
-
-                        {/* Word Bank Section - Bottom */}
-                        <div className="rounded-3xl border-2 border-slate-200 bg-white p-5 space-y-4 shadow-sm">
-                          <div className="flex items-center justify-between gap-3">
-                            <div>
-                              <p className="text-sm font-bold tracking-wide text-slate-700 uppercase">
-                                Word Bank
-                              </p>
-                              <p className="text-xs text-slate-500 mt-1">
-                                Tap atau drag kata ke jawaban
-                              </p>
-                            </div>
-                            <Badge variant="secondary" className="rounded-full">
-                              {listeningBank.length} kata
-                            </Badge>
-                          </div>
-
-                          <SortableContext
-                            items={listeningBank.map((item) => item.id)}
-                          >
-                            <ListeningDropZone
-                              id={LISTENING_BANK_ID}
-                              className="flex flex-wrap content-start gap-3 min-h-28 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-4"
-                            >
-                              {listeningBank.length > 0 ? (
-                                listeningBank.map((item) => (
-                                  <SortableListeningItem
-                                    key={item.id}
-                                    item={item}
-                                    disabled={revealed}
-                                    active={false}
-                                    onActivate={(word) =>
-                                      handleListeningItemActivate(
-                                        word,
-                                        LISTENING_BANK_ID,
-                                      )
-                                    }
-                                  />
-                                ))
-                              ) : (
-                                <p className="text-sm text-slate-400 self-center">
-                                  Semua kata sudah dipindahkan.
-                                </p>
-                              )}
-                            </ListeningDropZone>
-                          </SortableContext>
                         </div>
                       </div>
-                    </DndContext>
-
-                    {/* Unified Button */}
-                    <Button
-                      type="button"
-                      className="w-full h-12 rounded-2xl text-base font-bold bg-emerald-600 hover:bg-emerald-700"
-                      onClick={!revealed ? handleListeningCheck : goNext}
-                      disabled={
-                        (!revealed && listeningAnswer.length === 0) ||
-                        submitting
-                      }
-                    >
-                      {submitting
-                        ? "Mengirim..."
-                        : !revealed
-                          ? "Periksa Jawaban"
-                          : currentIndex === total - 1
-                            ? "Selesaikan & Lihat Hasil"
-                            : "Soal Berikutnya"}
-                      {revealed && <ChevronRight className="ml-2 h-5 w-5" />}
-                    </Button>
-
-                    {/* Feedback (Listening only) */}
-                    {revealed && (
-                      <div
-                        className="rounded-2xl p-4 border-l-4 animate-in fade-in"
-                        style={{
-                          backgroundColor: correct ? "#ecfdf5" : "#fef2f2",
-                          borderLeftColor: correct ? "#10b981" : "#ef4444",
-                        }}
-                      >
-                        <p
-                          className={`font-bold ${correct ? "text-emerald-700" : "text-red-700"}`}
-                        >
-                          {correct ? "✓ Benar!" : "✗ Salah"}
+                      <div className="hidden lg:block shrink-0">
+                        <svg className="w-5 h-5 text-[#0288D1]" viewBox="0 0 24 24" fill="none"><path d="M12 20H21M3 17.25V21H6.75L17.81 9.94L14.06 6.19L3 17.25ZM20.71 7.04C21.1 6.65 21.1 6.02 20.71 5.63L18.37 3.29C17.98 2.9 17.35 2.9 16.96 3.29L15.13 5.12L18.88 8.87L20.71 7.04Z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </div>
+                      <div>
+                        <h4 className="font-black text-[#4338CA] text-[10px] sm:text-xs tracking-wider uppercase">Detektif AI:</h4>
+                        <p className="text-[#3730A3] font-black text-sm leading-tight mt-0.5">
+                          {methodStr === "vocabulary" && "Pilih arti kata yang benar!"}
+                          {methodStr === "listening" && "Susun kata sesuai kalimat yang kamu dengar!"}
+                          {methodStr === "grammar" && "Temukan & klik 1 kata yang salah!"}
                         </p>
-                        {!correct && (
-                          <p className="text-sm text-slate-700 mt-2">
-                            Jawaban yang benar:{" "}
-                            <span className="font-bold">
-                              {formatListeningTokens(currentQuestion.answer)}
+                      </div>
+                    </div>
+
+                    {/* Mobile Feedback */}
+                    {revealed && (
+                      <div className="block lg:hidden mb-4 shrink-0">
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="rounded-2xl p-3 border-2 text-center bg-white shadow-sm"
+                          style={{ borderColor: correct ? "#A8E6CF" : "#EA2B2B" }}
+                        >
+                          <div className="flex items-center justify-center gap-1.5 mb-0.5">
+                            <span className="font-black text-xs" style={{ color: correct ? "#059669" : "#C62828" }}>
+                              {correct ? "✓ Analisis AI Tepat!" : "✗ Bukan yang itu!"}
                             </span>
+                          </div>
+                          <p className="text-[11px] font-bold" style={{ color: correct ? "#047857" : "#E53935" }}>
+                            {correct ? "Jawaban kamu benar! 👍" : methodStr === "listening" ? `Jawaban benar: ${formatListeningTokens(currentQuestion.answer)}` : `Jawaban benar: ${currentQuestion.answer}`}
                           </p>
-                        )}
+                        </motion.div>
                       </div>
                     )}
-                  </>
-                )}
 
-                {/* Grammar */}
-                {methodStr === "grammar" && (
-                  <>
-                    <div className="rounded-3xl border-2 border-slate-100 bg-gradient-to-br from-slate-50 to-white p-6">
-                      <div className="flex flex-wrap gap-2 justify-center">
-                        {sentenceTokens.map((word, index) => (
-                          <span
-                            key={`${word}-${index}`}
-                            className={`rounded-2xl px-4 py-2 text-base font-semibold transition-all ${
-                              index === currentQuestion.wrongIndex
-                                ? "bg-red-100 text-red-700 ring-2 ring-red-300 animate-pulse"
-                                : "bg-white text-slate-700 border-2 border-slate-200"
-                            }`}
-                          >
-                            {word}
-                          </span>
-                        ))}
-                      </div>
-                      <p className="text-center text-sm text-slate-500 mt-4">
-                        Pilih kata yang salah dan ganti dengan jawaban yang
-                        benar
-                      </p>
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {(currentQuestion.choices || []).map((choice) => (
-                        <Button
-                          key={choice}
-                          type="button"
-                          variant={
-                            selected === choice
-                              ? revealed
-                                ? correct
-                                  ? "default"
-                                  : "destructive"
-                                : "outline"
-                              : "outline"
-                          }
-                          className="h-auto justify-start rounded-2xl px-5 py-4 text-left transition-all disabled:opacity-60 font-semibold"
-                          onClick={() => handleAnswer(choice)}
-                          disabled={revealed}
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="font-black text-lg">•</span>
-                            <span>{choice}</span>
+                    {/* VOCABULARY */}
+                    {methodStr === "vocabulary" && (
+                      <>
+                        <div className="rounded-3xl bg-white/90 backdrop-blur-md border border-gray-200 p-6 mb-4 text-center shadow-lg relative overflow-hidden shrink-0">
+                          <div className="absolute top-2 right-3 text-4xl opacity-10 font-black select-none">🔤</div>
+                          <p className="text-[10px] font-black text-[#6366F1] uppercase tracking-widest mb-1.5 opacity-70">Apa arti kata ini?</p>
+                          <p className="text-3xl sm:text-4xl font-black text-[#1E1B4B] tracking-tight">{currentQuestion.question}</p>
+                        </div>
+                        <div className="grid gap-2.5 sm:grid-cols-2">
+                          {Object.entries(
+                            typeof currentQuestion.options === 'string'
+                              ? JSON.parse(currentQuestion.options)
+                              : currentQuestion.options || {}
+                          ).map(([key, value]) => {
+                            const isSel = selected === key;
+                            const isCorrectAnswer = revealed && currentQuestion.answer === key;
+                            return (
+                              <button key={key} type="button" onClick={() => !revealed && handleAnswer(key)} disabled={revealed}
+                                className={`px-4 py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 text-left flex items-center gap-3 w-full border-2 group
+                                  ${!revealed ? "bg-white border-gray-200 text-gray-700 hover:border-[#6366F1] hover:bg-[#EEF2FF] hover:scale-[1.01] shadow-sm cursor-pointer border-b-[4px] active:translate-y-[2px] active:border-b-[2px]" : ""}
+                                  ${isSel && correct ? "bg-emerald-50 border-emerald-400 border-b-[4px] text-emerald-700" : ""}
+                                  ${isSel && !correct ? "bg-red-50 border-red-400 border-b-[4px] text-red-700" : ""}
+                                  ${isCorrectAnswer && !isSel ? "bg-emerald-50 border-emerald-300 border-b-[4px] text-emerald-600" : ""}
+                                  ${revealed && !isSel && !isCorrectAnswer ? "bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed" : ""}
+                                `}
+                              >
+                                <span className={`w-7 h-7 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-colors ${
+                                  !revealed ? 'bg-gray-100 text-gray-500 group-hover:bg-[#6366F1] group-hover:text-white' :
+                                  isSel && correct ? 'bg-emerald-400 text-white' :
+                                  isSel && !correct ? 'bg-red-400 text-white' :
+                                  isCorrectAnswer ? 'bg-emerald-300 text-white' :
+                                  'bg-gray-100 text-gray-300'
+                                }`}>{key}</span>
+                                <span className="flex-1 leading-snug">{value}</span>
+                                {isSel && correct && <span className="text-emerald-500 text-base">✓</span>}
+                                {isSel && !correct && <span className="text-red-400 text-base">✗</span>}
+                                {isCorrectAnswer && !isSel && <span className="text-emerald-400 text-xs font-black">✓</span>}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+
+                    {/* LISTENING */}
+                    {methodStr === "listening" && (
+                      <>
+                        <div className="mb-4 shrink-0">
+                          <AudioPlayer text={currentQuestion.sentences} title="Listening Sentence" subtitle="Pilih normal untuk kecepatan biasa atau slow untuk versi lebih lambat" />
+                        </div>
+                        <DndContext sensors={listeningSensors} collisionDetection={closestCenter} onDragEnd={handleListeningDragEnd}>
+                          <div className="space-y-4">
+                            <div className="rounded-3xl border-2 border-[#6366F1]/30 bg-[#E0E7FF]/40 p-4 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs font-black text-[#4338CA] uppercase tracking-wider">Jawaban Kamu</p>
+                                <span className="px-2 py-0.5 rounded-lg bg-[#6366F1]/10 border-2 border-[#6366F1]/20 text-[10px] font-black text-[#6366F1]">{listeningAnswer.length}/{normalizeExpectedListeningAnswer(currentQuestion.answer).length}</span>
+                              </div>
+                              <SortableContext items={listeningAnswer.map(i => i.id)}>
+                                <ListeningDropZone id={LISTENING_ANSWER_ID} className="flex flex-wrap gap-2 min-h-16 rounded-2xl border-2 border-dashed border-[#6366F1]/30 bg-white p-3">
+                                  {listeningAnswer.length > 0 ? listeningAnswer.map(item => <SortableListeningItem key={item.id} item={item} disabled={revealed} active={true} onActivate={w => handleListeningItemActivate(w, LISTENING_ANSWER_ID)} />) : <p className="text-xs text-gray-400 self-center">Tarik atau klik kata ke sini…</p>}
+                                </ListeningDropZone>
+                              </SortableContext>
+                            </div>
+                            <div className="rounded-3xl border-2 border-gray-200 bg-white p-4 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs font-black text-gray-500 uppercase tracking-wider">Word Bank</p>
+                                <span className="px-2 py-0.5 rounded-lg bg-gray-100 border-2 border-gray-200 text-[10px] font-black text-gray-500">{listeningBank.length} kata</span>
+                              </div>
+                              <SortableContext items={listeningBank.map(i => i.id)}>
+                                <ListeningDropZone id={LISTENING_BANK_ID} className="flex flex-wrap gap-2 min-h-16 rounded-2xl border-2 border-dashed border-gray-200 bg-slate-50 p-3">
+                                  {listeningBank.length > 0 ? listeningBank.map(item => <SortableListeningItem key={item.id} item={item} disabled={revealed} active={false} onActivate={w => handleListeningItemActivate(w, LISTENING_BANK_ID)} />) : <p className="text-xs text-gray-400 self-center">Semua kata sudah dipindahkan.</p>}
+                                </ListeningDropZone>
+                              </SortableContext>
+                            </div>
                           </div>
-                        </Button>
-                      ))}
-                    </div>
-                  </>
-                )}
+                        </DndContext>
+                      </>
+                    )}
 
-                {/* Feedback (Vocabulary & Grammar only) */}
-                {revealed && methodStr !== "listening" && (
-                  <div
-                    className="rounded-2xl p-4 border-l-4 animate-in fade-in"
-                    style={{
-                      backgroundColor: correct ? "#ecfdf5" : "#fef2f2",
-                      borderLeftColor: correct ? "#10b981" : "#ef4444",
-                    }}
-                  >
-                    <p
-                      className={`font-bold ${correct ? "text-emerald-700" : "text-red-700"}`}
-                    >
-                      {correct ? "✓ Benar!" : "✗ Salah"}
-                    </p>
-                    {!correct && (
-                      <p className="text-sm text-slate-700 mt-2">
-                        Jawaban yang benar:{" "}
-                        <span className="font-bold">
-                          {currentQuestion.answer}
-                        </span>
-                      </p>
+                    {/* GRAMMAR */}
+                    {methodStr === "grammar" && (
+                      <>
+                        <div className="rounded-3xl border-2 border-gray-200 bg-gradient-to-br from-white to-slate-50 p-5 mb-4 shadow-[0_4px_0_#E2E8F0] shrink-0">
+                          <div className="flex flex-wrap gap-2 justify-center">
+                            {sentenceTokens.map((word, index) => (
+                              <span key={`${word}-${index}`}
+                                className={`rounded-xl px-3 py-1.5 text-sm font-black transition-all
+                                  ${revealed && index === currentQuestion.wrongIndex ? "bg-emerald-100 text-emerald-700 ring-2 ring-emerald-400" : ""}
+                                  ${!revealed && index === currentQuestion.wrongIndex ? "bg-amber-100 text-amber-700 ring-2 ring-amber-300 animate-pulse" : ""}
+                                  ${index !== currentQuestion.wrongIndex ? "bg-white text-gray-700 border-2 border-gray-200" : ""}
+                                `}
+                              >{word}</span>
+                            ))}
+                          </div>
+                          <p className="text-center text-[10px] font-bold text-gray-400 mt-3">Pilih kata yang salah dari pilihan di bawah</p>
+                        </div>
+                        <div className="grid gap-2.5 sm:grid-cols-2">
+                          {(typeof currentQuestion.choices === 'string' ? JSON.parse(currentQuestion.choices) : currentQuestion.choices || []).map(choice => {
+                            const isSel = selected === choice;
+                            return (
+                              <button key={choice} type="button" onClick={() => handleAnswer(choice)} disabled={revealed}
+                                className={`px-4 py-3 rounded-2xl font-black text-xs sm:text-sm transition-all duration-200 text-left flex items-center gap-3 w-full border-2
+                                  ${!revealed ? "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-[#6366F1]/50 hover:scale-[1.01] shadow-sm cursor-pointer border-b-[4px] active:translate-y-[2px] active:border-b-[2px]" : ""}
+                                  ${isSel && correct ? "bg-emerald-100 border-emerald-500 text-emerald-700 translate-y-[2px] border-b-0" : ""}
+                                  ${isSel && !correct ? "bg-red-100 border-red-500 text-red-700 translate-y-[2px] border-b-0" : ""}
+                                  ${revealed && !isSel ? "bg-gray-50 border-gray-200 text-gray-400 opacity-60 cursor-not-allowed border-b-2" : ""}
+                                `}
+                              >
+                                <span className="text-sm">•</span><span>{choice}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
                     )}
                   </div>
-                )}
 
-                {/* Next Button (Vocabulary & Grammar only) */}
-                {methodStr !== "listening" && (
-                  <Button
-                    className="w-full h-12 rounded-2xl text-base font-bold"
-                    onClick={goNext}
-                    disabled={!revealed || submitting}
-                  >
-                    {submitting
-                      ? "Mengirim..."
-                      : currentIndex === total - 1
-                        ? "Selesaikan & Lihat Hasil"
-                        : "Soal Berikutnya"}
-                    <ChevronRight className="ml-2 h-5 w-5" />
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
+                  {/* Fixed Card Footer for Check/Next Button */}
+                  <div className="pt-3 mt-3 border-t border-gray-100 shrink-0">
+                    {methodStr === "listening" ? (
+                      <button type="button"
+                        className={`duo-btn w-full py-3.5 rounded-2xl font-black text-xs sm:text-sm border-2 border-b-4 text-white transition-all ${
+                          !revealed ? "bg-[#6366F1] border-[#4338CA] hover:bg-[#818CF8]" :
+                          correct ? "bg-[#10B981] border-[#047857] hover:bg-[#34D399]" :
+                          "bg-[#EA2B2B] border-[#B71C1C] hover:bg-[#FF4D4D]"
+                        }`}
+                        onClick={!revealed ? handleListeningCheck : goNext}
+                        disabled={(!revealed && listeningAnswer.length === 0) || submitting}
+                      >
+                        {submitting ? "Mengirim…" : !revealed ? "Periksa Jawaban ✓" : currentIndex === total - 1 ? "Selesaikan & Lihat Hasil 🏆" : "Soal Berikutnya →"}
+                      </button>
+                    ) : (
+                      <motion.button
+                        initial={false}
+                        animate={revealed ? { scale: [0.97, 1] } : {}}
+                        transition={{ duration: 0.2 }}
+                        className={`duo-btn w-full py-3.5 rounded-2xl font-black text-xs sm:text-sm border-2 border-b-4 text-white transition-all flex items-center justify-center gap-2
+                          ${!revealed ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed" :
+                            correct ? "bg-gradient-to-r from-[#10B981] to-[#059669] border-[#047857] hover:opacity-90 shadow-md" :
+                            "bg-gradient-to-r from-[#EA2B2B] to-[#C62828] border-[#B71C1C] hover:opacity-90 shadow-md"}
+                        `}
+                        onClick={goNext}
+                        disabled={!revealed || submitting}
+                      >
+                        {submitting ? "Mengirim…" :
+                          !revealed ? "Pilih jawaban dulu" :
+                          currentIndex === total - 1 ? "🏆 Selesaikan & Lihat Hasil" :
+                          "Soal Berikutnya →"}
+                      </motion.button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

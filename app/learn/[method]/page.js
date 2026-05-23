@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import MethodPracticeClient from "@/components/MethodPracticeClient";
 import { Skeleton } from "@/components/ui/skeleton";
+import DashboardLayout from "@/components/DashboardLayout";
 
 export default function MethodPracticePage({ params: paramsPromise }) {
   const router = useRouter();
@@ -40,12 +41,12 @@ export default function MethodPracticePage({ params: paramsPromise }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-        <div className="container mx-auto px-4 py-8">
-          <Skeleton className="h-10 w-48 mb-6" />
-          <Skeleton className="h-96 w-full" />
+      <DashboardLayout>
+        <div className="flex-1 flex flex-col bg-gradient-to-br from-slate-50 to-slate-100 rounded-tl-none md:rounded-tl-3xl md:rounded-bl-3xl border-0 md:border-l-2 md:border-t-2 md:border-b-2 border-white/50 p-8">
+          <Skeleton className="h-10 w-48 mb-6 rounded-2xl" />
+          <Skeleton className="flex-1 w-full rounded-3xl" />
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
