@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import * as LucideIcons from "lucide-react";
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
@@ -37,6 +37,30 @@ const ReadIcon = () => (
   </svg>
 );
 
+const UserJoinIcon = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+    <circle cx="9" cy="7" r="3.5" fill="currentColor" />
+    <path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+    <path d="M19 8v6M16 11h6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+  </svg>
+);
+
+const QuizIcon = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+    <rect x="3" y="3" width="18" height="18" rx="3" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="2" />
+    <path d="M9 9.5C9 8.1 10.1 7 11.5 7h1C13.9 7 15 8.1 15 9.5c0 1-0.6 1.8-1.5 2.2L12 12.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <circle cx="12" cy="15.5" r="1" fill="currentColor" />
+  </svg>
+);
+
+const ReportIcon = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <line x1="12" y1="9" x2="12" y2="13" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+    <line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+  </svg>
+);
+
 const CheckAllIcon = () => (
   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
     <path d="M2 12l5 5L17 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
@@ -50,80 +74,88 @@ const ChevronRight = () => (
   </svg>
 );
 
-// Dynamic icon renderer from API data
-const NotificationIcon = ({ iconName }) => {
-  const Icon = LucideIcons[iconName] || LucideIcons.Bell;
-  return <Icon className="w-5 h-5" />;
-};
+// ── Data ──────────────────────────────────────────────────────────────────────
 
-// ── Type config for styling ───────────────────────────────────────────────────
+const DUMMY_NOTIFICATIONS = [
+  {
+    id: 1, type: "user",
+    title: "Pengguna baru bergabung",
+    message: "Budi Santoso baru saja mendaftar sebagai pengguna baru.",
+    time: "2 menit lalu", read: false,
+  },
+  {
+    id: 2, type: "quiz",
+    title: "Quiz baru ditambahkan",
+    message: "Quiz 'Vocabulary Level B2' berhasil dipublikasikan.",
+    time: "1 jam lalu", read: false,
+  },
+  {
+    id: 3, type: "report",
+    title: "Laporan aktivitas mingguan",
+    message: "Terdapat 142 sesi belajar dalam 7 hari terakhir.",
+    time: "3 jam lalu", read: false,
+  },
+  {
+    id: 4, type: "user",
+    title: "Pengguna baru bergabung",
+    message: "Siti Rahayu baru saja mendaftar sebagai pengguna baru.",
+    time: "5 jam lalu", read: true,
+  },
+  {
+    id: 5, type: "quiz",
+    title: "Quiz diperbarui",
+    message: "Quiz 'Grammar Basics A1' telah diperbarui oleh admin.",
+    time: "1 hari lalu", read: true,
+  },
+  {
+    id: 6, type: "report",
+    title: "Pengguna tidak aktif",
+    message: "12 pengguna tidak login selama lebih dari 30 hari.",
+    time: "2 hari lalu", read: true,
+  },
+];
 
-const getTypeConfig = (type) => {
-  const configs = {
-    achievement: { bg: "bg-amber-100",   text: "text-amber-600",   activeBorder: "border-amber-300",   label: "Pencapaian" },
-    friend:      { bg: "bg-indigo-100",  text: "text-indigo-600",  activeBorder: "border-indigo-300",  label: "Teman"      },
-    quiz:        { bg: "bg-emerald-100", text: "text-emerald-600", activeBorder: "border-emerald-300", label: "Quiz"       },
-    blog:        { bg: "bg-purple-100",  text: "text-purple-600",  activeBorder: "border-purple-300",  label: "Artikel"    },
-    system:      { bg: "bg-sky-100",     text: "text-sky-600",     activeBorder: "border-sky-300",     label: "Sistem"     },
-  };
-  return configs[type] || { bg: "bg-gray-100", text: "text-gray-600", activeBorder: "border-gray-300", label: "Info" };
+const TYPE_CONFIG = {
+  user:   { Icon: UserJoinIcon, bg: "bg-indigo-100",  text: "text-indigo-600",  activeBorder: "border-indigo-300",  label: "Pengguna" },
+  quiz:   { Icon: QuizIcon,     bg: "bg-emerald-100", text: "text-emerald-600", activeBorder: "border-emerald-300", label: "Quiz"     },
+  report: { Icon: ReportIcon,   bg: "bg-amber-100",   text: "text-amber-600",   activeBorder: "border-amber-300",   label: "Laporan"  },
 };
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function NotificationsPage() {
+  const { data: session, status } = useSession();
   const router = useRouter();
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [notifications, setNotifications] = useState(DUMMY_NOTIFICATIONS);
   const [filter, setFilter] = useState("all");
 
-  const load = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/notifications");
-      if (!res.ok) throw new Error("Failed to load");
-      const data = await res.json();
-      setNotifications(data.data.notifications || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    load();
-  }, []);
+    if (status === "unauthenticated") router.push("/login");
+    if (status === "authenticated" && session?.user?.role !== "ADMIN") router.push("/learn");
+  }, [status, session, router]);
 
-  const markAllRead = async () => {
-    await fetch("/api/notifications", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ markAll: true }),
-    });
-    load();
-  };
-
-  const markRead = async (id) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+  if (status === "loading") {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="text-xl font-black text-indigo-500 animate-pulse">Memuat Notifikasi...</div>
+      </div>
     );
-    await fetch(`/api/notifications/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isRead: true }),
-    }).catch(() => {});
-  };
+  }
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
-  const readCount   = notifications.filter((n) =>  n.isRead).length;
-  const totalCount  = notifications.length;
+  if (!session || session.user.role !== "ADMIN") return null;
+
+  const unreadCount  = notifications.filter((n) => !n.read).length;
+  const readCount    = notifications.filter((n) =>  n.read).length;
+  const totalCount   = notifications.length;
 
   const filtered = notifications.filter((n) => {
-    if (filter === "unread") return !n.isRead;
-    if (filter === "read")   return  n.isRead;
+    if (filter === "unread") return !n.read;
+    if (filter === "read")   return  n.read;
     return true;
   });
+
+  const markAllRead = () => setNotifications((p) => p.map((n) => ({ ...n, read: true })));
+  const markRead    = (id) => setNotifications((p) => p.map((n) => n.id === id ? { ...n, read: true } : n));
 
   return (
     <div className="min-h-screen bg-gray-50 font-[family-name:var(--font-nunito)]">
@@ -143,11 +175,9 @@ export default function NotificationsPage() {
           <div>
             <h1 className="text-4xl font-black text-gray-900 tracking-tight">Notifikasi</h1>
             <p className="text-gray-500 font-bold mt-1">
-              {loading
-                ? "Memuat notifikasi..."
-                : unreadCount > 0
-                  ? `${unreadCount} notifikasi belum dibaca`
-                  : "Semua notifikasi sudah dibaca ✓"}
+              {unreadCount > 0
+                ? `${unreadCount} notifikasi belum dibaca`
+                : "Semua notifikasi sudah dibaca ✓"}
             </p>
           </div>
 
@@ -155,8 +185,7 @@ export default function NotificationsPage() {
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={markAllRead}
-              disabled={loading}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white border-4 border-b-8 border-gray-200 text-sm font-black text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white border-4 border-b-8 border-gray-200 text-sm font-black text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors"
             >
               <CheckAllIcon />
               Tandai semua dibaca
@@ -199,9 +228,7 @@ export default function NotificationsPage() {
               <div className={`bg-gradient-to-br ${stat.color} p-3 rounded-2xl w-fit mb-4 shadow-md`}>
                 {stat.icon}
               </div>
-              <div className="text-4xl font-black text-gray-900 mb-1">
-                {loading ? "..." : stat.value}
-              </div>
+              <div className="text-4xl font-black text-gray-900 mb-1">{stat.value}</div>
               <div className="text-sm font-bold text-gray-500">{stat.label}</div>
             </motion.div>
           ))}
@@ -215,9 +242,9 @@ export default function NotificationsPage() {
           className="flex flex-wrap gap-2 mb-6"
         >
           {[
-            { key: "all",    label: "Semua",        count: totalCount,  activeClass: "bg-indigo-500 text-white border-indigo-700"   },
-            { key: "unread", label: "Belum Dibaca",  count: unreadCount, activeClass: "bg-amber-500 text-white border-amber-700"    },
-            { key: "read",   label: "Sudah Dibaca",  count: readCount,   activeClass: "bg-emerald-500 text-white border-emerald-700" },
+            { key: "all",    label: "Semua",        count: totalCount,  activeClass: "bg-indigo-500 text-white border-indigo-700"  },
+            { key: "unread", label: "Belum Dibaca",  count: unreadCount, activeClass: "bg-amber-500 text-white border-amber-700"   },
+            { key: "read",   label: "Sudah Dibaca",  count: readCount,   activeClass: "bg-emerald-500 text-white border-emerald-700"},
           ].map(({ key, label, count, activeClass }) => (
             <button
               key={key}
@@ -241,16 +268,7 @@ export default function NotificationsPage() {
         {/* ── Notification List ── */}
         <div className="space-y-3">
           <AnimatePresence mode="popLayout">
-            {loading ? (
-              <motion.div
-                key="loading"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="bg-white rounded-3xl border-4 border-b-8 border-gray-200 p-16 text-center"
-              >
-                <div className="text-xl font-black text-indigo-500 animate-pulse">Memuat Notifikasi...</div>
-              </motion.div>
-            ) : filtered.length === 0 ? (
+            {filtered.length === 0 ? (
               <motion.div
                 key="empty"
                 initial={{ opacity: 0, scale: 0.97 }}
@@ -264,7 +282,8 @@ export default function NotificationsPage() {
               </motion.div>
             ) : (
               filtered.map((notif, i) => {
-                const cfg = getTypeConfig(notif.type);
+                const cfg = TYPE_CONFIG[notif.type] || TYPE_CONFIG.report;
+                const Icon = cfg.Icon;
                 return (
                   <motion.div
                     key={notif.id}
@@ -273,52 +292,43 @@ export default function NotificationsPage() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ delay: i * 0.04 }}
-                    onClick={() => {
-                      markRead(notif.id);
-                      if (notif.link) router.push(notif.link);
-                    }}
+                    onClick={() => markRead(notif.id)}
                     className={`notif-card relative flex items-start gap-4 bg-white rounded-3xl border-4 border-b-8 p-5 cursor-pointer shadow-sm ${
-                      notif.isRead
+                      notif.read
                         ? "border-gray-200 opacity-60"
                         : cfg.activeBorder
                     }`}
                   >
                     {/* Unread pulse dot */}
-                    {!notif.isRead && (
+                    {!notif.read && (
                       <span className="absolute top-5 right-5 flex h-3 w-3">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-60" />
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500" />
                       </span>
                     )}
 
-                    {/* Icon badge */}
+                    {/* Type icon badge */}
                     <div className={`${cfg.bg} ${cfg.text} p-3 rounded-2xl flex-shrink-0 shadow-sm`}>
-                      <NotificationIcon iconName={notif.icon || "Bell"} />
+                      <Icon />
                     </div>
 
                     {/* Content */}
                     <div className="min-w-0 flex-1 pr-6">
+                      {/* Type label */}
                       <span className={`inline-block text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg mb-1.5 ${cfg.bg} ${cfg.text}`}>
                         {cfg.label}
                       </span>
-                      <div className={`font-black text-base leading-snug mb-1 ${notif.isRead ? "text-gray-400" : "text-gray-900"}`}>
+                      <div className={`font-black text-base leading-snug mb-1 ${notif.read ? "text-gray-400" : "text-gray-900"}`}>
                         {notif.title}
                       </div>
-                      {notif.description && (
-                        <div className="text-sm font-bold text-gray-400 leading-relaxed">
-                          {notif.description}
-                        </div>
-                      )}
-                      <div className="text-[11px] font-black text-gray-300 mt-2.5">
-                        {new Date(notif.createdAt).toLocaleString("id-ID", {
-                          day: "numeric", month: "short", year: "numeric",
-                          hour: "2-digit", minute: "2-digit",
-                        })}
+                      <div className="text-sm font-bold text-gray-400 leading-relaxed">
+                        {notif.message}
                       </div>
+                      <div className="text-[11px] font-black text-gray-300 mt-2.5">{notif.time}</div>
                     </div>
 
                     {/* Arrow */}
-                    <div className={`flex-shrink-0 self-center ${notif.isRead ? "text-gray-200" : "text-gray-400"}`}>
+                    <div className={`flex-shrink-0 self-center ${notif.read ? "text-gray-200" : "text-gray-400"}`}>
                       <ChevronRight />
                     </div>
                   </motion.div>

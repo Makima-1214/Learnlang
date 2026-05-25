@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,74 @@ const TrashCanIcon = () => (
     <line x1="14" y1="11" x2="14" y2="17" />
   </svg>
 );
+
+// ── Emoji Picker Data ─────────────────────────────────────────────────────────
+
+const EMOJI_GROUPS = [
+  {
+    label: "Bahasa & Belajar",
+    emojis: ["🗺️", "🧭", "📜", "🔤", "🗣️", "💬", "🧠", "🪄", "🔮", "📡", "🧬", "🔭", "🪐", "⚗️", "🧪"],
+  },
+  {
+    label: "Petualangan",
+    emojis: ["⚔️", "🛡️", "🏹", "🗡️", "🧱", "🏰", "🌋", "🏔️", "🌊", "🌪️", "🌌", "🌠", "🪨", "🌿", "🍄"],
+  },
+  {
+    label: "Teknologi & Sains",
+    emojis: ["🤖", "👾", "🕹️", "💾", "🖥️", "⌨️", "🔌", "🧲", "⚙️", "🔩", "🪛", "🔋", "💡", "🔬", "🧯"],
+  },
+  {
+    label: "Simbol & Unik",
+    emojis: ["🎯", "🎲", "🎴", "🃏", "🀄", "♟️", "🧩", "🪬", "🧿", "🪤", "🎪", "🎭", "🎨", "🖼️", "🪞"],
+  },
+];
+
+function EmojiPicker({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center gap-3 px-4 py-2.5 duo-input border-gray-200 bg-white hover:bg-gray-50 transition-colors text-left"
+      >
+        <span className="text-2xl leading-none">{value}</span>
+        <span className="text-sm font-bold text-gray-400">Pilih emoji</span>
+        <svg className="w-4 h-4 ml-auto text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+
+      {open && (
+        <div className="absolute z-50 top-full mt-2 left-0 w-80 bg-white border-3 border-gray-200 rounded-2xl shadow-xl p-4 space-y-3">
+          {EMOJI_GROUPS.map((group) => (
+            <div key={group.label}>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">{group.label}</p>
+              <div className="flex flex-wrap gap-1">
+                {group.emojis.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => { onChange(emoji); setOpen(false); }}
+                    className={`w-9 h-9 text-xl rounded-xl flex items-center justify-center transition-all hover:scale-110 hover:bg-indigo-50 border-2 ${value === emoji ? "border-indigo-400 bg-indigo-50 scale-110" : "border-transparent"}`}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function CreateQuizPage() {
   const { data: session, status } = useSession();
@@ -296,15 +364,9 @@ export default function CreateQuizPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label htmlFor="icon">Icon/Emoji</Label>
-                  <Input
-                    id="icon"
+                  <EmojiPicker
                     value={formData.icon}
-                    onChange={(e) =>
-                      setFormData({ ...formData, icon: e.target.value })
-                    }
-                    placeholder="📚"
-                    maxLength="2"
-                    className="duo-input border-gray-200"
+                    onChange={(emoji) => setFormData({ ...formData, icon: emoji })}
                   />
                   <p className="text-[10px] text-gray-400 font-bold px-1 uppercase tracking-tighter">Emoji unik kuis</p>
                 </div>
@@ -404,7 +466,7 @@ export default function CreateQuizPage() {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <Label className="font-black text-sm text-gray-600 ml-1 uppercase tracking-widest text-[10px]">Opsi Jawaban *</Label>
-                      {question.options.length < 3 && (
+                      {question.options.length < 4 && (
                         <Button
                           type="button"
                           variant="outline"

@@ -5,6 +5,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import UserAvatar from "@/components/UserAvatar";
+import { Icon } from "@iconify/react";
 
 const DashboardLayoutContext = createContext(false);
 
@@ -67,6 +68,14 @@ const NavIconProfile = ({ active }) => (
     <circle cx="12" cy="7.5" r="3.5" fill={active ? "rgba(16,185,129,0.12)" : "transparent"} stroke={active ? "#10B981" : "#9CA3AF"} strokeWidth="2" opacity={active ? 1 : 0.7} />
     <path d="M4 20c0-3.314 3.134-6 7-6h2c3.866 0 7 2.686 7 6" stroke={active ? "#10B981" : "#9CA3AF"} strokeWidth="2" strokeLinecap="round" opacity={active ? 1 : 0.7} />
     {active && <><circle cx="18.5" cy="7" r="3.5" fill="#10B981" /><path d="M17 7l1 1 2-2" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></>}
+  </svg>
+);
+
+// Bell icon
+const IconBell = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -152,15 +161,37 @@ const MOBILE_NAV = [
   AKUN[0], // Profil
 ];
 
+// Chevron toggle icon
+const IconChevronLeft = ({ collapsed }) => (
+  <svg
+    width="16" height="16" viewBox="0 0 24 24" fill="none"
+    style={{ transform: collapsed ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s" }}
+  >
+    <polyline points="15 18 9 12 15 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const IconChevronRight = ({ collapsed }) => (
+  <svg
+    width="16" height="16" viewBox="0 0 24 24" fill="none"
+    style={{ transform: collapsed ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s" }}
+  >
+    <polyline points="9 18 15 12 9 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 // ══════════════════════════════════════════════════
 //  KOMPONEN UTAMA
 // ══════════════════════════════════════════════════
 export default function DashboardLayout({ children }) {
   const isNested = useContext(DashboardLayoutContext);
-  if (isNested) return <>{children}</>;
 
   const pathname = usePathname();
   const { data: session } = useSession();
+
+  // Collapse state untuk kedua sidebar
+  const [leftCollapsed, setLeftCollapsed] = useState(false);
+  const [rightCollapsed, setRightCollapsed] = useState(false);
 
   // State untuk data sidebar kanan
   const [stats, setStats] = useState(null);
@@ -172,6 +203,8 @@ export default function DashboardLayout({ children }) {
 
   // Fetch data dari API
   useEffect(() => {
+    if (isNested) return;
+
     const fetchData = async () => {
       if (!session?.id) {
         setLoading(false);
@@ -215,13 +248,30 @@ export default function DashboardLayout({ children }) {
     };
 
     fetchData();
-  }, [session?.id]);
+  }, [session?.id, isNested]);
+
+  // Early return AFTER all hooks
+  if (isNested) return <>{children}</>;
 
   const isActive = (href) =>
     pathname === href || (href !== "/" && pathname?.startsWith(href + "/"));
 
-  const renderNavItem = ({ href, label, Icon, accent, bg, border, text }) => {
+  const renderNavItem = ({ href, label, Icon, accent, bg, border, text }, collapsed = false) => {
     const active = isActive(href);
+    if (collapsed) {
+      return (
+        <Link key={href} href={href} title={label}
+          className={`relative flex items-center justify-center w-10 h-10 mx-auto rounded-2xl border-2 transition-all duration-200
+            ${active ? "border-b-4 shadow-sm" : "border-transparent text-gray-400 hover:bg-gray-50"}`}
+          style={active ? { background: bg, borderColor: border } : {}}
+        >
+          <span className={`shrink-0 transition-transform duration-200 ${active ? "scale-110" : ""}`}>
+            <Icon active={active} />
+          </span>
+          {active && <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-white" style={{ background: accent }} />}
+        </Link>
+      );
+    }
     return (
       <Link key={href} href={href}
         className={`relative flex items-center gap-3 px-3.5 py-3 rounded-2xl font-black text-[14px] border-2 transition-all duration-200 group
@@ -249,12 +299,23 @@ export default function DashboardLayout({ children }) {
       `}} />
 
       {/* ═══════════════════════════════════════════
-          SIDEBAR KIRI — Fixed, 240px, scrollable content without scrollbars
+          SIDEBAR KIRI — Fixed, collapsible 240px ↔ 72px
          ═══════════════════════════════════════════ */}
-      <aside className="hidden md:flex flex-col fixed left-0 top-0 h-screen w-[240px] bg-white border-r-2 border-gray-100 z-40 shadow-[6px_0_32px_rgba(99,102,241,0.07)]">
+      <aside
+        className="hidden md:flex flex-col fixed left-0 top-0 h-screen bg-white border-r-2 border-gray-100 z-40 shadow-[6px_0_32px_rgba(99,102,241,0.07)] transition-all duration-300"
+        style={{ width: leftCollapsed ? 72 : 240 }}
+      >
+        {/* Toggle button */}
+        <button
+          onClick={() => setLeftCollapsed(c => !c)}
+          className="absolute -right-4 top-6 z-10 bg-white border-2 border-gray-200 rounded-full w-8 h-8 flex items-center justify-center shadow-sm hover:bg-gray-50 transition-colors"
+          title={leftCollapsed ? "Perluas sidebar" : "Ciutkan sidebar"}
+        >
+          <IconChevronLeft collapsed={leftCollapsed} />
+        </button>
 
         {/* Logo */}
-        <div className="px-5 pt-6 pb-4 border-b-2 border-gray-50 shrink-0">
+        <div className={`px-4 pt-6 pb-4 border-b-2 border-gray-50 shrink-0 ${leftCollapsed ? "flex justify-center" : ""}`}>
           <Link href="/" className="flex items-center gap-3 group">
             <div className="relative shrink-0">
               <svg className="w-10 h-10 group-hover:scale-110 transition-transform duration-300 drop-shadow-md" viewBox="0 0 100 100" fill="none">
@@ -274,15 +335,17 @@ export default function DashboardLayout({ children }) {
               </svg>
               <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-white" />
             </div>
-            <div className="leading-none">
-              <span className="text-[19px] font-black text-gray-900 tracking-tight">Learn<span className="text-[#6366F1]">Lang</span></span>
-              <span className="block text-[9px] font-bold text-gray-400 uppercase tracking-[0.14em] mt-0.5">Dashboard</span>
-            </div>
+            {!leftCollapsed && (
+              <div className="leading-none overflow-hidden">
+                <span className="text-[19px] font-black text-gray-900 tracking-tight">Learn<span className="text-[#6366F1]">Lang</span></span>
+                <span className="block text-[9px] font-bold text-gray-400 uppercase tracking-[0.14em] mt-0.5">Dashboard</span>
+              </div>
+            )}
           </Link>
         </div>
 
         {/* Profil Mini */}
-        {session?.user && (
+        {session?.user && !leftCollapsed && (
           <div className="mx-4 mt-4 px-3 py-3 rounded-2xl bg-gradient-to-br from-[#EEF2FF] to-[#F5F3FF] border-2 border-[#E0E7FF] shrink-0">
             <div className="flex items-center gap-3">
               <UserAvatar
@@ -291,33 +354,57 @@ export default function DashboardLayout({ children }) {
                 className="w-9 h-9 shrink-0"
                 size={30}
               />
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="font-black text-gray-800 text-sm truncate leading-tight">{session.user.name ?? "Pelajar"}</p>
                 <p className="text-[10px] font-semibold text-gray-400 truncate">{session.user.email}</p>
               </div>
+              <Link
+                href="/notifications"
+                className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:bg-white hover:text-[#6366F1] transition-all shadow-sm border border-transparent hover:border-gray-100"
+                title="Notifikasi"
+              >
+                <IconBell size={18} />
+              </Link>
             </div>
           </div>
         )}
+        {session?.user && leftCollapsed && (
+          <div className="flex flex-col items-center gap-3 mt-4 shrink-0 px-2">
+            <UserAvatar
+              src={session.user.avatar}
+              name={session.user.name}
+              className="w-9 h-9"
+              size={30}
+            />
+            <Link
+              href="/notifications"
+              className="w-10 h-10 flex items-center justify-center rounded-2xl text-gray-400 hover:bg-indigo-50 hover:text-[#6366F1] transition-all border-2 border-transparent hover:border-indigo-100"
+              title="Notifikasi"
+            >
+              <IconBell size={20} />
+            </Link>
+          </div>
+        )}
 
-        {/* Nav Links — scrollable, no scrollbars */}
-        <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col gap-5 px-3 py-4 mt-2">
+        {/* Nav Links */}
+        <div className={`flex-1 overflow-y-auto no-scrollbar flex flex-col gap-5 py-4 mt-2 ${leftCollapsed ? "px-2 items-center" : "px-3"}`}>
           
           {/* Menu Utama */}
-          <div className="flex flex-col gap-1">
-            <span className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-1">Menu Utama</span>
-            {MENU_UTAMA.map(renderNavItem)}
+          <div className={`flex flex-col gap-1 w-full ${leftCollapsed ? "items-center" : ""}`}>
+            {!leftCollapsed && <span className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-1">Menu Utama</span>}
+            {MENU_UTAMA.map(item => renderNavItem(item, leftCollapsed))}
           </div>
 
           {/* Sosial & Kompetisi */}
-          <div className="flex flex-col gap-1">
-            <span className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-1">Sosial & Interaksi</span>
-            {SOSIAL_KOMPETISI.map(renderNavItem)}
+          <div className={`flex flex-col gap-1 w-full ${leftCollapsed ? "items-center" : ""}`}>
+            {!leftCollapsed && <span className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-1">Sosial & Interaksi</span>}
+            {SOSIAL_KOMPETISI.map(item => renderNavItem(item, leftCollapsed))}
           </div>
 
           {/* Akun */}
-          <div className="flex flex-col gap-1">
-            <span className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-1">Akun</span>
-            {AKUN.map(renderNavItem)}
+          <div className={`flex flex-col gap-1 w-full ${leftCollapsed ? "items-center" : ""}`}>
+            {!leftCollapsed && <span className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-1">Akun</span>}
+            {AKUN.map(item => renderNavItem(item, leftCollapsed))}
           </div>
 
         </div>
@@ -325,183 +412,177 @@ export default function DashboardLayout({ children }) {
       </aside>
 
       {/* ═══════════════════════════════════════════
-          SIDEBAR KANAN — Fixed, 300px, status & gamifikasi
+          SIDEBAR KANAN — Fixed, collapsible 300px ↔ 72px
          ═══════════════════════════════════════════ */}
-      <aside className="hidden xl:flex flex-col fixed right-0 top-0 h-screen w-[300px] bg-white border-l-2 border-gray-100 z-40 shadow-[-6px_0_32px_rgba(99,102,241,0.06)] overflow-hidden">
+      <aside
+        className="hidden xl:flex flex-col fixed right-0 top-0 h-screen bg-white border-l-2 border-gray-100 z-40 shadow-[-6px_0_32px_rgba(99,102,241,0.06)] transition-all duration-300"
+        style={{ width: rightCollapsed ? 72 : 300 }}
+      >
+        {/* Toggle button */}
+        <button
+          onClick={() => setRightCollapsed(c => !c)}
+          className="absolute -left-4 top-6 z-50 bg-white border-2 border-gray-200 rounded-full w-8 h-8 flex items-center justify-center shadow-sm hover:bg-gray-50 transition-colors"
+          title={rightCollapsed ? "Perluas sidebar" : "Ciutkan sidebar"}
+        >
+          <IconChevronRight collapsed={rightCollapsed} />
+        </button>
 
-        {/* Header kanan */}
-        <div className="px-6 pt-7 pb-4 border-b-2 border-gray-50 shrink-0 flex items-center justify-between">
-          <h2 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.18em]">Pusat Info</h2>
-          <span className="px-2.5 py-1 bg-[#EEF2FF] text-[#6366F1] font-black text-[9px] uppercase tracking-wider rounded-lg border-2 border-[#C7D2FE]">Pro</span>
-        </div>
-
-        <div className="flex flex-col gap-5 px-5 pt-5 overflow-y-auto no-scrollbar pb-10 flex-1">
-
-          {/* Streak & Energi */}
-          <div className="flex items-center justify-between p-4 bg-gradient-to-br from-[#F8F9FF] to-[#EEF2FF] rounded-2xl border-2 border-[#E0E7FF] shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-sm border-2 border-b-4 border-orange-300">
-                <StatusFlame size={20} />
-              </div>
-              <div>
-                <div className="text-xl font-black text-amber-500 leading-none">
-                  {loading ? "..." : stats?.streak || 0}
-                </div>
-                <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">Hari Streak</div>
-              </div>
+        {/* Collapsed state — hanya ikon-ikon status */}
+        {rightCollapsed ? (
+          <div className="flex flex-col items-center gap-4 pt-20 px-2">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-sm border-2 border-b-4 border-orange-300" title="Streak">
+              <StatusFlame size={20} />
             </div>
-            <div className="w-px h-10 bg-gray-200" />
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center shadow-sm border-2 border-b-4 border-sky-300">
-                <StatusBattery size={20} />
-              </div>
-              <div>
-                <div className="text-xl font-black text-[#1CB0F6] leading-none">
-                  {loading ? "..." : `${stats?.energy?.current || 0}/${stats?.energy?.max || 5}`}
-                </div>
-                <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">Energi</div>
-              </div>
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center shadow-sm border-2 border-b-4 border-sky-300" title="Energi">
+              <StatusBattery size={20} />
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center border-2 border-b-4 border-amber-200" title="Liga">
+              <IconLeague />
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center border-2 border-b-4 border-indigo-200" title="Teman">
+              <IconFriendAdd />
             </div>
           </div>
-
-          {/* Klasemen Mini / Liga */}
-          <div className="bg-white border-2 border-b-[5px] border-gray-200 rounded-2xl p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-black text-gray-800 text-[13px] flex items-center gap-2">
-                <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-amber-50 border-2 border-amber-200">
-                  <IconLeague />
-                </span>
-                Liga Perunggu
-              </h3>
-              <Link href="/leaderboard" className="text-[9px] font-black text-[#6366F1] uppercase tracking-wider cursor-pointer hover:underline">Detail</Link>
+        ) : (
+          <>
+            {/* Header kanan */}
+            <div className="px-6 pt-7 pb-4 border-b-2 border-gray-50 shrink-0 flex items-center justify-between">
+              <h2 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.18em]">Pusat Info</h2>
+              <span className="px-2.5 py-1 bg-[#EEF2FF] text-[#6366F1] font-black text-[9px] uppercase tracking-wider rounded-lg border-2 border-[#C7D2FE]">Pro</span>
             </div>
-            <div className="flex flex-col gap-2.5">
-              {loading ? (
-                <div className="text-center py-4 text-gray-400 text-xs">Memuat data...</div>
-              ) : leaderboard && leaderboard.length > 0 ? (
-                leaderboard.map((user, idx) => {
-                  const isCurrentUser = session?.id === user.id;
-                  return (
-                    <div
-                      key={user.id}
-                      className={`flex items-center gap-3 ${
-                        isCurrentUser ? "bg-indigo-50 p-2 -mx-2 rounded-xl border-2 border-indigo-100" : ""
-                      }`}
-                    >
-                      <span className={`text-xs font-black ${
-                        idx === 0 ? "text-amber-500" : idx === 1 ? "text-gray-400" : "text-gray-300"
-                      } w-4 text-center`}>
-                        {user.rank || idx + 1}
-                      </span>
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs border ${
-                        isCurrentUser
-                          ? "bg-gradient-to-br from-indigo-500 to-purple-500 text-white border-indigo-600"
-                          : "bg-gray-100 text-gray-600 border-gray-200"
-                      }`}>
+
+            <div className="flex flex-col gap-5 px-5 pt-5 overflow-y-auto no-scrollbar pb-10 flex-1">
+
+              {/* Streak & Energi */}
+              <div className="flex items-center justify-between p-4 bg-gradient-to-br from-[#F8F9FF] to-[#EEF2FF] rounded-2xl border-2 border-[#E0E7FF] shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-sm border-2 border-b-4 border-orange-300">
+                    <StatusFlame size={20} />
+                  </div>
+                  <div>
+                    <div className="text-xl font-black text-amber-500 leading-none">
+                      {loading ? "..." : stats?.streak || 0}
+                    </div>
+                    <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">Hari Streak</div>
+                  </div>
+                </div>
+                <div className="w-px h-10 bg-gray-200" />
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center shadow-sm border-2 border-b-4 border-sky-300">
+                    <StatusBattery size={20} />
+                  </div>
+                  <div>
+                    <div className="text-xl font-black text-[#1CB0F6] leading-none">
+                      {loading ? "..." : `${stats?.energy?.current || 0}/${stats?.energy?.max || 5}`}
+                    </div>
+                    <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">Energi</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Klasemen Mini / Liga */}
+              <div className="bg-white border-2 border-b-[5px] border-gray-200 rounded-2xl p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-black text-gray-800 text-[13px] flex items-center gap-2">
+                    <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-amber-50 border-2 border-amber-200">
+                      <IconLeague />
+                    </span>
+                    Liga Perunggu
+                  </h3>
+                  <Link href="/leaderboard" className="text-[9px] font-black text-[#6366F1] uppercase tracking-wider cursor-pointer hover:underline">Detail</Link>
+                </div>
+                <div className="flex flex-col gap-2.5">
+                  {loading ? (
+                    <div className="text-center py-4 text-gray-400 text-xs">Memuat data...</div>
+                  ) : leaderboard && leaderboard.length > 0 ? (
+                    leaderboard.map((user, idx) => {
+                      const isCurrentUser = session?.id === user.id;
+                      return (
+                        <div
+                          key={user.id}
+                          className={`flex items-center gap-3 ${
+                            isCurrentUser ? "bg-indigo-50 p-2 -mx-2 rounded-xl border-2 border-indigo-100" : ""
+                          }`}
+                        >
+                          <span className={`text-xs font-black ${
+                            idx === 0 ? "text-amber-500" : idx === 1 ? "text-gray-400" : "text-gray-300"
+                          } w-4 text-center`}>
+                            {user.rank || idx + 1}
+                          </span>
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs border ${
+                            isCurrentUser
+                              ? "bg-gradient-to-br from-indigo-500 to-purple-500 text-white border-indigo-600"
+                              : "bg-gray-100 text-gray-600 border-gray-200"
+                          }`}>
+                            {user.name?.charAt(0).toUpperCase() || "?"}
+                          </div>
+                          <span className={`text-[12px] font-bold ${isCurrentUser ? "text-indigo-900 font-black" : "text-gray-700"} flex-1 truncate`}>
+                            {isCurrentUser ? "Anda" : user.name}
+                          </span>
+                          <span className={`text-[11px] font-black ${isCurrentUser ? "text-indigo-600" : "text-gray-500"}`}>
+                            {user.totalXP} XP
+                          </span>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center py-4 text-gray-400 text-xs">Tidak ada data</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Cari Teman / Suggestion */}
+              <div className="bg-white border-2 border-b-[5px] border-gray-200 rounded-2xl p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-black text-gray-800 text-[13px] flex items-center gap-2">
+                    <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-indigo-50 border-2 border-indigo-200">
+                      <IconFriendAdd />
+                    </span>
+                    Tambah Teman
+                  </h3>
+                  <Link href="/friends" className="text-[9px] font-black text-[#6366F1] uppercase tracking-wider cursor-pointer hover:underline">Cari</Link>
+                </div>
+                {loading ? (
+                  <div className="text-center py-4 text-gray-400 text-xs">Memuat...</div>
+                ) : suggestions && suggestions.length > 0 ? (
+                  suggestions.map((user) => (
+                    <div key={user.id} className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center font-bold text-indigo-600 border-2 border-indigo-200 shrink-0">
                         {user.name?.charAt(0).toUpperCase() || "?"}
                       </div>
-                      <span className={`text-[12px] font-bold ${isCurrentUser ? "text-indigo-900 font-black" : "text-gray-700"} flex-1 truncate`}>
-                        {isCurrentUser ? "Anda" : user.name}
-                      </span>
-                      <span className={`text-[11px] font-black ${isCurrentUser ? "text-indigo-600" : "text-gray-500"}`}>
-                        {user.totalXP} XP
-                      </span>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-4 text-gray-400 text-xs">Tidak ada data</div>
-              )}
-            </div>
-          </div>
-
-          {/* Cari Teman / Suggestion */}
-          <div className="bg-white border-2 border-b-[5px] border-gray-200 rounded-2xl p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-black text-gray-800 text-[13px] flex items-center gap-2">
-                <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-indigo-50 border-2 border-indigo-200">
-                  <IconFriendAdd />
-                </span>
-                Tambah Teman
-              </h3>
-              <Link href="/friends" className="text-[9px] font-black text-[#6366F1] uppercase tracking-wider cursor-pointer hover:underline">Cari</Link>
-            </div>
-            {loading ? (
-              <div className="text-center py-4 text-gray-400 text-xs">Memuat...</div>
-            ) : suggestions && suggestions.length > 0 ? (
-              suggestions.map((user) => (
-                <div key={user.id} className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center font-bold text-indigo-600 border-2 border-indigo-200 shrink-0">
-                    {user.name?.charAt(0).toUpperCase() || "?"}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-black text-gray-800 text-[12px] truncate">{user.name}</p>
-                    <p className="text-[10px] font-semibold text-gray-400 truncate">
-                      {user.totalXP > 0 ? `${user.totalXP} XP` : "Pelajar baru"}
-                    </p>
-                  </div>
-                  <button className="px-3 py-1.5 bg-[#EEF2FF] text-[#6366F1] border-2 border-[#C7D2FE] font-black text-[10px] rounded-lg hover:bg-[#E0E7FF] transition-colors shrink-0">
-                    Ikuti
-                  </button>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-4 text-gray-400 text-xs">Tidak ada rekomendasi</div>
-            )}
-          </div>
-
-          {/* Misi Harian */}
-          <div className="bg-white border-2 border-b-[5px] border-gray-200 rounded-2xl p-5 shadow-sm">
-            <h3 className="font-black text-gray-800 text-[13px] flex items-center gap-2 mb-4">
-              <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-emerald-50 border-2 border-emerald-200">
-                <IconMission />
-              </span>
-              Misi Harian
-            </h3>
-            <div className="flex flex-col gap-4">
-              {loading ? (
-                <div className="text-center py-4 text-gray-400 text-xs">Memuat misi...</div>
-              ) : missions && missions.length > 0 ? (
-                missions.slice(0, 2).map((mission) => {
-                  const progress = Math.round((mission.progress / mission.target) * 100);
-                  return (
-                    <div key={mission.id} className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-amber-50 border-2 border-b-[3px] border-amber-200 flex items-center justify-center shrink-0">
-                        <IconClock />
-                      </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-black text-gray-700 text-[12px] mb-1.5">{mission.title}</p>
-                        <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden border border-gray-200">
-                          <div
-                            className="bg-gradient-to-r from-amber-400 to-orange-400 h-full rounded-full transition-all duration-300"
-                            style={{ width: `${Math.min(progress, 100)}%` }}
-                          />
-                        </div>
-                        <p className="text-[9px] text-gray-400 font-bold mt-1.5">
-                          {mission.progress} / {mission.target} {mission.type === "LEARN_15_MIN" ? "menit" : "selesai"}
+                        <p className="font-black text-gray-800 text-[12px] truncate">{user.name}</p>
+                        <p className="text-[10px] font-semibold text-gray-400 truncate">
+                          {user.totalXP > 0 ? `${user.totalXP} XP` : "Pelajar baru"}
                         </p>
                       </div>
-                      {mission.completed && (
-                        <span className="text-xs font-black text-emerald-500">✓</span>
-                      )}
+                      <button className="px-3 py-1.5 bg-[#EEF2FF] text-[#6366F1] border-2 border-[#C7D2FE] font-black text-[10px] rounded-lg hover:bg-[#E0E7FF] transition-colors shrink-0">
+                        Ikuti
+                      </button>
                     </div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-4 text-gray-400 text-xs">Tidak ada misi hari ini</div>
-              )}
-            </div>
-          </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-gray-400 text-xs">Tidak ada rekomendasi</div>
+                )}
+              </div>
 
-        </div>
+
+
+            </div>
+          </>
+        )}
       </aside>
 
       {/* ═══════════════════════════════════════════
-          MAIN CONTENT
-          — margin-left 240px (sidebar kiri, md+)
-          — margin-right 300px (sidebar kanan, xl+)
+          MAIN CONTENT — margin ikut state collapse
          ═══════════════════════════════════════════ */}
-      <div className="md:ml-[240px] xl:mr-[300px] min-h-screen flex flex-col">
+      <div
+        className="min-h-screen flex flex-col transition-all duration-300 md:ml-[var(--left-w)] xl:mr-[var(--right-w)]"
+        style={{
+          "--left-w": leftCollapsed ? "72px" : "240px",
+          "--right-w": rightCollapsed ? "72px" : "300px",
+        }}
+      >
 
         {/* Mobile Top Bar */}
         <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-white border-b-2 border-gray-100 shadow-sm">
@@ -515,6 +596,9 @@ export default function DashboardLayout({ children }) {
             <span className="text-[18px] font-black text-gray-900 tracking-tight">Learn<span className="text-[#6366F1]">Lang</span></span>
           </Link>
           <div className="flex items-center gap-2">
+            <Link href="/notifications" className="p-2 text-gray-400 hover:text-[#6366F1] transition-colors">
+              <IconBell size={22} />
+            </Link>
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-50 border-2 border-amber-200 rounded-xl">
               <StatusFlame size={16} />
               <span className="text-xs font-black text-amber-500">12</span>

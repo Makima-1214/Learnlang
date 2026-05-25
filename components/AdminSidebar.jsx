@@ -110,8 +110,8 @@ export default function AdminSidebar() {
 
   return (
     <aside
-      className="relative flex flex-col bg-white border-r-4 border-gray-100 transition-all duration-300 font-[family-name:var(--font-nunito)]"
-      style={{ width: collapsed ? 72 : 240, minHeight: "100vh" }}
+      className="sticky top-0 h-screen flex flex-col bg-white border-r-4 border-gray-100 transition-all duration-300 font-[family-name:var(--font-nunito)] shrink-0"
+      style={{ width: collapsed ? 72 : 240 }}
     >
       {/* Collapse toggle */}
       <button
@@ -123,7 +123,7 @@ export default function AdminSidebar() {
       </button>
 
       {/* Brand */}
-      <div className={`flex items-center gap-3 px-4 py-5 border-b-2 border-gray-100 ${collapsed ? "justify-center" : ""}`}>
+      <Link href="/" className={`flex items-center gap-3 px-4 py-5 border-b-2 border-gray-100 hover:bg-indigo-50 transition-colors ${collapsed ? "justify-center" : ""}`} title="Kembali ke landing page">
         <div className="relative shrink-0">
           <svg className="w-10 h-10 drop-shadow-md" viewBox="0 0 100 100" fill="none">
             <rect x="15" y="18" width="70" height="64" rx="18" fill="#6366F1" />
@@ -148,10 +148,10 @@ export default function AdminSidebar() {
             <div className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.14em] mt-0.5">Admin Panel</div>
           </div>
         )}
-      </div>
+      </Link>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
         {NAV_ITEMS.map(({ href, label, Icon, color }) => {
           const active = isActive(href);
           const c = COLOR_MAP[color];
@@ -189,11 +189,34 @@ export default function AdminSidebar() {
             <div className="w-7 h-7 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-black flex-shrink-0">
               {session.user.name?.[0]?.toUpperCase() ?? "A"}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="text-xs font-black text-gray-800 truncate">{session.user.name}</div>
               <div className="text-[10px] font-bold text-gray-400 truncate">{session.user.email}</div>
             </div>
+            <Link
+              href="/admin/notifications"
+              className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-indigo-100 hover:text-indigo-600 transition-colors"
+              title="Notifikasi"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
           </div>
+        )}
+        {/* Bell icon when collapsed */}
+        {collapsed && (
+          <Link
+            href="/admin/notifications"
+            className="w-full flex items-center justify-center py-2 rounded-xl text-gray-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+            title="Notifikasi"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </Link>
         )}
 
         {/* Logout */}

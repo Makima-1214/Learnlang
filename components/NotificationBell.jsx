@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSocket } from "@/lib/socket-provider";
+import { Icon } from "@iconify/react";
 
 // ============================================================
 // CUSTOM SVG ICONS FOR NOTIFICATION TYPES
@@ -158,21 +159,12 @@ const getNotificationIcon = (type) => {
   }
 };
 
-// Custom notification bell icon - unique design
-const NotificationBellIcon = () => (
-  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    {/* Bell body with curve */}
-    <path d="M9.5 3c0 0-3 2-3 6c0 4 1 8 1 8h10s1-4 1-8c0-4-3-6-3-6" />
-    {/* Bell clapper */}
-    <circle cx="12" cy="17" r="1.5" fill="currentColor" />
-    {/* Notification lines */}
-    <path d="M7 19.5h10M9 21.5h6" />
-    {/* Energy waves around bell */}
-    <g opacity="0.6">
-      <circle cx="18" cy="8" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      <circle cx="20" cy="10" r="3.5" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.4" />
-    </g>
-  </svg>
+// Bell icon via Iconify
+const NotificationBellIcon = ({ hasUnread }) => (
+  <Icon
+    icon={hasUnread ? "solar:bell-bing-bold-duotone" : "solar:bell-bold-duotone"}
+    className="h-5 w-5"
+  />
 );
 
 
@@ -273,7 +265,7 @@ export default function NotificationBell() {
         onClick={handleBellClick}
         className="relative p-2 text-gray-700 hover:text-primary transition-colors"
       >
-        <NotificationBellIcon />
+        <NotificationBellIcon hasUnread={unreadCount > 0} />
         {unreadCount > 0 && (
           <span className="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold leading-none text-white bg-amber-600 rounded-full">
             {unreadCount > 99 ? "99+" : unreadCount}

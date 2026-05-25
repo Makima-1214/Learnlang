@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Icon } from "@iconify/react";
 import AIMascot from "@/components/AIMascot";
 import DashboardLayout from "@/components/DashboardLayout";
 import AudioPlayer from "@/components/AudioPlayer";
@@ -914,13 +915,13 @@ export default function MethodPracticeClient({ method }) {
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-3 mb-6">
                   {[
-                    ["✅", `${results.session.score}/${results.session.total}`, "Benar"],
-                    ["🎯", `${pct}%`, "Akurasi"],
-                    ["⚡", methodDisplay.badge, "Mode"]
-                  ].map(([emoji, val, label]) => (
-                    <div key={label} className="bg-gray-50 border-2 border-gray-100 rounded-2xl p-3 text-center">
-                      <div className="text-xl mb-0.5">{emoji}</div>
-                      <div className="font-black text-gray-800 text-base">{val}</div>
+                    { icon: "solar:check-circle-bold", iconClass: "text-emerald-500", bg: "bg-emerald-50 border-emerald-200", val: `${results.session.score}/${results.session.total}`, valClass: "text-emerald-600", label: "Benar" },
+                    { icon: "solar:target-bold",       iconClass: "text-indigo-500",  bg: "bg-indigo-50 border-indigo-200",  val: `${pct}%`,                                          valClass: "text-indigo-600",  label: "Akurasi" },
+                    { icon: "solar:bolt-bold",         iconClass: "text-amber-500",   bg: "bg-amber-50 border-amber-200",    val: methodDisplay.badge,                                valClass: "text-amber-600",   label: "Mode" },
+                  ].map(({ icon, iconClass, bg, val, valClass, label }) => (
+                    <div key={label} className={`${bg} border-2 border-b-4 rounded-2xl p-3 text-center`}>
+                      <Icon icon={icon} className={`text-2xl mx-auto mb-1 ${iconClass}`} />
+                      <div className={`font-black text-base ${valClass}`}>{val}</div>
                       <div className="text-[9px] font-black text-gray-400 uppercase tracking-wide">{label}</div>
                     </div>
                   ))}
@@ -948,34 +949,19 @@ export default function MethodPracticeClient({ method }) {
 
   return (
     <DashboardLayout>
-      <div className="flex-1 flex flex-col h-[calc(100dvh)] md:h-screen overflow-hidden bg-gradient-to-br from-[#F0F7FF] via-[#EEF2FF] to-[#F5F3FF] font-[family-name:var(--font-nunito)]">
+      <div className="flex-1 flex flex-col min-h-screen bg-gradient-to-br from-[#F0F7FF] via-[#EEF2FF] to-[#F5F3FF] font-[family-name:var(--font-nunito)]">
         <style dangerouslySetInnerHTML={{ __html: `
           .duo-btn{border-bottom-width:4px;transition:all 0.1s ease}
           .duo-btn:hover{transform:translateY(-2px);border-bottom-width:6px}
           .duo-btn:active{transform:translateY(4px);border-bottom-width:0px}
           .cloud-bg{position:absolute;background:white;border-radius:999px;opacity:0.7;border:3px solid #E2E8F0}
-          
-          /* Prevent page scrolling completely */
-          body { overflow: hidden !important; touch-action: none; }
-          main {
-            height: calc(100dvh - 56px - 70px) !important;
-            max-height: calc(100dvh - 56px - 70px) !important;
-            overflow: hidden !important;
-            padding-bottom: 0 !important;
-          }
-          @media (min-width: 768px) {
-            main {
-              height: calc(100vh - 24px) !important;
-              max-height: calc(100vh - 24px) !important;
-            }
-          }
         `}} />
         <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
           <div className="cloud-bg w-48 h-16 top-12 -left-12 shadow-sm animate-[bounce_4s_infinite]" />
           <div className="cloud-bg w-64 h-20 top-32 -right-16 shadow-sm animate-[bounce_5s_infinite]" />
         </div>
 
-        <div className="max-w-5xl w-full mx-auto px-2 sm:px-6 py-2 md:py-4 relative z-10 flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="max-w-5xl w-full mx-auto px-2 sm:px-6 py-2 md:py-4 relative z-10 flex-1 flex flex-col pb-8">
           <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -1011,9 +997,9 @@ export default function MethodPracticeClient({ method }) {
           {error && <div className="bg-red-50 border-4 border-red-300 rounded-3xl p-6 text-center"><p className="font-black text-red-700">{error}</p></div>}
 
           {!loading && !error && currentQuestion && sessionData && (
-            <div className="grid lg:grid-cols-12 gap-3 sm:gap-6 items-stretch flex-1 min-h-0 overflow-hidden pb-1">
+            <div className="grid lg:grid-cols-12 gap-3 sm:gap-6 items-start flex-1 pb-1">
               {/* Mascot column */}
-              <div className="hidden lg:flex lg:col-span-4 flex-col items-center justify-center gap-4 bg-white/50 border-2 border-white/80 rounded-3xl p-6 shadow-sm h-full">
+              <div className="hidden lg:flex lg:col-span-4 flex-col items-center justify-start gap-4 bg-white/50 border-2 border-white/80 rounded-3xl p-6 shadow-sm sticky top-4">
                 <AIMascot mood={mascotMood} />
                 <AnimatePresence>
                   {revealed && (
@@ -1038,12 +1024,12 @@ export default function MethodPracticeClient({ method }) {
               </div>
 
               {/* Question panel */}
-              <div className="col-span-12 lg:col-span-8 flex flex-col h-full min-h-0">
-                <div className="bg-white border-2 border-b-[4px] sm:border-b-[6px] border-gray-200 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-sm flex-1 flex flex-col min-h-0 overflow-hidden">
+              <div className="col-span-12 lg:col-span-8 flex flex-col">
+                <div className="bg-white border-2 border-b-[4px] sm:border-b-[6px] border-gray-200 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-sm flex flex-col gap-3">
                   {/* Scrollable contents inside the card */}
-                  <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pr-1 scrollbar-hide">
+                  <div className="flex flex-col gap-3">
                     {/* Instruction badge */}
-                    <div className="hidden lg:flex bg-[#E0E7FF] border-2 border-[#818CF8] rounded-2xl p-3 mb-3 items-center gap-3 shrink-0">
+                    <div className="hidden lg:flex bg-[#E0E7FF] border-2 border-[#818CF8] rounded-2xl p-3 items-center gap-3">
                       <div className="hidden lg:block shrink-0">
                         <svg className="w-5 h-5 text-[#0288D1]" viewBox="0 0 24 24" fill="none"><path d="M12 20H21M3 17.25V21H6.75L17.81 9.94L14.06 6.19L3 17.25ZM20.71 7.04C21.1 6.65 21.1 6.02 20.71 5.63L18.37 3.29C17.98 2.9 17.35 2.9 16.96 3.29L15.13 5.12L18.88 8.87L20.71 7.04Z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </div>
@@ -1081,7 +1067,7 @@ export default function MethodPracticeClient({ method }) {
                     {/* VOCABULARY */}
                     {methodStr === "vocabulary" && (
                       <>
-                        <div className="rounded-3xl bg-white/90 backdrop-blur-md border border-gray-200 p-6 mb-4 text-center shadow-lg relative overflow-hidden shrink-0">
+                        <div className="rounded-3xl bg-white/90 backdrop-blur-md border border-gray-200 p-6 text-center shadow-lg relative overflow-hidden">
                           <div className="absolute top-2 right-3 text-4xl opacity-10 font-black select-none">🔤</div>
                           <p className="text-[10px] font-black text-[#6366F1] uppercase tracking-widest mb-1.5 opacity-70">Apa arti kata ini?</p>
                           <p className="text-3xl sm:text-4xl font-black text-[#1E1B4B] tracking-tight">{currentQuestion.question}</p>
@@ -1125,7 +1111,7 @@ export default function MethodPracticeClient({ method }) {
                     {/* LISTENING */}
                     {methodStr === "listening" && (
                       <>
-                        <div className="mb-4 shrink-0">
+                        <div className="mb-4">
                           <AudioPlayer text={currentQuestion.sentences} title="Listening Sentence" subtitle="Pilih normal untuk kecepatan biasa atau slow untuk versi lebih lambat" />
                         </div>
                         <DndContext sensors={listeningSensors} collisionDetection={closestCenter} onDragEnd={handleListeningDragEnd}>
@@ -1160,7 +1146,7 @@ export default function MethodPracticeClient({ method }) {
                     {/* GRAMMAR */}
                     {methodStr === "grammar" && (
                       <>
-                        <div className="rounded-3xl border-2 border-gray-200 bg-gradient-to-br from-white to-slate-50 p-5 mb-4 shadow-[0_4px_0_#E2E8F0] shrink-0">
+                        <div className="rounded-3xl border-2 border-gray-200 bg-gradient-to-br from-white to-slate-50 p-5 mb-4 shadow-[0_4px_0_#E2E8F0]">
                           <div className="flex flex-wrap gap-2 justify-center">
                             {sentenceTokens.map((word, index) => (
                               <span key={`${word}-${index}`}
@@ -1174,19 +1160,32 @@ export default function MethodPracticeClient({ method }) {
                           </div>
                           <p className="text-center text-[10px] font-bold text-gray-400 mt-3">Pilih kata yang salah dari pilihan di bawah</p>
                         </div>
-                        <div className="grid gap-2.5 sm:grid-cols-2">
-                          {(typeof currentQuestion.choices === 'string' ? JSON.parse(currentQuestion.choices) : currentQuestion.choices || []).map(choice => {
+                        <div className="grid grid-cols-2 gap-2.5">
+                          {(typeof currentQuestion.choices === 'string' ? JSON.parse(currentQuestion.choices) : currentQuestion.choices || []).map((choice) => {
                             const isSel = selected === choice;
+                            const isCorrectChoice = revealed && choice === currentQuestion.answer;
                             return (
                               <button key={choice} type="button" onClick={() => handleAnswer(choice)} disabled={revealed}
-                                className={`px-4 py-3 rounded-2xl font-black text-xs sm:text-sm transition-all duration-200 text-left flex items-center gap-3 w-full border-2
-                                  ${!revealed ? "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-[#6366F1]/50 hover:scale-[1.01] shadow-sm cursor-pointer border-b-[4px] active:translate-y-[2px] active:border-b-[2px]" : ""}
-                                  ${isSel && correct ? "bg-emerald-100 border-emerald-500 text-emerald-700 translate-y-[2px] border-b-0" : ""}
-                                  ${isSel && !correct ? "bg-red-100 border-red-500 text-red-700 translate-y-[2px] border-b-0" : ""}
-                                  ${revealed && !isSel ? "bg-gray-50 border-gray-200 text-gray-400 opacity-60 cursor-not-allowed border-b-2" : ""}
+                                className={`py-3.5 px-4 rounded-2xl font-black text-sm transition-all duration-200 text-center w-full border-2 flex items-center justify-center gap-2
+                                  ${!revealed
+                                    ? "bg-white border-gray-200 text-gray-700 hover:bg-[#EEF2FF] hover:border-[#6366F1] hover:text-[#4338CA] shadow-sm cursor-pointer border-b-[4px] active:translate-y-[2px] active:border-b-[2px]"
+                                    : ""}
+                                  ${isSel && correct ? "bg-emerald-50 border-emerald-500 border-b-[4px] text-emerald-700" : ""}
+                                  ${isSel && !correct ? "bg-red-50 border-red-500 border-b-[4px] text-red-700" : ""}
+                                  ${isCorrectChoice && !isSel ? "bg-emerald-50 border-emerald-400 border-b-[4px] text-emerald-600" : ""}
+                                  ${revealed && !isSel && !isCorrectChoice ? "bg-gray-50 border-gray-200 text-gray-400 opacity-50 cursor-not-allowed border-b-2" : ""}
                                 `}
                               >
-                                <span className="text-sm">•</span><span>{choice}</span>
+                                <span className={`text-lg leading-none shrink-0
+                                  ${isSel && correct ? "text-emerald-500" : ""}
+                                  ${isSel && !correct ? "text-red-400" : ""}
+                                  ${isCorrectChoice && !isSel ? "text-emerald-400" : ""}
+                                  ${!revealed || (revealed && !isSel && !isCorrectChoice) ? "text-gray-400" : ""}
+                                `}>•</span>
+                                <span className="leading-snug">{choice}</span>
+                                {isSel && correct && <span className="text-emerald-500 shrink-0 text-base">✓</span>}
+                                {isSel && !correct && <span className="text-red-400 shrink-0 text-base">✗</span>}
+                                {isCorrectChoice && !isSel && <span className="text-emerald-400 shrink-0 text-xs font-black">✓</span>}
                               </button>
                             );
                           })}
@@ -1195,8 +1194,8 @@ export default function MethodPracticeClient({ method }) {
                     )}
                   </div>
 
-                  {/* Fixed Card Footer for Check/Next Button */}
-                  <div className="pt-3 mt-3 border-t border-gray-100 shrink-0">
+                  {/* Footer: Check/Next Button */}
+                  <div className="pt-3 border-t border-gray-100">
                     {methodStr === "listening" ? (
                       <button type="button"
                         className={`duo-btn w-full py-3.5 rounded-2xl font-black text-xs sm:text-sm border-2 border-b-4 text-white transition-all ${
