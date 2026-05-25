@@ -3,7 +3,6 @@
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import LoadingScreen from "@/components/LoadingScreen";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -42,23 +41,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Plus,
-  Edit2,
-  Trash2,
-  Eye,
-  EyeOff,
-  Loader2,
-  ArrowLeft,
-  Upload,
-  ImageIcon,
-  X,
-} from "lucide-react";
+import { Loader2, Trash2, Edit2, Eye, EyeOff, Plus, ImageIcon, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+
+// Custom Icon
+const BlogMagicIcon = () => (
+  <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    <path d="M12 6v6M9 9h6" stroke="#10B981" />
+  </svg>
+);
 
 export default function AdminBlogsPage() {
   const { data: session, status } = useSession();
@@ -241,7 +238,7 @@ export default function AdminBlogsPage() {
   };
 
   if (status === "loading" || loading) {
-    return <LoadingScreen />;
+    return null;
   }
 
   if (!session || session.user.role !== "ADMIN") {
@@ -249,36 +246,41 @@ export default function AdminBlogsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f0f9f4]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-white font-[family-name:var(--font-nunito)]">
+      <style dangerouslySetInnerHTML={{ __html: `
+        .duo-card { border-bottom-width: 6px; border-radius: 1.5rem; transition: all 0.2s; }
+        .duo-btn-primary { border-bottom-width: 4px; border-radius: 1rem; transition: all 0.1s; }
+        .duo-btn-primary:active { transform: translateY(2px); border-bottom-width: 0; margin-bottom: 4px; }
+      `}} />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-10 bg-emerald-500 p-8 rounded-[2rem] border-4 border-b-8 border-emerald-700 text-white shadow-xl">
           <div className="flex items-center gap-4">
-            <Link href="/admin">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
+            <div className="bg-white p-3 rounded-2xl shadow-inner text-emerald-500">
+              <BlogMagicIcon />
+            </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Management Blog
-              </h1>
-              <p className="text-gray-500 text-sm">
-                Kelola artikel dan konten blog
+              <h1 className="text-3xl font-black">Management Blog</h1>
+              <p className="font-bold opacity-90 text-sm">
+                Tulis artikel keren untuk menginspirasi pelajar
               </p>
             </div>
           </div>
-          <Button onClick={openCreateDialog} className="gap-2">
+          <Button 
+            onClick={openCreateDialog} 
+            className="duo-btn-primary bg-white text-emerald-600 font-black hover:bg-emerald-50 border-emerald-200 px-8 py-6 text-lg"
+          >
             <Plus className="h-4 w-4" />
             Buat Blog Baru
           </Button>
         </div>
 
         {/* Blog Table */}
-        <Card>
+        <Card className="duo-card border-4 border-gray-100 shadow-none overflow-hidden">
           <CardHeader>
-            <CardTitle>Daftar Blog</CardTitle>
-            <CardDescription>{blogs.length} blog ditemukan</CardDescription>
+            <CardTitle className="font-black text-xl">Daftar Blog</CardTitle>
+            <CardDescription className="font-bold">{blogs.length} blog ditemukan dalam database</CardDescription>
           </CardHeader>
           <CardContent>
             {blogs.length === 0 ? (
@@ -293,12 +295,12 @@ export default function AdminBlogsPage() {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-20">Cover</TableHead>
-                      <TableHead>Judul</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Penulis</TableHead>
-                      <TableHead>Tanggal</TableHead>
+                    <TableRow className="hover:bg-transparent border-b-2">
+                      <TableHead className="w-20 font-black text-gray-400">Cover</TableHead>
+                      <TableHead className="font-black text-gray-400">Judul</TableHead>
+                      <TableHead className="font-black text-gray-400">Status</TableHead>
+                      <TableHead className="font-black text-gray-400">Penulis</TableHead>
+                      <TableHead className="font-black text-gray-400">Tanggal</TableHead>
                       <TableHead className="text-right">Aksi</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -307,7 +309,7 @@ export default function AdminBlogsPage() {
                       <TableRow key={blog.id}>
                         <TableCell>
                           {blog.coverImage ? (
-                            <div className="relative w-16 h-10 rounded overflow-hidden">
+                            <div className="relative w-16 h-10 rounded-lg overflow-hidden border-2 border-gray-100">
                               <Image
                                 src={blog.coverImage}
                                 alt={blog.title}
@@ -316,14 +318,14 @@ export default function AdminBlogsPage() {
                               />
                             </div>
                           ) : (
-                            <div className="w-16 h-10 rounded bg-gray-100 flex items-center justify-center">
+                            <div className="w-16 h-10 rounded-lg bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center">
                               <ImageIcon className="h-4 w-4 text-gray-400" />
                             </div>
                           )}
                         </TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-medium text-sm line-clamp-1">
+                            <p className="font-black text-gray-800 line-clamp-1">
                               {blog.title}
                             </p>
                             <p className="text-xs text-gray-500 line-clamp-1">
@@ -333,23 +335,19 @@ export default function AdminBlogsPage() {
                         </TableCell>
                         <TableCell>
                           <Badge
-                            variant={blog.published ? "default" : "secondary"}
-                            className={
+                            className={`font-black rounded-lg border-2 ${
                               blog.published
-                                ? "bg-green-100 text-green-700 hover:bg-green-100"
-                                : ""
-                            }
+                                ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                                : "bg-gray-50 text-gray-400 border-gray-100"
+                            }`}
                           >
                             {blog.published ? "Published" : "Draft"}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <p className="text-sm">
-                            {blog.author?.name || "Unknown"}
-                          </p>
+                          <p className="text-sm font-bold">{blog.author?.name || "Unknown"}</p>
                         </TableCell>
-                        <TableCell>
-                          <p className="text-sm text-gray-500">
+                        <TableCell className="text-xs font-bold text-gray-400">
                             {new Date(blog.createdAt).toLocaleDateString(
                               "id-ID",
                               {
@@ -358,14 +356,11 @@ export default function AdminBlogsPage() {
                                 year: "numeric",
                               },
                             )}
-                          </p>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
                             <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleTogglePublish(blog)}
+                              className="bg-white border-2 border-b-4 border-gray-200 text-gray-500 hover:bg-gray-50 h-9 w-9 p-0"
                               title={
                                 blog.published
                                   ? "Jadikan Draft"
@@ -379,19 +374,16 @@ export default function AdminBlogsPage() {
                               )}
                             </Button>
                             <Button
-                              variant="ghost"
-                              size="icon"
+                              className="bg-white border-2 border-b-4 border-gray-200 text-indigo-500 hover:bg-indigo-50 h-9 w-9 p-0"
                               onClick={() => openEditDialog(blog)}
                             >
                               <Edit2 className="h-4 w-4" />
                             </Button>
                             <Button
-                              variant="ghost"
-                              size="icon"
+                              className="bg-white border-2 border-b-4 border-red-100 text-red-500 hover:bg-red-50 h-9 w-9 p-0 text-destructive hover:text-destructive"
                               onClick={() =>
                                 setDeleteDialog({ open: true, blog })
                               }
-                              className="text-destructive hover:text-destructive"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -600,3 +592,4 @@ export default function AdminBlogsPage() {
     </div>
   );
 }
+

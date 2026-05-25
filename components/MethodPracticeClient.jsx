@@ -948,20 +948,18 @@ export default function MethodPracticeClient({ method }) {
 
   return (
     <DashboardLayout>
-      <div className="flex-1 flex flex-col h-screen overflow-hidden bg-gradient-to-br from-[#F0F7FF] via-[#EEF2FF] to-[#F5F3FF] font-[family-name:var(--font-nunito)]">
+      <div className="flex-1 flex flex-col h-[calc(100dvh)] md:h-screen overflow-hidden bg-gradient-to-br from-[#F0F7FF] via-[#EEF2FF] to-[#F5F3FF] font-[family-name:var(--font-nunito)]">
         <style dangerouslySetInnerHTML={{ __html: `
           .duo-btn{border-bottom-width:4px;transition:all 0.1s ease}
           .duo-btn:hover{transform:translateY(-2px);border-bottom-width:6px}
           .duo-btn:active{transform:translateY(4px);border-bottom-width:0px}
           .cloud-bg{position:absolute;background:white;border-radius:999px;opacity:0.7;border:3px solid #E2E8F0}
           
-          /* Prevent page scrolling and cap heights */
-          body {
-            overflow: hidden !important;
-          }
+          /* Prevent page scrolling completely */
+          body { overflow: hidden !important; touch-action: none; }
           main {
-            height: calc(100vh - 56px - 80px) !important;
-            max-height: calc(100vh - 56px - 80px) !important;
+            height: calc(100dvh - 56px - 70px) !important;
+            max-height: calc(100dvh - 56px - 70px) !important;
             overflow: hidden !important;
             padding-bottom: 0 !important;
           }
@@ -969,7 +967,6 @@ export default function MethodPracticeClient({ method }) {
             main {
               height: calc(100vh - 24px) !important;
               max-height: calc(100vh - 24px) !important;
-              padding-bottom: 0 !important;
             }
           }
         `}} />
@@ -978,7 +975,7 @@ export default function MethodPracticeClient({ method }) {
           <div className="cloud-bg w-64 h-20 top-32 -right-16 shadow-sm animate-[bounce_5s_infinite]" />
         </div>
 
-        <div className="max-w-5xl w-full mx-auto px-3 sm:px-6 py-3 md:py-4 relative z-10 flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="max-w-5xl w-full mx-auto px-2 sm:px-6 py-2 md:py-4 relative z-10 flex-1 flex flex-col min-h-0 overflow-hidden">
           <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -993,18 +990,14 @@ export default function MethodPracticeClient({ method }) {
           </AlertDialog>
 
           {/* Top bar */}
-          <div className="flex items-center gap-3 mb-4 bg-white/80 backdrop-blur-sm rounded-2xl p-2.5 border-2 border-white shadow-sm shrink-0">
-            <button onClick={handleBackWithConfirmation} className="duo-btn flex items-center gap-1.5 px-3 py-2 bg-white border-2 border-b-4 border-gray-200 rounded-xl font-black text-gray-600 text-xs hover:bg-gray-50 shrink-0">
-              <ArrowLeft className="w-3.5 h-3.5" /> Keluar
+          <div className="flex items-center gap-2 mb-2 bg-white/80 backdrop-blur-sm rounded-xl p-2 border-2 border-white shadow-sm shrink-0">
+            <button onClick={handleBackWithConfirmation} className="duo-btn flex items-center gap-1 px-2 py-1.5 bg-white border-2 border-b-[3px] border-gray-200 rounded-lg font-black text-gray-600 text-[10px] sm:text-xs hover:bg-gray-50 shrink-0">
+              <ArrowLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> <span className="hidden sm:inline">Keluar</span>
             </button>
-            <div className="flex-1 space-y-2">
-              <div className="flex justify-between text-[11px] font-black text-gray-400">
-                <span className="text-[#6366F1]">Soal {currentIndex + 1}</span>
-                <span>dari {total}</span>
-              </div>
+            <div className="flex-1 space-y-1 sm:space-y-1.5 px-2">
               <div className="flex items-center gap-1">
                 {Array.from({ length: total }).map((_, i) => (
-                  <div key={i} className={`h-2 flex-1 rounded-full transition-all duration-300 ${
+                  <div key={i} className={`h-1.5 sm:h-2 flex-1 rounded-full transition-all duration-300 ${
                     i < currentIndex ? 'bg-[#10B981]' :
                     i === currentIndex ? 'bg-gradient-to-r from-[#6366F1] to-[#818CF8] animate-pulse' :
                     'bg-gray-200'
@@ -1012,26 +1005,13 @@ export default function MethodPracticeClient({ method }) {
                 ))}
               </div>
             </div>
-            <div className="shrink-0 px-2.5 py-1.5 bg-[#EEF2FF] border-2 border-[#C7D2FE] rounded-xl text-[10px] font-black text-[#6366F1] uppercase tracking-wider">{methodDisplay.badge}</div>
-          </div>
-
-          {/* Section heading */}
-          <div className="text-center mb-4 shrink-0">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-100 rounded-2xl shadow-sm mb-3">
-              <span className="text-lg">{methodStr === "vocabulary" ? "🔤" : methodStr === "listening" ? "🎧" : "🔍"}</span>
-              <span className="font-black text-gray-600 text-sm">
-                {methodStr === "vocabulary" && "Pilih arti kata yang tepat"}
-                {methodStr === "listening" && "Susun kata yang kamu dengar"}
-                {methodStr === "grammar" && "Temukan kata yang salah"}
-              </span>
-            </div>
           </div>
 
           {loading && <div className="flex justify-center py-20"><div className="text-xl font-black text-[#6366F1] animate-pulse">Memuat soal...</div></div>}
           {error && <div className="bg-red-50 border-4 border-red-300 rounded-3xl p-6 text-center"><p className="font-black text-red-700">{error}</p></div>}
 
           {!loading && !error && currentQuestion && sessionData && (
-            <div className="grid lg:grid-cols-12 gap-6 items-stretch flex-1 min-h-0 overflow-hidden pb-1">
+            <div className="grid lg:grid-cols-12 gap-3 sm:gap-6 items-stretch flex-1 min-h-0 overflow-hidden pb-1">
               {/* Mascot column */}
               <div className="hidden lg:flex lg:col-span-4 flex-col items-center justify-center gap-4 bg-white/50 border-2 border-white/80 rounded-3xl p-6 shadow-sm h-full">
                 <AIMascot mood={mascotMood} />
@@ -1059,19 +1039,11 @@ export default function MethodPracticeClient({ method }) {
 
               {/* Question panel */}
               <div className="col-span-12 lg:col-span-8 flex flex-col h-full min-h-0">
-                <div className="bg-white border-2 border-b-[6px] border-gray-200 rounded-3xl p-4 sm:p-6 shadow-sm flex-1 flex flex-col min-h-0 overflow-hidden">
+                <div className="bg-white border-2 border-b-[4px] sm:border-b-[6px] border-gray-200 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-sm flex-1 flex flex-col min-h-0 overflow-hidden">
                   {/* Scrollable contents inside the card */}
-                  <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+                  <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pr-1 scrollbar-hide">
                     {/* Instruction badge */}
-                    <div className="bg-[#E0E7FF] border-2 border-[#818CF8] rounded-2xl p-3 mb-4 flex items-center gap-3 shrink-0">
-                      <div className="shrink-0 block lg:hidden">
-                        {/* Mini Mascot on Mobile */}
-                        <div className="w-12 h-12 rounded-xl bg-white border-2 border-[#818CF8] overflow-hidden flex items-center justify-center relative shrink-0">
-                          <div className="scale-[0.3] w-48 h-48 absolute flex items-center justify-center origin-center">
-                            <AIMascot mood={mascotMood} />
-                          </div>
-                        </div>
-                      </div>
+                    <div className="hidden lg:flex bg-[#E0E7FF] border-2 border-[#818CF8] rounded-2xl p-3 mb-3 items-center gap-3 shrink-0">
                       <div className="hidden lg:block shrink-0">
                         <svg className="w-5 h-5 text-[#0288D1]" viewBox="0 0 24 24" fill="none"><path d="M12 20H21M3 17.25V21H6.75L17.81 9.94L14.06 6.19L3 17.25ZM20.71 7.04C21.1 6.65 21.1 6.02 20.71 5.63L18.37 3.29C17.98 2.9 17.35 2.9 16.96 3.29L15.13 5.12L18.88 8.87L20.71 7.04Z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </div>

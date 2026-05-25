@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createContext, useContext, useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import UserAvatar from "@/components/UserAvatar";
 
 const DashboardLayoutContext = createContext(false);
 
@@ -146,6 +147,7 @@ const MOBILE_NAV = [
   MENU_UTAMA[0], // Belajar
   MENU_UTAMA[1], // Game Seru
   SOSIAL_KOMPETISI[0], // Diskusi
+  SOSIAL_KOMPETISI[1], // Chats AI
   SOSIAL_KOMPETISI[2], // Cari Teman
   AKUN[0], // Profil
 ];
@@ -283,9 +285,12 @@ export default function DashboardLayout({ children }) {
         {session?.user && (
           <div className="mx-4 mt-4 px-3 py-3 rounded-2xl bg-gradient-to-br from-[#EEF2FF] to-[#F5F3FF] border-2 border-[#E0E7FF] shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#6366F1] to-[#818CF8] flex items-center justify-center text-white font-black text-sm border-2 border-white shadow-md shrink-0">
-                {session.user.name?.charAt(0).toUpperCase() ?? "U"}
-              </div>
+              <UserAvatar
+                src={session.user.avatar}
+                name={session.user.name}
+                className="w-9 h-9 shrink-0"
+                size={30}
+              />
               <div className="min-w-0">
                 <p className="font-black text-gray-800 text-sm truncate leading-tight">{session.user.name ?? "Pelajar"}</p>
                 <p className="text-[10px] font-semibold text-gray-400 truncate">{session.user.email}</p>
@@ -531,7 +536,7 @@ export default function DashboardLayout({ children }) {
           MOBILE BOTTOM NAV
          ═══════════════════════════════════════════ */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t-2 border-gray-100 shadow-[0_-4px_24px_rgba(99,102,241,0.10)] pb-safe">
-        <div className="flex justify-around items-center px-1 py-1.5">
+        <div className="flex justify-between items-center px-2 py-1.5 overflow-x-auto no-scrollbar">
           {MOBILE_NAV.map(({ href, label, Icon, accent, bg }) => {
             const active = isActive(href);
             return (

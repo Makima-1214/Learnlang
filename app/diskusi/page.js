@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
-import LoadingScreen from "@/components/LoadingScreen";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -26,6 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UserAvatar from "@/components/UserAvatar";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
@@ -204,7 +204,7 @@ export default function DiskusiPage() {
       .slice(0, 2);
   };
 
-  if (loading || status === "loading") return <LoadingScreen />;
+  if (loading || status === "loading") return null;
 
   return (
     <DashboardLayout>
@@ -231,7 +231,7 @@ export default function DiskusiPage() {
         }
       `}} />
 
-      <div className="min-h-[calc(100vh-4rem)] bg-white relative w-full font-[family-name:var(--font-nunito)]">
+      <div className="min-h-[calc(100vh-4rem)] bg-white relative w-full overflow-x-hidden font-[family-name:var(--font-nunito)] pb-20">
 
         {/* Cloud Decorations */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
@@ -415,15 +415,13 @@ export default function DiskusiPage() {
                           </div>
 
                           <div className="flex items-center gap-2">
-                            <Avatar className="w-6 h-6 border border-gray-200">
-                              <AvatarImage
-                                src={room.createdBy.avatar}
-                                alt={room.createdBy.name}
-                              />
-                              <AvatarFallback className="text-[10px] font-black bg-sky-100 text-sky-600">
-                                {getInitials(room.createdBy.name)}
-                              </AvatarFallback>
-                            </Avatar>
+                          <UserAvatar
+                              src={room.createdBy.avatar}
+                              name={room.createdBy.name}
+                              className="w-6 h-6"
+                              size={20}
+                              showInitial
+                            />
                             <span className="text-[11px] font-black text-gray-600 truncate max-w-[80px]">
                               {room.createdBy.name.split(" ")[0]}
                             </span>

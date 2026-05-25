@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
-import LoadingScreen from "@/components/LoadingScreen";
 import { motion } from "framer-motion";
 
 // Import modular, high-fidelity components
@@ -78,7 +77,8 @@ export default function LandingPage() {
   const router = useRouter();
   const [mascotMood, setMascotMood] = useState("neutral");
 
-  if (status === "loading") return <LoadingScreen fullPage={true} />;
+  const ctaHref = session ? "/learn" : "/register";
+  const ctaLabel = session ? "LANJUT BELAJAR ➔" : "MULAI SEKARANG ➔";
 
   return (
     <div className="min-h-screen bg-white text-gray-800 font-[family-name:var(--font-nunito)] selection:bg-[#818CF8] selection:text-white">
@@ -132,9 +132,9 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start max-w-md">
-              <Link href="/register" className="w-full">
+              <Link href={ctaHref} className="w-full">
                 <button className="w-full py-5 bg-[#6366F1] hover:bg-[#818CF8] text-white border-b-6 border-[#4338CA] rounded-2xl font-black text-xl duo-btn flex items-center justify-center gap-3 shadow-md">
-                  MULAI SEKARANG ➔
+                  {ctaLabel}
                 </button>
               </Link>
             </div>
@@ -375,9 +375,9 @@ export default function LandingPage() {
             <p className="text-xl text-[#F1FFF8] font-bold mb-10 max-w-xl mx-auto">
               Daftar gratis selamanya. Dapatkan akses penuh ke sistem koreksi AI sekarang juga!
             </p>
-            <Link href="/register">
+            <Link href={ctaHref}>
               <button className="px-12 py-5 bg-white text-[#6366F1] border-b-6 border-gray-300 hover:border-gray-400 rounded-2xl font-black text-2xl active:translate-y-[4px] active:border-b-0 shadow-lg">
-                DAFTAR SEKARANG! 🚀
+                {session ? "LANJUT BELAJAR! 🚀" : "DAFTAR SEKARANG! 🚀"}
               </button>
             </Link>
           </div>

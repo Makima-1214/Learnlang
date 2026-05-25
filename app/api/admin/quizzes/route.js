@@ -29,7 +29,7 @@ export async function GET(request) {
         },
       },
       orderBy: {
-        createdAt: "desc",
+        order: "asc", // Sort by order for learning path
       },
     });
 
@@ -53,7 +53,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { title, description, published, questions } = body;
+    const { title, description, published, order, timeLimit, icon, color, questions } = body;
 
     if (!title || !questions || questions.length === 0) {
       return NextResponse.json(
@@ -68,6 +68,10 @@ export async function POST(request) {
         title,
         description: description || null,
         published: published || false,
+        order: order || 0,
+        timeLimit: timeLimit || null,
+        icon: icon || null,
+        color: color || "#6366F1",
         createdById: session.user.id,
         questions: {
           create: questions.map((q, index) => ({

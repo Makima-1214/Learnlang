@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
-import LoadingScreen from "@/components/LoadingScreen";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -125,8 +124,6 @@ export default function TakeQuizPage() {
       setIsSubmitting(false);
     }
   };
-
-  if (loading || status === "loading") return <LoadingScreen />;
 
   if (status === "unauthenticated" || !quiz) return null;
 

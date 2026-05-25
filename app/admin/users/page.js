@@ -37,8 +37,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2, Shield, User as UserIcon, Loader2, Edit2 } from "lucide-react";
+import { Loader2, Trash2, Shield, User as UserIcon } from "lucide-react";
 import { toast } from "sonner";
+
+// Custom Playful Icons
+const CyberShieldIcon = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    <circle cx="12" cy="11" r="3" fill="currentColor" fillOpacity="0.2" />
+  </svg>
+);
+
+const UserAvatarIcon = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M19 8v6M16 11h6" strokeDasharray="2 2" />
+  </svg>
+);
+
+const TrashVaporIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    <line x1="10" y1="11" x2="10" y2="17" />
+    <line x1="14" y1="11" x2="14" y2="17" />
+  </svg>
+);
 
 export default function UsersPage() {
   const { data: session, status } = useSession();
@@ -235,21 +259,33 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">User Management</h1>
-          <p className="text-muted-foreground">
+    <div className="min-h-screen bg-white font-[family-name:var(--font-nunito)]">
+      <style dangerouslySetInnerHTML={{ __html: `
+        .duo-card { border-bottom-width: 6px; border-radius: 1.5rem; transition: all 0.2s; }
+        .duo-btn-primary { border-bottom-width: 4px; border-radius: 1rem; transition: all 0.1s; }
+        .duo-btn-primary:active { transform: translateY(2px); border-bottom-width: 0; margin-bottom: 4px; }
+      `}} />
+      
+      <main className="max-w-6xl mx-auto px-4 py-10 space-y-8">
+        {/* Header Section */}
+        <div>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight">User Management</h1>
+          <p className="font-bold text-gray-500 text-sm mt-1">
             Kelola semua pengguna dan role mereka di platform LernLang
           </p>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card>
+          <Card className="duo-card border-4 border-indigo-100 shadow-none bg-indigo-50/30">
             <CardHeader className="pb-3">
-              <CardDescription className="text-xs">Total Users</CardDescription>
-              <CardTitle className="text-3xl">{users.length}</CardTitle>
+              <CardDescription className="text-indigo-500 font-black uppercase text-[10px] tracking-wider">Total Users</CardDescription>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-indigo-500 rounded-lg text-white">
+                  <UserAvatarIcon />
+                </div>
+                <CardTitle className="text-4xl font-black text-indigo-700">{users.length}</CardTitle>
+              </div>
             </CardHeader>
           </Card>
           <Card>
@@ -273,9 +309,9 @@ export default function UsersPage() {
         </div>
 
         {/* Search and Filters */}
-        <Card className="mb-6">
+        <Card className="duo-card border-4 border-gray-100 shadow-none">
           <CardHeader>
-            <CardTitle className="text-lg">Cari & Filter</CardTitle>
+            <CardTitle className="text-lg font-black text-gray-800 flex items-center gap-2">🔍 Cari & Filter</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -289,7 +325,7 @@ export default function UsersPage() {
                   placeholder="Cari nama atau email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full"
+                  className="w-full rounded-xl border-2 focus:ring-indigo-500"
                 />
               </div>
 
@@ -299,20 +335,18 @@ export default function UsersPage() {
                 <div className="flex gap-2 flex-wrap">
                   {[
                     { value: "all", label: "Semua", icon: null },
-                    { value: "ADMIN", label: "Admin", icon: Shield },
-                    { value: "USER", label: "User", icon: UserIcon },
+                    { value: "ADMIN", label: "Admin", icon: CyberShieldIcon },
+                    { value: "USER", label: "User", icon: UserAvatarIcon },
                   ].map((option) => {
                     const Icon = option.icon;
                     return (
                       <Button
                         key={option.value}
                         onClick={() => setRoleFilter(option.value)}
-                        variant={
-                          roleFilter === option.value ? "default" : "outline"
-                        }
+                        className={`duo-btn-primary font-black ${roleFilter === option.value ? "bg-indigo-500 border-indigo-700 hover:bg-indigo-600" : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"}`}
                         size="sm"
                       >
-                        {Icon && <Icon className="mr-1 h-3 w-3" />}
+                        {Icon && <span className="mr-2"><Icon /></span>}
                         {option.label}
                       </Button>
                     );
@@ -331,8 +365,7 @@ export default function UsersPage() {
                   ].map((option) => (
                     <Button
                       key={option.value}
-                      onClick={() => setSortBy(option.value)}
-                      variant={sortBy === option.value ? "default" : "outline"}
+                      className={`duo-btn-primary font-black ${sortBy === option.value ? "bg-indigo-500 border-indigo-700 hover:bg-indigo-600" : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"}`}
                       size="sm"
                     >
                       {option.label}
@@ -354,10 +387,10 @@ export default function UsersPage() {
         </Card>
 
         {/* Users Table */}
-        <Card>
+        <Card className="duo-card border-4 border-gray-100 shadow-none overflow-hidden">
           <CardHeader>
-            <CardTitle>Semua Pengguna ({sortedUsers.length})</CardTitle>
-            <CardDescription>
+            <CardTitle className="font-black">Semua Pengguna ({sortedUsers.length})</CardTitle>
+            <CardDescription className="font-bold">
               Daftar lengkap semua pengguna terdaftar di platform
             </CardDescription>
           </CardHeader>
@@ -372,15 +405,15 @@ export default function UsersPage() {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Nama</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead className="text-center">Role</TableHead>
-                      <TableHead className="text-center">
+                    <TableRow className="hover:bg-transparent border-b-2">
+                      <TableHead className="font-black text-gray-400">Nama</TableHead>
+                      <TableHead className="font-black text-gray-400">Email</TableHead>
+                      <TableHead className="text-center font-black text-gray-400">Role</TableHead>
+                      <TableHead className="text-center font-black text-gray-400">
                         Total Latihan
                       </TableHead>
-                      <TableHead className="text-center">Terdaftar</TableHead>
-                      <TableHead className="text-center">Aksi</TableHead>
+                      <TableHead className="text-center font-black text-gray-400">Terdaftar</TableHead>
+                      <TableHead className="text-center font-black text-gray-400">Aksi</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -392,12 +425,10 @@ export default function UsersPage() {
                         <TableCell className="text-sm text-muted-foreground">
                           {user.email}
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center space-x-1">
                           <Badge
-                            variant={
-                              user.role === "ADMIN" ? "default" : "secondary"
-                            }
-                            className="cursor-pointer"
+                            variant="outline"
+                            className={`cursor-pointer px-3 py-1 rounded-lg border-2 font-black ${user.role === "ADMIN" ? "bg-amber-50 text-amber-600 border-amber-200" : "bg-blue-50 text-blue-600 border-blue-200"}`}
                             onClick={() =>
                               setRoleDialog({
                                 open: true,
@@ -406,10 +437,10 @@ export default function UsersPage() {
                               })
                             }
                           >
-                            {user.role === "ADMIN" ? (
-                              <Shield className="mr-1 h-3 w-3" />
+                            {user.role === "ADMIN" ? ( 
+                              <span className="mr-1 inline-block scale-75"><CyberShieldIcon /></span>
                             ) : (
-                              <UserIcon className="mr-1 h-3 w-3" />
+                              <span className="mr-1 inline-block scale-75"><UserAvatarIcon /></span>
                             )}
                             {user.role}
                           </Badge>
@@ -430,8 +461,8 @@ export default function UsersPage() {
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-2">
                             <Button
-                              variant="outline"
                               size="sm"
+                              className="bg-white border-2 border-b-4 border-gray-200 text-gray-600 hover:bg-gray-50 h-8 w-8 p-0"
                               onClick={() =>
                                 setEditDialog({
                                   open: true,
@@ -441,15 +472,14 @@ export default function UsersPage() {
                                 })
                               }
                             >
-                              <Edit2 className="h-4 w-4" />
+                              <span className="text-xs">✏️</span>
                             </Button>
                             <Button
-                              variant="destructive"
                               size="sm"
+                              className="bg-white border-2 border-b-4 border-red-100 text-red-500 hover:bg-red-50 h-8 w-8 p-0"
                               onClick={() =>
                                 setDeleteDialog({ open: true, user })
                               }
-                              disabled={user.id === session.user.id}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>

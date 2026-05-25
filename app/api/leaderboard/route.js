@@ -1,97 +1,87 @@
-/**
- * GET /api/leaderboard
- * Returns top users by XP (achievement points)
- * Includes current user's ranking
- */
-
-import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { jsonResponse } from "@/lib/api-response";
-import { calculateTotalXP } from "@/lib/streak";
-import { apiLogger } from "@/lib/logger";
+import { ApiResponse, jsonResponse } from "@/lib/api-response";
 
+/**
+ * GET /api/leaderboard
+ * Returns top users ranked by achievement XP points.
+ * Query params:
+ *   limit  — number of users to return (default 20, max 100)
+ *   offset — pagination offset (default 0)
+ */
 export async function GET(req) {
   try {
     const session = await getServerSession(authOptions);
+    const { searchParams } = new URL(req.url);
+    const limit  = Math.min(parseInt(searchParams.get("limit")  || "20"), 100);
+    const offset = parseInt(searchParams.get("offset") || "0");
 
-    if (!session) {
-      return jsonResponse(
-        { error: "Unauthorized" },
-        401,
-        "User not authenticated"
-      );
+    // Aggregate achievement points per user
+    const aggregated = await prisma.achievement.groupBy({
+      by: ["userId"],
+      _sum: { points: true },
+      _count: { type: true },
+      orderBy: { _sum: { points: "desc" } },
+      take: limit + (session ? 1 : 0), // fetch a bit extra to find current user
+      skip: offset,
+    });
+
+    // Fetch user details for those IDs
+    const userIds = aggregated.map((a) => a.userId);
+    const users = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, name: true, username: true, avatar: true },
+    });
+
+    const userMap = Object.fromEntries(users.map((u) => [u.id, u]));
+
+    const leaderboard = aggregated.map((a, idx) => ({
+      rank: offset + idx + 1,
+      id: a.userId,
+      name: userMap[a.userId]?.name ?? "Unknown",
+      username: userMap[a.userId]?.username ?? null,
+      avatar: userMap[a.userId]?.avatar ?? null,
+      totalXP: a._sum.points ?? 0,
+      achievementCount: a._count.type ?? 0,
+    }));
+
+    // Find current user's rank if logged in
+    let currentUserRank = null;
+    if (session?.user?.id) {
+      const userId = session.user.id;
+      const inList = leaderboard.find((u) => u.id === userId);
+      if (inList) {
+        currentUserRank = inList;
+      } else {
+        // Count how many users have more XP
+        const userAgg = await prisma.achievement.groupBy({
+          by: ["userId"],
+          _sum: { points: true },
+          where: { userId },
+        });
+        const myXP = userAgg[0]?._sum?.points ?? 0;
+        const ahead = await prisma.achievement.groupBy({
+          by: ["userId"],
+          _sum: { points: true },
+          having: { points: { _sum: { gt: myXP } } },
+        });
+        currentUserRank = {
+          rank: ahead.length + 1,
+          id: userId,
+          name: session.user.name,
+          totalXP: myXP,
+          achievementCount: userAgg[0]?._count?.type ?? 0,
+        };
+      }
     }
 
-    const userId = session.id;
-    const limit = Math.min(parseInt(req.nextUrl.searchParams.get("limit")) || 10, 100);
-
-    // Get all users with their total XP
-    // We'll calculate total XP per user from achievements
-    const users = await prisma.user.findMany({
-      where: {
-        role: "USER", // Exclude admins
-      },
-      select: {
-        id: true,
-        name: true,
-        username: true,
-        avatar: true,
-        createdAt: true,
-        achievements: {
-          select: {
-            points: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "asc",
-      },
-      take: 1000, // Get top 1000 to calculate XP
-    });
-
-    // Calculate total XP for each user and create leaderboard
-    const leaderboard = users
-      .map((user) => ({
-        id: user.id,
-        name: user.name,
-        username: user.username,
-        avatar: user.avatar,
-        totalXP: user.achievements.reduce((sum, ach) => sum + ach.points, 0),
-      }))
-      .sort((a, b) => b.totalXP - a.totalXP)
-      .slice(0, limit);
-
-    // Add rank to each user
-    leaderboard.forEach((user, index) => {
-      user.rank = index + 1;
-    });
-
-    // Find current user's rank
-    const currentUserRank = leaderboard.find((u) => u.id === userId);
-    const fullRank = users
-      .map((user) => ({
-        id: user.id,
-        totalXP: user.achievements.reduce((sum, ach) => sum + ach.points, 0),
-      }))
-      .sort((a, b) => b.totalXP - a.totalXP)
-      .findIndex((u) => u.id === userId) + 1;
-
     return jsonResponse(
-      {
-        success: true,
-        leaderboard,
-        currentUserRank: currentUserRank || { rank: fullRank, totalXP: 0 },
-        totalUsers: users.length,
-      },
+      ApiResponse.success({ leaderboard, currentUserRank }),
       200,
-      "Leaderboard retrieved"
     );
   } catch (error) {
-    apiLogger.error("Error getting leaderboard:", {
-      error: error.message,
-      stack: error.stack,
-    });
-    return jsonResponse({ error: error.message }, 500);
+    console.error("Leaderboard error:", error);
+    return jsonResponse(ApiResponse.internalError(), 500);
   }
 }

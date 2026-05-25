@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import LoadingScreen from "@/components/LoadingScreen";
 import {
   Card,
   CardContent,
@@ -32,8 +31,7 @@ import {
   Area,
   AreaChart,
 } from "recharts";
-import { Users, BookOpen, Award, ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { Users, BookOpen, Award } from "lucide-react";
 
 const COLORS = [
   "hsl(142, 55%, 45%)",
@@ -71,26 +69,18 @@ export default function ReportsPage() {
     }
   }, [session]);
 
-  if (status === "loading" || loading) return <LoadingScreen fullPage />;
+  if (status === "loading" || loading) return null;
   if (!session || session.user.role !== "ADMIN") return null;
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-green-50 via-white to-green-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50 font-[family-name:var(--font-nunito)]">
+      <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Link
-            href="/admin"
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold">Laporan & Statistik</h1>
-            <p className="text-gray-600">
-              Analisis lengkap aktivitas pengguna dan pembelajaran
-            </p>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-black text-gray-900">Laporan & Statistik</h1>
+          <p className="text-gray-500 font-bold mt-1">
+            Analisis lengkap aktivitas pengguna dan pembelajaran
+          </p>
         </div>
 
         {/* Overall Stats */}

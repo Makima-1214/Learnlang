@@ -34,7 +34,7 @@ export async function GET(request) {
         },
       },
       orderBy: {
-        createdAt: "desc",
+        order: "asc", // Sort by order field for learning path
       },
     });
 

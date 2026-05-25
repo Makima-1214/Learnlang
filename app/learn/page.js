@@ -134,7 +134,7 @@ export default function LearnPage() {
 
   return (
     <DashboardLayout>
-      <div className="h-[calc(100vh-4rem)] lg:h-[calc(100vh-5rem)] min-h-[550px] bg-[#F8FAFC] relative w-full overflow-hidden font-[family-name:var(--font-nunito)] flex flex-col items-center justify-center p-4 sm:p-6">
+      <div className="min-h-[calc(100vh-4rem)] bg-[#F8FAFC] relative w-full overflow-y-auto overflow-x-hidden font-[family-name:var(--font-nunito)] flex flex-col items-center justify-center py-12 px-4 sm:px-6">
 
         {/* Dynamic Background Elements */}
         <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-indigo-50/80 to-transparent -z-10 pointer-events-none" />

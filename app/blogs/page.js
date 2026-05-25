@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import LoadingScreen from "@/components/LoadingScreen";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import * as Icons from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -9,6 +10,21 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  const NotificationIcon = ({ iconName }) => {
+    if (iconName === "Bell") {
+      return (
+        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9.5 3c0 0-3 2-3 6c0 4 1 8 1 8h10s1-4 1-8c0-4-3-6-3-6" />
+          <circle cx="12" cy="17" r="1.5" fill="currentColor" />
+          <path d="M7 19.5h10M9 21.5h6" />
+        </svg>
+      );
+    }
+
+    const Icon = Icons[iconName] || Icons.Bell;
+    return <Icon className="w-6 h-6" />;
+  };
 
   const load = async () => {
     setLoading(true);
@@ -63,7 +79,7 @@ export default function NotificationsPage() {
               <CardContent>
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xl">
-                    {n.icon ? n.icon.charAt(0).toUpperCase() : "🔔"}
+                    <NotificationIcon iconName={n.icon || "Bell"} />
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between items-start">

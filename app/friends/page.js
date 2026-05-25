@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import UserAvatar from "@/components/UserAvatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -336,12 +337,12 @@ export default function FriendsPage() {
     >
       <CardContent className="pt-6">
         <div className="flex items-start gap-4">
-          <Avatar className="w-14 h-14 border-2 border-[#14B8A6]">
-            <AvatarImage src={user.avatar} alt={user.name} />
-            <AvatarFallback className="font-black bg-teal-100 text-teal-600">
-              {user.name.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <UserAvatar
+            src={user.avatar}
+            name={user.name}
+            className="w-14 h-14"
+            size={44}
+          />
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1 flex-wrap">

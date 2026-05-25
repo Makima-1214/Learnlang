@@ -156,6 +156,10 @@ model Quiz {
   title       String
   description String?  @db.Text
   published   Boolean  @default(false)
+  order       Int      @default(0) // Order in learning path (0 = first, 1 = second, etc.)
+  timeLimit   Int?     // Time limit in minutes (optional)
+  icon        String?  @db.Text // Icon/emoji for the quiz
+  color       String?  @default("#6366F1") // Color theme for the quiz
   createdById String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -166,6 +170,7 @@ model Quiz {
 
   @@index([createdById])
   @@index([published])
+  @@index([order])
   @@map("quizzes")
 }
 

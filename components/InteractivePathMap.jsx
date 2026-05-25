@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 // Custom Futuristic Cyber Shield Lock Icon
@@ -28,6 +29,7 @@ const CyberFlameIcon = ({ className = "w-3.5 h-3.5 inline-block" }) => (
 import AIMascot from "./AIMascot";
 
 export default function InteractivePathMap() {
+  const { data: session } = useSession();
   const [activeLevel, setActiveLevel] = useState(1);
   const [selectedLevel, setSelectedLevel] = useState(null);
   
@@ -328,12 +330,12 @@ export default function InteractivePathMap() {
                       </div>
 
                       {isActive ? (
-                        <Link href="/register" className="block w-full">
+                        <Link href={session ? "/quiz" : "/register"} className="block w-full">
                           <button 
                             style={{ backgroundColor: lvl.color, borderBottomColor: lvl.border }}
                             className="w-full py-2.5 border-b-4 rounded-xl text-white font-black text-xs hover:brightness-105 active:translate-y-[2px] active:border-b-0 shadow-sm"
                           >
-                            MULAI KUIS ➔
+                            {session ? "MULAI KUIS ➔" : "DAFTAR & MULAI ➔"}
                           </button>
                         </Link>
                       ) : (

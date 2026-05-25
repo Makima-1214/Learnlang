@@ -1,34 +1,123 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import LoadingScreen from "@/components/LoadingScreen";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UserAvatar from "@/components/UserAvatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import {
-  Calendar,
-  Trophy,
-  Target,
-  CheckCircle,
-  Star,
-  BookOpen,
-  ArrowLeft,
-  TrendingUp,
-  Zap,
-  Award,
-  Share2,
-  Copy,
-  Check,
-  MessageSquare,
-} from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { toast } from "sonner";
+
+// ============================================================
+// CUSTOM BESPOKE SVG ICONS - Unique Design
+// ============================================================
+
+const CalendarIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="3" y="4" width="18" height="18" rx="2" />
+    <path d="M16 2v4M8 2v4M3 10h18" />
+  </svg>
+);
+
+const TrophyIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+    <path d="M6 9H4.5A1.5 1.5 0 0 1 3 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3"/>
+    <path d="M18 9h1.5A1.5 1.5 0 0 0 21 7.5V6a1.5 1.5 0 0 0-1.5-1.5h-3"/>
+    <path d="M8 3h8v8a4 4 0 0 1-8 0V3z"/>
+    <path d="M12 15v4M9 19h6"/>
+  </svg>
+);
+
+const TargetIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="12" cy="12" r="10"/>
+    <circle cx="12" cy="12" r="6"/>
+    <circle cx="12" cy="12" r="2"/>
+  </svg>
+);
+
+const CheckCircleIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+    <polyline points="22 4 12 14.01 9 11.01"/>
+  </svg>
+);
+
+const StarIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1">
+    <polygon points="12 2 15.09 10.26 24 10.26 17.55 16.52 19.64 24 12 18.74 4.36 24 6.45 16.52 0 10.26 8.91 10.26"/>
+  </svg>
+);
+
+const BookOpenIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+  </svg>
+);
+
+const ArrowLeftIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+    <line x1="19" y1="12" x2="5" y2="12"/>
+    <polyline points="12 19 5 12 12 5"/>
+  </svg>
+);
+
+const TrendingUpIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+    <polyline points="23 6 23 12 17 12"/>
+  </svg>
+);
+
+const ZapIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+  </svg>
+);
+
+const AwardIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="12" cy="8" r="7"/>
+    <polyline points="8 14 12 17 16 14"/>
+    <line x1="12" y1="17" x2="12" y2="23"/>
+    <line x1="9" y1="23" x2="15" y2="23"/>
+  </svg>
+);
+
+const ShareIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="18" cy="5" r="3"/>
+    <circle cx="6" cy="12" r="3"/>
+    <circle cx="18" cy="19" r="3"/>
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+  </svg>
+);
+
+const CopyIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+);
+
+const MessageSquareIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </svg>
+);
 
 export default function PublicProfilePage() {
   const params = useParams();
@@ -37,11 +126,7 @@ export default function PublicProfilePage() {
   const [notFound, setNotFound] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    fetchProfile();
-  }, [params.username]);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       const response = await fetch(`/api/users/${params.username}`);
       if (response.ok) {
@@ -55,17 +140,11 @@ export default function PublicProfilePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.username]);
 
-  const getInitials = (name) => {
-    if (!name) return "U";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const copyProfileUrl = async () => {
     const url = `${window.location.origin}/user/${user?.username}`;
@@ -174,8 +253,6 @@ export default function PublicProfilePage() {
     }
   };
 
-  if (loading) return <LoadingScreen />;
-
   if (notFound) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -190,7 +267,7 @@ export default function PublicProfilePage() {
           </p>
           <Link href="/">
             <Button>
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ArrowLeftIcon className="w-4 h-4 mr-2" />
               Kembali ke Beranda
             </Button>
           </Link>
@@ -230,12 +307,12 @@ export default function PublicProfilePage() {
                   transition={{ delay: 0.2 }}
                   className="-mt-16 sm:-mt-20"
                 >
-                  <Avatar className="w-32 h-32 sm:w-40 sm:h-40 border-4 border-white shadow-xl ring-4 ring-primary/10">
-                    <AvatarImage src={user?.avatar} alt={user?.name} />
-                    <AvatarFallback className="bg-primary text-primary-foreground text-4xl sm:text-5xl font-bold">
-                      {getInitials(user?.name)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <UserAvatar
+                    src={user?.avatar}
+                    name={user?.name}
+                    className="w-32 h-32 sm:w-40 sm:h-40 border-4 border-white shadow-xl ring-4 ring-primary/10"
+                    size={120}
+                  />
                 </motion.div>
 
                 {/* Info & Actions */}
@@ -268,7 +345,7 @@ export default function PublicProfilePage() {
 
                   <div className="flex flex-wrap items-center gap-3 justify-center sm:justify-start text-sm text-gray-500">
                     <div className="flex items-center gap-1.5">
-                      <Calendar className="w-4 h-4" />
+                      <CalendarIcon className="w-4 h-4" />
                       <span>
                         Bergabung{" "}
                         {user?.createdAt &&
@@ -287,12 +364,12 @@ export default function PublicProfilePage() {
                       >
                         {copied ? (
                           <>
-                            <Check className="w-4 h-4" />
+                            <CheckIcon className="w-4 h-4" />
                             Tersalin
                           </>
                         ) : (
                           <>
-                            <Copy className="w-4 h-4" />
+                            <CopyIcon className="w-4 h-4" />
                             Salin Link
                           </>
                         )}
@@ -302,7 +379,7 @@ export default function PublicProfilePage() {
                         size="sm"
                         className="gap-2"
                       >
-                        <Share2 className="w-4 h-4" />
+                        <ShareIcon className="w-4 h-4" />
                         Bagikan
                       </Button>
                     </div>
@@ -322,9 +399,9 @@ export default function PublicProfilePage() {
 
                   {user?.viewerRelationship?.isFriend && (
                     <div className="pt-2 flex justify-center sm:justify-start">
-                      <Link href={`/chats?userId=${user.id}`}>
+                      <Link href={`/chats?userId=${user?.id}`}>
                         <Button className="gap-2">
-                          <MessageSquare className="w-4 h-4" />
+                          <MessageSquareIcon className="w-4 h-4" />
                           Chat Teman
                         </Button>
                       </Link>
@@ -345,7 +422,7 @@ export default function PublicProfilePage() {
               <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
                 <CardContent className="pt-6 text-center">
                   <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 mb-3">
-                    <Target className="w-6 h-6 text-blue-600" />
+                    <TargetIcon className="w-6 h-6 text-blue-600" />
                   </div>
                   <p className="text-3xl font-bold text-blue-600 mb-1">
                     {user?.stats?.totalExercises || 0}
@@ -365,7 +442,7 @@ export default function PublicProfilePage() {
               <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
                 <CardContent className="pt-6 text-center">
                   <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 mb-3">
-                    <CheckCircle className="w-6 h-6 text-green-600" />
+                    <CheckCircleIcon className="w-6 h-6 text-green-600" />
                   </div>
                   <p className="text-3xl font-bold text-green-600 mb-1">
                     {user?.stats?.correctCount || 0}
@@ -385,7 +462,7 @@ export default function PublicProfilePage() {
               <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
                 <CardContent className="pt-6 text-center">
                   <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-purple-100 mb-3">
-                    <Trophy className="w-6 h-6 text-purple-600" />
+                    <TrophyIcon className="w-6 h-6 text-purple-600" />
                   </div>
                   <p className="text-3xl font-bold text-purple-600 mb-1">
                     {user?.stats?.averageScore || 0}
@@ -405,7 +482,7 @@ export default function PublicProfilePage() {
               <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
                 <CardContent className="pt-6 text-center">
                   <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-orange-100 mb-3">
-                    <TrendingUp className="w-6 h-6 text-orange-600" />
+                    <TrendingUpIcon className="w-6 h-6 text-orange-600" />
                   </div>
                   <p className="text-3xl font-bold text-orange-600 mb-1">
                     {accuracy}%
@@ -424,7 +501,7 @@ export default function PublicProfilePage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Zap className="w-4 h-4" />
+                  <ZapIcon className="w-4 h-4" />
                   Tingkat Kesulitan
                 </CardTitle>
               </CardHeader>
@@ -477,7 +554,7 @@ export default function PublicProfilePage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <BookOpen className="w-4 h-4" />
+                  <BookOpenIcon className="w-4 h-4" />
                   Metode Belajar
                 </CardTitle>
               </CardHeader>
@@ -524,7 +601,7 @@ export default function PublicProfilePage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Award className="w-4 h-4" />
+                  <AwardIcon className="w-4 h-4" />
                   Pencapaian
                 </CardTitle>
               </CardHeader>
@@ -646,7 +723,7 @@ export default function PublicProfilePage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Star className="w-4 h-4" />
+                  <StarIcon className="w-4 h-4" />
                   Aktivitas Terbaru
                 </CardTitle>
               </CardHeader>
