@@ -87,8 +87,10 @@ export async function GET(req, { params }) {
         },
         questions: session.questions.map((sq) => {
           let snapshot = sq.snapshot;
-          if (typeof snapshot === 'string') {
-            try { snapshot = JSON.parse(snapshot); } catch (e) {}
+          if (typeof snapshot === "string") {
+            try {
+              snapshot = JSON.parse(snapshot);
+            } catch (e) {}
           }
           return {
             sessionQuestionId: sq.id,
@@ -198,21 +200,35 @@ export async function POST(req, { params }) {
       },
     });
 
+    const earnedXP = session.userId ? 10 : 0;
+
     // Optionally create an activity record for completed learning session
     if (session.userId) {
       try {
+        if (earnedXP > 0) {
+          await prisma.user.update({
+            where: { id: session.userId },
+            data: {
+              xp: {
+                increment: earnedXP,
+              },
+            },
+          });
+        }
+
         await prisma.activity.create({
           data: {
             userId: session.userId,
             type: "LESSON_COMPLETED",
             title: `Completed ${session.method} session`,
-            description: `Score ${correctCount}/${session.total}`,
+            description: `Score ${correctCount}/${session.total} • XP +${earnedXP}`,
             metadata: JSON.stringify({
               sessionId: session.id,
               method: session.method,
               level: session.level,
               score: correctCount,
               total: session.total,
+              earnedXP,
             }),
           },
         });
@@ -236,6 +252,9 @@ export async function POST(req, { params }) {
           percentage: Math.round((correctCount / session.total) * 100),
           createdAt: updatedSession.createdAt,
           completedAt: updatedSession.completedAt,
+        },
+        progress: {
+          earnedXP,
         },
         results: detailedResults,
       }),

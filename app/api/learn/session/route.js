@@ -15,10 +15,8 @@ export async function POST(req) {
       return jsonResponse(ApiResponse.validationError("Invalid method"), 400);
     }
 
-    // SPEED OPTIMIZATION: Bypass getServerSession which is causing delays
-    // const userSession = await getServerSession(authOptions);
-    // const userId = userSession?.user?.id ?? null;
-    const userId = null;
+    const userSession = await getServerSession(authOptions);
+    const userId = userSession?.user?.id ?? null;
 
     // Fetch questions based on method
     let questions = [];
@@ -88,8 +86,10 @@ export async function POST(req) {
         },
         questions: sessionQuestions.map((sq) => {
           let snapshot = sq.snapshot;
-          if (typeof snapshot === 'string') {
-            try { snapshot = JSON.parse(snapshot); } catch (e) {}
+          if (typeof snapshot === "string") {
+            try {
+              snapshot = JSON.parse(snapshot);
+            } catch (e) {}
           }
           return {
             sessionQuestionId: sq.id,
@@ -151,8 +151,10 @@ export async function GET(req) {
         },
         questions: session.questions.map((sq) => {
           let snapshot = sq.snapshot;
-          if (typeof snapshot === 'string') {
-            try { snapshot = JSON.parse(snapshot); } catch (e) {}
+          if (typeof snapshot === "string") {
+            try {
+              snapshot = JSON.parse(snapshot);
+            } catch (e) {}
           }
           return {
             sessionQuestionId: sq.id,

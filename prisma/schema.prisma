@@ -20,6 +20,9 @@ model User {
   avatar    String?  @db.Text
   bio       String?  @db.Text
   role      Role     @default(USER)
+  xp        Int      @default(0)
+  energy    Int      @default(5)
+  energyNextRefillAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
     // Presence tracking for real-time features
@@ -64,6 +67,9 @@ model User {
   dailyMissions DailyMission[]
   // Learning Sessions
   learningSessions LearningSession[]
+
+  @@index([xp])
+  @@index([energy])
   
   @@map("users")
 }

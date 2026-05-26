@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { calculateStreak, calculateTotalXP } from "@/lib/streak";
+import { getUserEnergy } from "@/lib/energy";
 
 // GET - Get current user's profile
 export async function GET() {
@@ -21,6 +23,9 @@ export async function GET() {
         avatar: true,
         bio: true,
         role: true,
+        xp: true,
+        energy: true,
+        energyNextRefillAt: true,
         createdAt: true,
         _count: {
           select: {
@@ -53,6 +58,12 @@ export async function GET() {
         }),
       ],
     );
+
+    const [streakData, totalXP, energy] = await Promise.all([
+      calculateStreak(session.user.id),
+      calculateTotalXP(session.user.id),
+      getUserEnergy(session.user.id, { emit: false }),
+    ]);
 
     // Get learning stats from completed LearningSession records
     const completedSessions = await prisma.learningSession.findMany({
@@ -90,10 +101,15 @@ export async function GET() {
       followingCount,
       friendshipCount,
       stats: {
+        streak: streakData.streak,
+        lastSessionDate: streakData.lastSessionDate,
+        totalXP,
+        exp: totalXP,
         totalExercises,
         averageScore,
         correctCount,
         methodBreakdown,
+        energy,
       },
     });
   } catch (error) {

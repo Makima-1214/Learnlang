@@ -5,7 +5,7 @@ import { ApiResponse, jsonResponse } from "@/lib/api-response";
 
 /**
  * GET /api/leaderboard
- * Returns top users ranked by achievement XP points.
+ * Returns top users ranked by persisted XP totals.
  * Query params:
  *   limit  — number of users to return (default 20, max 100)
  *   offset — pagination offset (default 0)
@@ -14,64 +14,89 @@ export async function GET(req) {
   try {
     const session = await getServerSession(authOptions);
     const { searchParams } = new URL(req.url);
-    const limit  = Math.min(parseInt(searchParams.get("limit")  || "20"), 100);
+    const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 100);
     const offset = parseInt(searchParams.get("offset") || "0");
 
-    // Aggregate achievement points per user
-    const aggregated = await prisma.achievement.groupBy({
-      by: ["userId"],
-      _sum: { points: true },
-      _count: { type: true },
-      orderBy: { _sum: { points: "desc" } },
-      take: limit + (session ? 1 : 0), // fetch a bit extra to find current user
-      skip: offset,
-    });
+    const [users, achievementGroups] = await Promise.all([
+      prisma.user.findMany({
+        select: {
+          id: true,
+          name: true,
+          username: true,
+          avatar: true,
+          xp: true,
+        },
+      }),
+      prisma.achievement.groupBy({
+        by: ["userId"],
+        _sum: { points: true },
+        _count: { type: true },
+      }),
+    ]);
 
-    // Fetch user details for those IDs
-    const userIds = aggregated.map((a) => a.userId);
-    const users = await prisma.user.findMany({
-      where: { id: { in: userIds } },
-      select: { id: true, name: true, username: true, avatar: true },
-    });
+    const achievementMap = new Map(
+      achievementGroups.map((item) => [item.userId, item]),
+    );
 
-    const userMap = Object.fromEntries(users.map((u) => [u.id, u]));
+    const rankedUsers = users
+      .map((user) => {
+        const achievement = achievementMap.get(user.id);
+        const achievementCount = achievement?._count?.type ?? 0;
 
-    const leaderboard = aggregated.map((a, idx) => ({
-      rank: offset + idx + 1,
-      id: a.userId,
-      name: userMap[a.userId]?.name ?? "Unknown",
-      username: userMap[a.userId]?.username ?? null,
-      avatar: userMap[a.userId]?.avatar ?? null,
-      totalXP: a._sum.points ?? 0,
-      achievementCount: a._count.type ?? 0,
-    }));
+        return {
+          id: user.id,
+          name: user.name,
+          username: user.username,
+          avatar: user.avatar,
+          totalXP: user.xp || 0,
+          achievementCount,
+        };
+      })
+      .sort((left, right) => {
+        if (right.totalXP !== left.totalXP) return right.totalXP - left.totalXP;
+        if (right.achievementCount !== left.achievementCount) {
+          return right.achievementCount - left.achievementCount;
+        }
+        return left.name.localeCompare(right.name);
+      });
+
+    const leaderboard = rankedUsers
+      .slice(offset, offset + limit)
+      .map((user, index) => ({
+        rank: offset + index + 1,
+        ...user,
+      }));
 
     // Find current user's rank if logged in
     let currentUserRank = null;
     if (session?.user?.id) {
       const userId = session.user.id;
-      const inList = leaderboard.find((u) => u.id === userId);
-      if (inList) {
-        currentUserRank = inList;
-      } else {
-        // Count how many users have more XP
-        const userAgg = await prisma.achievement.groupBy({
-          by: ["userId"],
-          _sum: { points: true },
-          where: { userId },
-        });
-        const myXP = userAgg[0]?._sum?.points ?? 0;
-        const ahead = await prisma.achievement.groupBy({
-          by: ["userId"],
-          _sum: { points: true },
-          having: { points: { _sum: { gt: myXP } } },
-        });
+      const rankIndex = rankedUsers.findIndex((item) => item.id === userId);
+      if (rankIndex >= 0) {
         currentUserRank = {
-          rank: ahead.length + 1,
+          rank: rankIndex + 1,
+          ...rankedUsers[rankIndex],
+        };
+      } else {
+        const myUser = await prisma.user.findUnique({
+          where: { id: userId },
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            avatar: true,
+            xp: true,
+          },
+        });
+        const myXP = myUser?.xp || 0;
+        currentUserRank = {
+          rank: rankedUsers.filter((item) => item.totalXP > myXP).length + 1,
           id: userId,
           name: session.user.name,
+          username: session.user.username || null,
+          avatar: session.user.avatar || null,
           totalXP: myXP,
-          achievementCount: userAgg[0]?._count?.type ?? 0,
+          achievementCount: 0,
         };
       }
     }

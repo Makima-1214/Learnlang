@@ -96,8 +96,12 @@ function parseListeningAnswer(value) {
 
 function createListeningItems(question) {
   let chunks = question?.chunks || [];
-  if (typeof chunks === 'string') {
-    try { chunks = JSON.parse(chunks); } catch { chunks = []; }
+  if (typeof chunks === "string") {
+    try {
+      chunks = JSON.parse(chunks);
+    } catch {
+      chunks = [];
+    }
   }
   if (!Array.isArray(chunks)) chunks = [];
 
@@ -516,6 +520,20 @@ export default function MethodPracticeClient({ method }) {
     }
   };
 
+  const consumeEnergyForWrongAnswer = async () => {
+    if (!sessionData?.session?.id) return;
+
+    try {
+      await fetch(`/api/learn/session/${sessionData.session.id}/energy`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: 1 }),
+      });
+    } catch (error) {
+      console.warn("Failed to consume energy:", error);
+    }
+  };
+
   const commitListeningBoard = (nextBank, nextAnswer) => {
     setListeningBank(nextBank);
     setListeningAnswer(nextAnswer);
@@ -634,6 +652,10 @@ export default function MethodPracticeClient({ method }) {
       [currentQuestion.sessionQuestionId]: serialized,
     }));
 
+    if (!isRight) {
+      consumeEnergyForWrongAnswer();
+    }
+
     if (sessionData?.session?.id) {
       fetch(`/api/learn/session/${sessionData.session.id}/progress`, {
         method: "POST",
@@ -703,6 +725,10 @@ export default function MethodPracticeClient({ method }) {
       ...prev,
       [currentQuestion.sessionQuestionId]: answer,
     }));
+
+    if (!isRight) {
+      consumeEnergyForWrongAnswer();
+    }
     // autosave single question answer to backend
     if (sessionData?.session?.id) {
       const sid = sessionData.session.id;
@@ -822,8 +848,12 @@ export default function MethodPracticeClient({ method }) {
   const sentenceTokens = useMemo(() => {
     if (!currentQuestion || methodStr !== "grammar") return [];
     let words = currentQuestion.words;
-    if (typeof words === 'string') {
-      try { words = JSON.parse(words); } catch { words = []; }
+    if (typeof words === "string") {
+      try {
+        words = JSON.parse(words);
+      } catch {
+        words = [];
+      }
     }
     return Array.isArray(words) ? words : [];
   }, [currentQuestion, methodStr]);
@@ -841,7 +871,9 @@ export default function MethodPracticeClient({ method }) {
   if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F0F7FF]">
-        <div className="text-xl font-black text-[#6366F1] animate-pulse">Memuat...</div>
+        <div className="text-xl font-black text-[#6366F1] animate-pulse">
+          Memuat...
+        </div>
       </div>
     );
   }
@@ -853,7 +885,9 @@ export default function MethodPracticeClient({ method }) {
       <DashboardLayout>
         <div className="min-h-screen bg-[#F0F7FF] flex items-center justify-center">
           <div className="bg-white border-4 border-b-8 border-gray-200 rounded-3xl p-8 text-center shadow-lg">
-            <p className="font-black text-gray-900 mb-4 text-lg">Metode belajar tidak ditemukan.</p>
+            <p className="font-black text-gray-900 mb-4 text-lg">
+              Metode belajar tidak ditemukan.
+            </p>
             <button
               className="px-6 py-3 bg-[#6366F1] border-2 border-b-4 border-[#4338CA] text-white rounded-2xl font-black hover:bg-[#818CF8] active:translate-y-[4px] active:border-b-0 transition-all"
               onClick={() => router.push("/learn")}
@@ -874,7 +908,11 @@ export default function MethodPracticeClient({ method }) {
     return (
       <DashboardLayout>
         <div className="min-h-screen bg-gradient-to-br from-[#F0F7FF] via-[#EEF2FF] to-[#F5F3FF] font-[family-name:var(--font-nunito)] flex items-center justify-center p-4">
-          <style dangerouslySetInnerHTML={{ __html: `.duo-btn{border-bottom-width:4px;transition:all 0.1s ease}.duo-btn:hover{transform:translateY(-2px);border-bottom-width:6px}.duo-btn:active{transform:translateY(4px);border-bottom-width:0px}` }} />
+          <style
+            dangerouslySetInnerHTML={{
+              __html: `.duo-btn{border-bottom-width:4px;transition:all 0.1s ease}.duo-btn:hover{transform:translateY(-2px);border-bottom-width:6px}.duo-btn:active{transform:translateY(4px);border-bottom-width:0px}`,
+            }}
+          />
           <motion.div
             initial={{ opacity: 0, y: 30, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -883,46 +921,108 @@ export default function MethodPracticeClient({ method }) {
           >
             <div className="bg-white border-2 border-b-[6px] border-gray-200 rounded-[2rem] overflow-hidden shadow-2xl">
               {/* Result Header */}
-              <div className={`px-8 pt-10 pb-8 text-center relative overflow-hidden ${
-                isWin ? "bg-gradient-to-br from-emerald-400 via-teal-500 to-emerald-600" :
-                "bg-gradient-to-br from-rose-400 via-red-500 to-rose-600"
-              }`}>
+              <div
+                className={`px-8 pt-10 pb-8 text-center relative overflow-hidden ${
+                  isWin
+                    ? "bg-gradient-to-br from-emerald-400 via-teal-500 to-emerald-600"
+                    : "bg-gradient-to-br from-rose-400 via-red-500 to-rose-600"
+                }`}
+              >
                 <div className="absolute inset-0 opacity-10">
-                  {isWin ? <div className="text-[120px] leading-none text-center select-none">🏆</div> : <div className="text-[120px] leading-none text-center select-none">🔄</div>}
+                  {isWin ? (
+                    <div className="text-[120px] leading-none text-center select-none">
+                      🏆
+                    </div>
+                  ) : (
+                    <div className="text-[120px] leading-none text-center select-none">
+                      🔄
+                    </div>
+                  )}
                 </div>
                 <div className="relative">
-                  <div className="flex justify-center mb-4"><AIMascot mood={resultMood} /></div>
+                  <div className="flex justify-center mb-4">
+                    <AIMascot mood={resultMood} />
+                  </div>
                   <h2 className="text-2xl font-black text-white drop-shadow-md mb-1">
-                    {pct >= 80 ? "Luar Biasa! 🎉" : pct >= 60 ? "Bagus Sekali! 👍" : pct >= 40 ? "Tingkatkan Lagi 💪" : "Ayo Coba Lagi 🔄"}
+                    {pct >= 80
+                      ? "Luar Biasa! 🎉"
+                      : pct >= 60
+                        ? "Bagus Sekali! 👍"
+                        : pct >= 40
+                          ? "Tingkatkan Lagi 💪"
+                          : "Ayo Coba Lagi 🔄"}
                   </h2>
                   <p className="text-white/80 text-sm font-semibold">
-                    {isWin ? "Kamu berhasil menyelesaikan latihan ini!" : "Jangan menyerah, terus berlatih!"}
+                    {isWin
+                      ? "Kamu berhasil menyelesaikan latihan ini!"
+                      : "Jangan menyerah, terus berlatih!"}
                   </p>
                 </div>
               </div>
               <div className="p-6">
                 {/* Score circle */}
                 <div className="flex justify-center mb-6">
-                  <div className={`w-28 h-28 rounded-full border-[6px] flex flex-col items-center justify-center shadow-inner ${
-                    isWin ? "border-emerald-400 bg-emerald-50" : "border-rose-400 bg-rose-50"
-                  }`}>
-                    <span className={`text-4xl font-black leading-none ${
-                      isWin ? "text-emerald-600" : "text-rose-600"
-                    }`}>{pct}%</span>
-                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider mt-0.5">Skor</span>
+                  <div
+                    className={`w-28 h-28 rounded-full border-[6px] flex flex-col items-center justify-center shadow-inner ${
+                      isWin
+                        ? "border-emerald-400 bg-emerald-50"
+                        : "border-rose-400 bg-rose-50"
+                    }`}
+                  >
+                    <span
+                      className={`text-4xl font-black leading-none ${
+                        isWin ? "text-emerald-600" : "text-rose-600"
+                      }`}
+                    >
+                      {pct}%
+                    </span>
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider mt-0.5">
+                      Skor
+                    </span>
                   </div>
                 </div>
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-3 mb-6">
                   {[
-                    { icon: "solar:check-circle-bold", iconClass: "text-emerald-500", bg: "bg-emerald-50 border-emerald-200", val: `${results.session.score}/${results.session.total}`, valClass: "text-emerald-600", label: "Benar" },
-                    { icon: "solar:target-bold",       iconClass: "text-indigo-500",  bg: "bg-indigo-50 border-indigo-200",  val: `${pct}%`,                                          valClass: "text-indigo-600",  label: "Akurasi" },
-                    { icon: "solar:bolt-bold",         iconClass: "text-amber-500",   bg: "bg-amber-50 border-amber-200",    val: methodDisplay.badge,                                valClass: "text-amber-600",   label: "Mode" },
+                    {
+                      icon: "solar:check-circle-bold",
+                      iconClass: "text-emerald-500",
+                      bg: "bg-emerald-50 border-emerald-200",
+                      val: `${results.session.score}/${results.session.total}`,
+                      valClass: "text-emerald-600",
+                      label: "Benar",
+                    },
+                    {
+                      icon: "solar:target-bold",
+                      iconClass: "text-indigo-500",
+                      bg: "bg-indigo-50 border-indigo-200",
+                      val: `${pct}%`,
+                      valClass: "text-indigo-600",
+                      label: "Akurasi",
+                    },
+                    {
+                      icon: "solar:bolt-bold",
+                      iconClass: "text-amber-500",
+                      bg: "bg-amber-50 border-amber-200",
+                      val: methodDisplay.badge,
+                      valClass: "text-amber-600",
+                      label: "Mode",
+                    },
                   ].map(({ icon, iconClass, bg, val, valClass, label }) => (
-                    <div key={label} className={`${bg} border-2 border-b-4 rounded-2xl p-3 text-center`}>
-                      <Icon icon={icon} className={`text-2xl mx-auto mb-1 ${iconClass}`} />
-                      <div className={`font-black text-base ${valClass}`}>{val}</div>
-                      <div className="text-[9px] font-black text-gray-400 uppercase tracking-wide">{label}</div>
+                    <div
+                      key={label}
+                      className={`${bg} border-2 border-b-4 rounded-2xl p-3 text-center`}
+                    >
+                      <Icon
+                        icon={icon}
+                        className={`text-2xl mx-auto mb-1 ${iconClass}`}
+                      />
+                      <div className={`font-black text-base ${valClass}`}>
+                        {val}
+                      </div>
+                      <div className="text-[9px] font-black text-gray-400 uppercase tracking-wide">
+                        {label}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -931,11 +1031,15 @@ export default function MethodPracticeClient({ method }) {
                   <button
                     className="duo-btn flex-1 py-3.5 bg-gradient-to-r from-[#6366F1] to-[#818CF8] text-white border-2 border-b-4 border-[#4338CA] rounded-2xl font-black text-sm shadow-md"
                     onClick={() => router.push("/learn")}
-                  >← Kembali ke Menu</button>
+                  >
+                    ← Kembali ke Menu
+                  </button>
                   <button
                     className="duo-btn flex-1 py-3.5 bg-white text-gray-600 border-2 border-b-4 border-gray-200 rounded-2xl font-black text-sm"
                     onClick={() => window.location.reload()}
-                  >Ulang ↺</button>
+                  >
+                    Ulang ↺
+                  </button>
                 </div>
               </div>
             </div>
@@ -950,12 +1054,16 @@ export default function MethodPracticeClient({ method }) {
   return (
     <DashboardLayout>
       <div className="flex-1 flex flex-col min-h-screen bg-gradient-to-br from-[#F0F7FF] via-[#EEF2FF] to-[#F5F3FF] font-[family-name:var(--font-nunito)]">
-        <style dangerouslySetInnerHTML={{ __html: `
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
           .duo-btn{border-bottom-width:4px;transition:all 0.1s ease}
           .duo-btn:hover{transform:translateY(-2px);border-bottom-width:6px}
           .duo-btn:active{transform:translateY(4px);border-bottom-width:0px}
           .cloud-bg{position:absolute;background:white;border-radius:999px;opacity:0.7;border:3px solid #E2E8F0}
-        `}} />
+        `,
+          }}
+        />
         <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
           <div className="cloud-bg w-48 h-16 top-12 -left-12 shadow-sm animate-[bounce_4s_infinite]" />
           <div className="cloud-bg w-64 h-20 top-32 -right-16 shadow-sm animate-[bounce_5s_infinite]" />
@@ -966,35 +1074,67 @@ export default function MethodPracticeClient({ method }) {
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Keluar dari Latihan?</AlertDialogTitle>
-                <AlertDialogDescription>Progress latihan akan hilang jika kamu keluar. Apakah kamu yakin?</AlertDialogDescription>
+                <AlertDialogDescription>
+                  Progress latihan akan hilang jika kamu keluar. Apakah kamu
+                  yakin?
+                </AlertDialogDescription>
               </AlertDialogHeader>
               <div className="flex gap-3 justify-end">
-                <AlertDialogCancel onClick={handleCancelExit} className="rounded-lg">Batal</AlertDialogCancel>
-                <AlertDialogAction onClick={handleConfirmExit} className="bg-red-600 hover:bg-red-700 rounded-lg">Keluar &amp; Hapus Progress</AlertDialogAction>
+                <AlertDialogCancel
+                  onClick={handleCancelExit}
+                  className="rounded-lg"
+                >
+                  Batal
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleConfirmExit}
+                  className="bg-red-600 hover:bg-red-700 rounded-lg"
+                >
+                  Keluar &amp; Hapus Progress
+                </AlertDialogAction>
               </div>
             </AlertDialogContent>
           </AlertDialog>
 
           {/* Top bar */}
           <div className="flex items-center gap-2 mb-2 bg-white/80 backdrop-blur-sm rounded-xl p-2 border-2 border-white shadow-sm shrink-0">
-            <button onClick={handleBackWithConfirmation} className="duo-btn flex items-center gap-1 px-2 py-1.5 bg-white border-2 border-b-[3px] border-gray-200 rounded-lg font-black text-gray-600 text-[10px] sm:text-xs hover:bg-gray-50 shrink-0">
-              <ArrowLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> <span className="hidden sm:inline">Keluar</span>
+            <button
+              onClick={handleBackWithConfirmation}
+              className="duo-btn flex items-center gap-1 px-2 py-1.5 bg-white border-2 border-b-[3px] border-gray-200 rounded-lg font-black text-gray-600 text-[10px] sm:text-xs hover:bg-gray-50 shrink-0"
+            >
+              <ArrowLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" />{" "}
+              <span className="hidden sm:inline">Keluar</span>
             </button>
             <div className="flex-1 space-y-1 sm:space-y-1.5 px-2">
               <div className="flex items-center gap-1">
                 {Array.from({ length: total }).map((_, i) => (
-                  <div key={i} className={`h-1.5 sm:h-2 flex-1 rounded-full transition-all duration-300 ${
-                    i < currentIndex ? 'bg-[#10B981]' :
-                    i === currentIndex ? 'bg-gradient-to-r from-[#6366F1] to-[#818CF8] animate-pulse' :
-                    'bg-gray-200'
-                  }`} />
+                  <div
+                    key={i}
+                    className={`h-1.5 sm:h-2 flex-1 rounded-full transition-all duration-300 ${
+                      i < currentIndex
+                        ? "bg-[#10B981]"
+                        : i === currentIndex
+                          ? "bg-gradient-to-r from-[#6366F1] to-[#818CF8] animate-pulse"
+                          : "bg-gray-200"
+                    }`}
+                  />
                 ))}
               </div>
             </div>
           </div>
 
-          {loading && <div className="flex justify-center py-20"><div className="text-xl font-black text-[#6366F1] animate-pulse">Memuat soal...</div></div>}
-          {error && <div className="bg-red-50 border-4 border-red-300 rounded-3xl p-6 text-center"><p className="font-black text-red-700">{error}</p></div>}
+          {loading && (
+            <div className="flex justify-center py-20">
+              <div className="text-xl font-black text-[#6366F1] animate-pulse">
+                Memuat soal...
+              </div>
+            </div>
+          )}
+          {error && (
+            <div className="bg-red-50 border-4 border-red-300 rounded-3xl p-6 text-center">
+              <p className="font-black text-red-700">{error}</p>
+            </div>
+          )}
 
           {!loading && !error && currentQuestion && sessionData && (
             <div className="grid lg:grid-cols-12 gap-3 sm:gap-6 items-start flex-1 pb-1">
@@ -1012,11 +1152,30 @@ export default function MethodPracticeClient({ method }) {
                       style={{ borderColor: correct ? "#A8E6CF" : "#EA2B2B" }}
                     >
                       <div className="flex items-center justify-center gap-2 mb-1">
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-white font-black text-sm" style={{ backgroundColor: correct ? "#10B981" : "#EA2B2B" }}>{correct ? "✓" : "✗"}</div>
-                        <span className="font-black text-sm" style={{ color: correct ? "#059669" : "#C62828" }}>{correct ? "Analisis AI Tepat!" : "Bukan yang itu!"}</span>
+                        <div
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-white font-black text-sm"
+                          style={{
+                            backgroundColor: correct ? "#10B981" : "#EA2B2B",
+                          }}
+                        >
+                          {correct ? "✓" : "✗"}
+                        </div>
+                        <span
+                          className="font-black text-sm"
+                          style={{ color: correct ? "#059669" : "#C62828" }}
+                        >
+                          {correct ? "Analisis AI Tepat!" : "Bukan yang itu!"}
+                        </span>
                       </div>
-                      <p className="text-xs font-bold leading-relaxed" style={{ color: correct ? "#047857" : "#E53935" }}>
-                        {correct ? "Jawaban kamu benar! 👍" : methodStr === "listening" ? `Jawaban benar: ${formatListeningTokens(currentQuestion.answer)}` : `Jawaban benar: ${currentQuestion.answer}`}
+                      <p
+                        className="text-xs font-bold leading-relaxed"
+                        style={{ color: correct ? "#047857" : "#E53935" }}
+                      >
+                        {correct
+                          ? "Jawaban kamu benar! 👍"
+                          : methodStr === "listening"
+                            ? `Jawaban benar: ${formatListeningTokens(currentQuestion.answer)}`
+                            : `Jawaban benar: ${currentQuestion.answer}`}
                       </p>
                     </motion.div>
                   )}
@@ -1031,14 +1190,31 @@ export default function MethodPracticeClient({ method }) {
                     {/* Instruction badge */}
                     <div className="hidden lg:flex bg-[#E0E7FF] border-2 border-[#818CF8] rounded-2xl p-3 items-center gap-3">
                       <div className="hidden lg:block shrink-0">
-                        <svg className="w-5 h-5 text-[#0288D1]" viewBox="0 0 24 24" fill="none"><path d="M12 20H21M3 17.25V21H6.75L17.81 9.94L14.06 6.19L3 17.25ZM20.71 7.04C21.1 6.65 21.1 6.02 20.71 5.63L18.37 3.29C17.98 2.9 17.35 2.9 16.96 3.29L15.13 5.12L18.88 8.87L20.71 7.04Z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        <svg
+                          className="w-5 h-5 text-[#0288D1]"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                        >
+                          <path
+                            d="M12 20H21M3 17.25V21H6.75L17.81 9.94L14.06 6.19L3 17.25ZM20.71 7.04C21.1 6.65 21.1 6.02 20.71 5.63L18.37 3.29C17.98 2.9 17.35 2.9 16.96 3.29L15.13 5.12L18.88 8.87L20.71 7.04Z"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
                       </div>
                       <div>
-                        <h4 className="font-black text-[#4338CA] text-[10px] sm:text-xs tracking-wider uppercase">Detektif AI:</h4>
+                        <h4 className="font-black text-[#4338CA] text-[10px] sm:text-xs tracking-wider uppercase">
+                          Detektif AI:
+                        </h4>
                         <p className="text-[#3730A3] font-black text-sm leading-tight mt-0.5">
-                          {methodStr === "vocabulary" && "Pilih arti kata yang benar!"}
-                          {methodStr === "listening" && "Susun kata sesuai kalimat yang kamu dengar!"}
-                          {methodStr === "grammar" && "Temukan & klik 1 kata yang salah!"}
+                          {methodStr === "vocabulary" &&
+                            "Pilih arti kata yang benar!"}
+                          {methodStr === "listening" &&
+                            "Susun kata sesuai kalimat yang kamu dengar!"}
+                          {methodStr === "grammar" &&
+                            "Temukan & klik 1 kata yang salah!"}
                         </p>
                       </div>
                     </div>
@@ -1050,15 +1226,29 @@ export default function MethodPracticeClient({ method }) {
                           initial={{ opacity: 0, scale: 0.95 }}
                           animate={{ opacity: 1, scale: 1 }}
                           className="rounded-2xl p-3 border-2 text-center bg-white shadow-sm"
-                          style={{ borderColor: correct ? "#A8E6CF" : "#EA2B2B" }}
+                          style={{
+                            borderColor: correct ? "#A8E6CF" : "#EA2B2B",
+                          }}
                         >
                           <div className="flex items-center justify-center gap-1.5 mb-0.5">
-                            <span className="font-black text-xs" style={{ color: correct ? "#059669" : "#C62828" }}>
-                              {correct ? "✓ Analisis AI Tepat!" : "✗ Bukan yang itu!"}
+                            <span
+                              className="font-black text-xs"
+                              style={{ color: correct ? "#059669" : "#C62828" }}
+                            >
+                              {correct
+                                ? "✓ Analisis AI Tepat!"
+                                : "✗ Bukan yang itu!"}
                             </span>
                           </div>
-                          <p className="text-[11px] font-bold" style={{ color: correct ? "#047857" : "#E53935" }}>
-                            {correct ? "Jawaban kamu benar! 👍" : methodStr === "listening" ? `Jawaban benar: ${formatListeningTokens(currentQuestion.answer)}` : `Jawaban benar: ${currentQuestion.answer}`}
+                          <p
+                            className="text-[11px] font-bold"
+                            style={{ color: correct ? "#047857" : "#E53935" }}
+                          >
+                            {correct
+                              ? "Jawaban kamu benar! 👍"
+                              : methodStr === "listening"
+                                ? `Jawaban benar: ${formatListeningTokens(currentQuestion.answer)}`
+                                : `Jawaban benar: ${currentQuestion.answer}`}
                           </p>
                         </motion.div>
                       </div>
@@ -1068,20 +1258,31 @@ export default function MethodPracticeClient({ method }) {
                     {methodStr === "vocabulary" && (
                       <>
                         <div className="rounded-3xl bg-white/90 backdrop-blur-md border border-gray-200 p-6 text-center shadow-lg relative overflow-hidden">
-                          <div className="absolute top-2 right-3 text-4xl opacity-10 font-black select-none">🔤</div>
-                          <p className="text-[10px] font-black text-[#6366F1] uppercase tracking-widest mb-1.5 opacity-70">Apa arti kata ini?</p>
-                          <p className="text-3xl sm:text-4xl font-black text-[#1E1B4B] tracking-tight">{currentQuestion.question}</p>
+                          <div className="absolute top-2 right-3 text-4xl opacity-10 font-black select-none">
+                            🔤
+                          </div>
+                          <p className="text-[10px] font-black text-[#6366F1] uppercase tracking-widest mb-1.5 opacity-70">
+                            Apa arti kata ini?
+                          </p>
+                          <p className="text-3xl sm:text-4xl font-black text-[#1E1B4B] tracking-tight">
+                            {currentQuestion.question}
+                          </p>
                         </div>
                         <div className="grid gap-2.5 sm:grid-cols-2">
                           {Object.entries(
-                            typeof currentQuestion.options === 'string'
+                            typeof currentQuestion.options === "string"
                               ? JSON.parse(currentQuestion.options)
-                              : currentQuestion.options || {}
+                              : currentQuestion.options || {},
                           ).map(([key, value]) => {
                             const isSel = selected === key;
-                            const isCorrectAnswer = revealed && currentQuestion.answer === key;
+                            const isCorrectAnswer =
+                              revealed && currentQuestion.answer === key;
                             return (
-                              <button key={key} type="button" onClick={() => !revealed && handleAnswer(key)} disabled={revealed}
+                              <button
+                                key={key}
+                                type="button"
+                                onClick={() => !revealed && handleAnswer(key)}
+                                disabled={revealed}
                                 className={`px-4 py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 text-left flex items-center gap-3 w-full border-2 group
                                   ${!revealed ? "bg-white border-gray-200 text-gray-700 hover:border-[#6366F1] hover:bg-[#EEF2FF] hover:scale-[1.01] shadow-sm cursor-pointer border-b-[4px] active:translate-y-[2px] active:border-b-[2px]" : ""}
                                   ${isSel && correct ? "bg-emerald-50 border-emerald-400 border-b-[4px] text-emerald-700" : ""}
@@ -1090,17 +1291,39 @@ export default function MethodPracticeClient({ method }) {
                                   ${revealed && !isSel && !isCorrectAnswer ? "bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed" : ""}
                                 `}
                               >
-                                <span className={`w-7 h-7 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-colors ${
-                                  !revealed ? 'bg-gray-100 text-gray-500 group-hover:bg-[#6366F1] group-hover:text-white' :
-                                  isSel && correct ? 'bg-emerald-400 text-white' :
-                                  isSel && !correct ? 'bg-red-400 text-white' :
-                                  isCorrectAnswer ? 'bg-emerald-300 text-white' :
-                                  'bg-gray-100 text-gray-300'
-                                }`}>{key}</span>
-                                <span className="flex-1 leading-snug">{value}</span>
-                                {isSel && correct && <span className="text-emerald-500 text-base">✓</span>}
-                                {isSel && !correct && <span className="text-red-400 text-base">✗</span>}
-                                {isCorrectAnswer && !isSel && <span className="text-emerald-400 text-xs font-black">✓</span>}
+                                <span
+                                  className={`w-7 h-7 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-colors ${
+                                    !revealed
+                                      ? "bg-gray-100 text-gray-500 group-hover:bg-[#6366F1] group-hover:text-white"
+                                      : isSel && correct
+                                        ? "bg-emerald-400 text-white"
+                                        : isSel && !correct
+                                          ? "bg-red-400 text-white"
+                                          : isCorrectAnswer
+                                            ? "bg-emerald-300 text-white"
+                                            : "bg-gray-100 text-gray-300"
+                                  }`}
+                                >
+                                  {key}
+                                </span>
+                                <span className="flex-1 leading-snug">
+                                  {value}
+                                </span>
+                                {isSel && correct && (
+                                  <span className="text-emerald-500 text-base">
+                                    ✓
+                                  </span>
+                                )}
+                                {isSel && !correct && (
+                                  <span className="text-red-400 text-base">
+                                    ✗
+                                  </span>
+                                )}
+                                {isCorrectAnswer && !isSel && (
+                                  <span className="text-emerald-400 text-xs font-black">
+                                    ✓
+                                  </span>
+                                )}
                               </button>
                             );
                           })}
@@ -1112,29 +1335,98 @@ export default function MethodPracticeClient({ method }) {
                     {methodStr === "listening" && (
                       <>
                         <div className="mb-4">
-                          <AudioPlayer text={currentQuestion.sentences} title="Listening Sentence" subtitle="Pilih normal untuk kecepatan biasa atau slow untuk versi lebih lambat" />
+                          <AudioPlayer
+                            text={currentQuestion.sentences}
+                            title="Listening Sentence"
+                            subtitle="Pilih normal untuk kecepatan biasa atau slow untuk versi lebih lambat"
+                          />
                         </div>
-                        <DndContext sensors={listeningSensors} collisionDetection={closestCenter} onDragEnd={handleListeningDragEnd}>
+                        <DndContext
+                          sensors={listeningSensors}
+                          collisionDetection={closestCenter}
+                          onDragEnd={handleListeningDragEnd}
+                        >
                           <div className="space-y-4">
                             <div className="rounded-3xl border-2 border-[#6366F1]/30 bg-[#E0E7FF]/40 p-4 space-y-2">
                               <div className="flex items-center justify-between">
-                                <p className="text-xs font-black text-[#4338CA] uppercase tracking-wider">Jawaban Kamu</p>
-                                <span className="px-2 py-0.5 rounded-lg bg-[#6366F1]/10 border-2 border-[#6366F1]/20 text-[10px] font-black text-[#6366F1]">{listeningAnswer.length}/{normalizeExpectedListeningAnswer(currentQuestion.answer).length}</span>
+                                <p className="text-xs font-black text-[#4338CA] uppercase tracking-wider">
+                                  Jawaban Kamu
+                                </p>
+                                <span className="px-2 py-0.5 rounded-lg bg-[#6366F1]/10 border-2 border-[#6366F1]/20 text-[10px] font-black text-[#6366F1]">
+                                  {listeningAnswer.length}/
+                                  {
+                                    normalizeExpectedListeningAnswer(
+                                      currentQuestion.answer,
+                                    ).length
+                                  }
+                                </span>
                               </div>
-                              <SortableContext items={listeningAnswer.map(i => i.id)}>
-                                <ListeningDropZone id={LISTENING_ANSWER_ID} className="flex flex-wrap gap-2 min-h-16 rounded-2xl border-2 border-dashed border-[#6366F1]/30 bg-white p-3">
-                                  {listeningAnswer.length > 0 ? listeningAnswer.map(item => <SortableListeningItem key={item.id} item={item} disabled={revealed} active={true} onActivate={w => handleListeningItemActivate(w, LISTENING_ANSWER_ID)} />) : <p className="text-xs text-gray-400 self-center">Tarik atau klik kata ke sini…</p>}
+                              <SortableContext
+                                items={listeningAnswer.map((i) => i.id)}
+                              >
+                                <ListeningDropZone
+                                  id={LISTENING_ANSWER_ID}
+                                  className="flex flex-wrap gap-2 min-h-16 rounded-2xl border-2 border-dashed border-[#6366F1]/30 bg-white p-3"
+                                >
+                                  {listeningAnswer.length > 0 ? (
+                                    listeningAnswer.map((item) => (
+                                      <SortableListeningItem
+                                        key={item.id}
+                                        item={item}
+                                        disabled={revealed}
+                                        active={true}
+                                        onActivate={(w) =>
+                                          handleListeningItemActivate(
+                                            w,
+                                            LISTENING_ANSWER_ID,
+                                          )
+                                        }
+                                      />
+                                    ))
+                                  ) : (
+                                    <p className="text-xs text-gray-400 self-center">
+                                      Tarik atau klik kata ke sini…
+                                    </p>
+                                  )}
                                 </ListeningDropZone>
                               </SortableContext>
                             </div>
                             <div className="rounded-3xl border-2 border-gray-200 bg-white p-4 space-y-2">
                               <div className="flex items-center justify-between">
-                                <p className="text-xs font-black text-gray-500 uppercase tracking-wider">Word Bank</p>
-                                <span className="px-2 py-0.5 rounded-lg bg-gray-100 border-2 border-gray-200 text-[10px] font-black text-gray-500">{listeningBank.length} kata</span>
+                                <p className="text-xs font-black text-gray-500 uppercase tracking-wider">
+                                  Word Bank
+                                </p>
+                                <span className="px-2 py-0.5 rounded-lg bg-gray-100 border-2 border-gray-200 text-[10px] font-black text-gray-500">
+                                  {listeningBank.length} kata
+                                </span>
                               </div>
-                              <SortableContext items={listeningBank.map(i => i.id)}>
-                                <ListeningDropZone id={LISTENING_BANK_ID} className="flex flex-wrap gap-2 min-h-16 rounded-2xl border-2 border-dashed border-gray-200 bg-slate-50 p-3">
-                                  {listeningBank.length > 0 ? listeningBank.map(item => <SortableListeningItem key={item.id} item={item} disabled={revealed} active={false} onActivate={w => handleListeningItemActivate(w, LISTENING_BANK_ID)} />) : <p className="text-xs text-gray-400 self-center">Semua kata sudah dipindahkan.</p>}
+                              <SortableContext
+                                items={listeningBank.map((i) => i.id)}
+                              >
+                                <ListeningDropZone
+                                  id={LISTENING_BANK_ID}
+                                  className="flex flex-wrap gap-2 min-h-16 rounded-2xl border-2 border-dashed border-gray-200 bg-slate-50 p-3"
+                                >
+                                  {listeningBank.length > 0 ? (
+                                    listeningBank.map((item) => (
+                                      <SortableListeningItem
+                                        key={item.id}
+                                        item={item}
+                                        disabled={revealed}
+                                        active={false}
+                                        onActivate={(w) =>
+                                          handleListeningItemActivate(
+                                            w,
+                                            LISTENING_BANK_ID,
+                                          )
+                                        }
+                                      />
+                                    ))
+                                  ) : (
+                                    <p className="text-xs text-gray-400 self-center">
+                                      Semua kata sudah dipindahkan.
+                                    </p>
+                                  )}
                                 </ListeningDropZone>
                               </SortableContext>
                             </div>
@@ -1149,43 +1441,74 @@ export default function MethodPracticeClient({ method }) {
                         <div className="rounded-3xl border-2 border-gray-200 bg-gradient-to-br from-white to-slate-50 p-5 mb-4 shadow-[0_4px_0_#E2E8F0]">
                           <div className="flex flex-wrap gap-2 justify-center">
                             {sentenceTokens.map((word, index) => (
-                              <span key={`${word}-${index}`}
+                              <span
+                                key={`${word}-${index}`}
                                 className={`rounded-xl px-3 py-1.5 text-sm font-black transition-all
                                   ${revealed && index === currentQuestion.wrongIndex ? "bg-emerald-100 text-emerald-700 ring-2 ring-emerald-400" : ""}
                                   ${!revealed && index === currentQuestion.wrongIndex ? "bg-amber-100 text-amber-700 ring-2 ring-amber-300 animate-pulse" : ""}
                                   ${index !== currentQuestion.wrongIndex ? "bg-white text-gray-700 border-2 border-gray-200" : ""}
                                 `}
-                              >{word}</span>
+                              >
+                                {word}
+                              </span>
                             ))}
                           </div>
-                          <p className="text-center text-[10px] font-bold text-gray-400 mt-3">Pilih kata yang salah dari pilihan di bawah</p>
+                          <p className="text-center text-[10px] font-bold text-gray-400 mt-3">
+                            Pilih kata yang salah dari pilihan di bawah
+                          </p>
                         </div>
                         <div className="grid grid-cols-2 gap-2.5">
-                          {(typeof currentQuestion.choices === 'string' ? JSON.parse(currentQuestion.choices) : currentQuestion.choices || []).map((choice) => {
+                          {(typeof currentQuestion.choices === "string"
+                            ? JSON.parse(currentQuestion.choices)
+                            : currentQuestion.choices || []
+                          ).map((choice) => {
                             const isSel = selected === choice;
-                            const isCorrectChoice = revealed && choice === currentQuestion.answer;
+                            const isCorrectChoice =
+                              revealed && choice === currentQuestion.answer;
                             return (
-                              <button key={choice} type="button" onClick={() => handleAnswer(choice)} disabled={revealed}
+                              <button
+                                key={choice}
+                                type="button"
+                                onClick={() => handleAnswer(choice)}
+                                disabled={revealed}
                                 className={`py-3.5 px-4 rounded-2xl font-black text-sm transition-all duration-200 text-center w-full border-2 flex items-center justify-center gap-2
-                                  ${!revealed
-                                    ? "bg-white border-gray-200 text-gray-700 hover:bg-[#EEF2FF] hover:border-[#6366F1] hover:text-[#4338CA] shadow-sm cursor-pointer border-b-[4px] active:translate-y-[2px] active:border-b-[2px]"
-                                    : ""}
+                                  ${
+                                    !revealed
+                                      ? "bg-white border-gray-200 text-gray-700 hover:bg-[#EEF2FF] hover:border-[#6366F1] hover:text-[#4338CA] shadow-sm cursor-pointer border-b-[4px] active:translate-y-[2px] active:border-b-[2px]"
+                                      : ""
+                                  }
                                   ${isSel && correct ? "bg-emerald-50 border-emerald-500 border-b-[4px] text-emerald-700" : ""}
                                   ${isSel && !correct ? "bg-red-50 border-red-500 border-b-[4px] text-red-700" : ""}
                                   ${isCorrectChoice && !isSel ? "bg-emerald-50 border-emerald-400 border-b-[4px] text-emerald-600" : ""}
                                   ${revealed && !isSel && !isCorrectChoice ? "bg-gray-50 border-gray-200 text-gray-400 opacity-50 cursor-not-allowed border-b-2" : ""}
                                 `}
                               >
-                                <span className={`text-lg leading-none shrink-0
+                                <span
+                                  className={`text-lg leading-none shrink-0
                                   ${isSel && correct ? "text-emerald-500" : ""}
                                   ${isSel && !correct ? "text-red-400" : ""}
                                   ${isCorrectChoice && !isSel ? "text-emerald-400" : ""}
                                   ${!revealed || (revealed && !isSel && !isCorrectChoice) ? "text-gray-400" : ""}
-                                `}>•</span>
+                                `}
+                                >
+                                  •
+                                </span>
                                 <span className="leading-snug">{choice}</span>
-                                {isSel && correct && <span className="text-emerald-500 shrink-0 text-base">✓</span>}
-                                {isSel && !correct && <span className="text-red-400 shrink-0 text-base">✗</span>}
-                                {isCorrectChoice && !isSel && <span className="text-emerald-400 shrink-0 text-xs font-black">✓</span>}
+                                {isSel && correct && (
+                                  <span className="text-emerald-500 shrink-0 text-base">
+                                    ✓
+                                  </span>
+                                )}
+                                {isSel && !correct && (
+                                  <span className="text-red-400 shrink-0 text-base">
+                                    ✗
+                                  </span>
+                                )}
+                                {isCorrectChoice && !isSel && (
+                                  <span className="text-emerald-400 shrink-0 text-xs font-black">
+                                    ✓
+                                  </span>
+                                )}
                               </button>
                             );
                           })}
@@ -1197,16 +1520,28 @@ export default function MethodPracticeClient({ method }) {
                   {/* Footer: Check/Next Button */}
                   <div className="pt-3 border-t border-gray-100">
                     {methodStr === "listening" ? (
-                      <button type="button"
+                      <button
+                        type="button"
                         className={`duo-btn w-full py-3.5 rounded-2xl font-black text-xs sm:text-sm border-2 border-b-4 text-white transition-all ${
-                          !revealed ? "bg-[#6366F1] border-[#4338CA] hover:bg-[#818CF8]" :
-                          correct ? "bg-[#10B981] border-[#047857] hover:bg-[#34D399]" :
-                          "bg-[#EA2B2B] border-[#B71C1C] hover:bg-[#FF4D4D]"
+                          !revealed
+                            ? "bg-[#6366F1] border-[#4338CA] hover:bg-[#818CF8]"
+                            : correct
+                              ? "bg-[#10B981] border-[#047857] hover:bg-[#34D399]"
+                              : "bg-[#EA2B2B] border-[#B71C1C] hover:bg-[#FF4D4D]"
                         }`}
                         onClick={!revealed ? handleListeningCheck : goNext}
-                        disabled={(!revealed && listeningAnswer.length === 0) || submitting}
+                        disabled={
+                          (!revealed && listeningAnswer.length === 0) ||
+                          submitting
+                        }
                       >
-                        {submitting ? "Mengirim…" : !revealed ? "Periksa Jawaban ✓" : currentIndex === total - 1 ? "Selesaikan & Lihat Hasil 🏆" : "Soal Berikutnya →"}
+                        {submitting
+                          ? "Mengirim…"
+                          : !revealed
+                            ? "Periksa Jawaban ✓"
+                            : currentIndex === total - 1
+                              ? "Selesaikan & Lihat Hasil 🏆"
+                              : "Soal Berikutnya →"}
                       </button>
                     ) : (
                       <motion.button
@@ -1214,17 +1549,24 @@ export default function MethodPracticeClient({ method }) {
                         animate={revealed ? { scale: [0.97, 1] } : {}}
                         transition={{ duration: 0.2 }}
                         className={`duo-btn w-full py-3.5 rounded-2xl font-black text-xs sm:text-sm border-2 border-b-4 text-white transition-all flex items-center justify-center gap-2
-                          ${!revealed ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed" :
-                            correct ? "bg-gradient-to-r from-[#10B981] to-[#059669] border-[#047857] hover:opacity-90 shadow-md" :
-                            "bg-gradient-to-r from-[#EA2B2B] to-[#C62828] border-[#B71C1C] hover:opacity-90 shadow-md"}
+                          ${
+                            !revealed
+                              ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
+                              : correct
+                                ? "bg-gradient-to-r from-[#10B981] to-[#059669] border-[#047857] hover:opacity-90 shadow-md"
+                                : "bg-gradient-to-r from-[#EA2B2B] to-[#C62828] border-[#B71C1C] hover:opacity-90 shadow-md"
+                          }
                         `}
                         onClick={goNext}
                         disabled={!revealed || submitting}
                       >
-                        {submitting ? "Mengirim…" :
-                          !revealed ? "Pilih jawaban dulu" :
-                          currentIndex === total - 1 ? "🏆 Selesaikan & Lihat Hasil" :
-                          "Soal Berikutnya →"}
+                        {submitting
+                          ? "Mengirim…"
+                          : !revealed
+                            ? "Pilih jawaban dulu"
+                            : currentIndex === total - 1
+                              ? "🏆 Selesaikan & Lihat Hasil"
+                              : "Soal Berikutnya →"}
                       </motion.button>
                     )}
                   </div>

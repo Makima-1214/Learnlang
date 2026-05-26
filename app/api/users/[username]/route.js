@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { calculateStreak, calculateTotalXP } from "@/lib/streak";
+import { getUserEnergy } from "@/lib/energy";
 import {
   getAchievementProgress,
   getUserAchievements,
@@ -27,6 +29,9 @@ export async function GET(request, { params }) {
         username: true,
         avatar: true,
         bio: true,
+        xp: true,
+        energy: true,
+        energyNextRefillAt: true,
         createdAt: true,
       },
     });
@@ -170,13 +175,25 @@ export async function GET(request, { params }) {
       getAchievementProgress(user.id),
     ]);
 
+    const [streakData, totalXP, energy] = await Promise.all([
+      calculateStreak(user.id),
+      calculateTotalXP(user.id),
+      getUserEnergy(user.id, { emit: false }),
+    ]);
+
     return NextResponse.json({
       ...user,
       followersCount,
       followingCount,
       friendshipCount,
       viewerRelationship,
+      totalXP,
+      streak: streakData.streak,
+      lastSessionDate: streakData.lastSessionDate,
+      energy,
       stats: {
+        totalXP,
+        streak: streakData.streak,
         totalExercises,
         averageScore,
         correctCount,

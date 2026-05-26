@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createContext, useContext, useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useSocket } from "@/lib/socket-provider";
 import UserAvatar from "@/components/UserAvatar";
 import { Icon } from "@iconify/react";
 
@@ -188,6 +189,7 @@ export default function DashboardLayout({ children }) {
 
   const pathname = usePathname();
   const { data: session } = useSession();
+  const { socket } = useSocket();
 
   // Collapse state untuk kedua sidebar
   const [leftCollapsed, setLeftCollapsed] = useState(false);
@@ -206,7 +208,7 @@ export default function DashboardLayout({ children }) {
     if (isNested) return;
 
     const fetchData = async () => {
-      if (!session?.id) {
+      if (!session?.user?.id) {
         setLoading(false);
         return;
       }
@@ -248,7 +250,30 @@ export default function DashboardLayout({ children }) {
     };
 
     fetchData();
-  }, [session?.id, isNested]);
+  }, [session?.user?.id, isNested]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleEnergyUpdate = (payload) => {
+      setStats((current) => {
+        if (!current) return current;
+        return {
+          ...current,
+          energy: {
+            current: payload?.current ?? current.energy?.current ?? 0,
+            max: payload?.max ?? current.energy?.max ?? 5,
+            nextRefillAt: payload?.nextRefillAt ?? current.energy?.nextRefillAt ?? null,
+          },
+        };
+      });
+    };
+
+    socket.on("energy-update", handleEnergyUpdate);
+    return () => {
+      socket.off("energy-update", handleEnergyUpdate);
+    };
+  }, [socket]);
 
   // Early return AFTER all hooks
   if (isNested) return <>{children}</>;
@@ -436,6 +461,9 @@ export default function DashboardLayout({ children }) {
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center shadow-sm border-2 border-b-4 border-sky-300" title="Energi">
               <StatusBattery size={20} />
             </div>
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-400 to-indigo-500 flex items-center justify-center shadow-sm border-2 border-b-4 border-indigo-300" title="XP">
+              <IconMission />
+            </div>
             <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center border-2 border-b-4 border-amber-200" title="Liga">
               <IconLeague />
             </div>
@@ -479,7 +507,6 @@ export default function DashboardLayout({ children }) {
                   </div>
                 </div>
               </div>
-
               {/* Klasemen Mini / Liga */}
               <div className="bg-white border-2 border-b-[5px] border-gray-200 rounded-2xl p-5 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
