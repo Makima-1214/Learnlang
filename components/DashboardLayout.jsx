@@ -218,7 +218,7 @@ export default function DashboardLayout({ children }) {
         const [statsRes, leaderboardRes, suggestionsRes, missionsRes] = await Promise.all([
           fetch("/api/user/stats"),
           fetch("/api/leaderboard?limit=3"),
-          fetch("/api/friends/suggestions?limit=1"),
+          fetch("/api/friends/suggestions?limit=3"),
           fetch("/api/daily-missions"),
         ]);
 
@@ -573,7 +573,7 @@ export default function DashboardLayout({ children }) {
                   <div className="text-center py-4 text-gray-400 text-xs">Memuat...</div>
                 ) : suggestions && suggestions.length > 0 ? (
                   suggestions.map((user) => (
-                    <div key={user.id} className="flex items-center gap-3">
+                    <div key={user.id} className="flex items-center gap-3 mt-2">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center font-bold text-indigo-600 border-2 border-indigo-200 shrink-0">
                         {user.name?.charAt(0).toUpperCase() || "?"}
                       </div>

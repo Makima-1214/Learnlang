@@ -3,7 +3,7 @@
  * Returns friend suggestions: users you don't follow, not friends with, not blocked
  */
 
-import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { jsonResponse } from "@/lib/api-response";
@@ -13,16 +13,15 @@ export async function GET(req) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session) {
-      return jsonResponse(
-        { error: "Unauthorized" },
-        401,
-        "User not authenticated"
-      );
+    if (!session || !session.user) {
+      return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
-    const userId = session.id;
-    const limit = Math.min(parseInt(req.nextUrl.searchParams.get("limit")) || 5, 20);
+    const userId = session.user.id;
+    const limit = Math.min(
+      parseInt(req.nextUrl.searchParams.get("limit")) || 5,
+      20,
+    );
 
     // Get all users you're already connected to (following, friends with, blocked)
     const [following, friendships, blockedByMe, blocking] = await Promise.all([
@@ -47,19 +46,23 @@ export async function GET(req) {
     ]);
 
     // Get all user IDs to exclude
-    const excludeIds = new Set([
+    const excludeArray = [
       userId,
-      ...following.map((f) => f.followingId),
-      ...friendships.map((f) => (f.initiatorId === userId ? f.friendId : f.initiatorId)),
-      ...blockedByMe.map((b) => b.blockedId),
-      ...blocking.map((b) => b.blockerId),
-    ]);
+      ...following.map((f) => f.followingId).filter(Boolean),
+      ...friendships
+        .map((f) => (f.initiatorId === userId ? f.friendId : f.initiatorId))
+        .filter(Boolean),
+      ...blockedByMe.map((b) => b.blockedId).filter(Boolean),
+      ...blocking.map((b) => b.blockerId).filter(Boolean),
+    ];
+
+    const excludeIds = new Set(excludeArray);
 
     // Get random suggestions from users not in the exclude set
     const suggestions = await prisma.user.findMany({
       where: {
         id: {
-          notIn: Array.from(excludeIds),
+          notIn: Array.from(excludeIds).filter(Boolean),
         },
         role: "USER",
       },
@@ -97,7 +100,7 @@ export async function GET(req) {
         suggestions: withXP,
       },
       200,
-      "Friend suggestions retrieved"
+      "Friend suggestions retrieved",
     );
   } catch (error) {
     apiLogger.error("Error getting friend suggestions:", {
