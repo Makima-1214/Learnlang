@@ -3,600 +3,446 @@
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Navbar from "@/components/Navbar";
-import LoadingScreen from "@/components/LoadingScreen";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Icon } from "@iconify/react";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
-  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Plus,
-  Edit2,
-  Trash2,
-  Eye,
-  EyeOff,
-  Loader2,
-  ArrowLeft,
-  Upload,
-  ImageIcon,
-  X,
-} from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import Link from "next/link";
 import Image from "next/image";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { motion, AnimatePresence } from "framer-motion";
+import dynamic from "next/dynamic";
+
+// Load TiptapEditor only on client (no SSR)
+const TiptapEditor = dynamic(() => import("@/components/TiptapEditor"), { ssr: false });
+
+// ── Helpers ───────────────────────────────────────────────────
+function DuoBtn({ onClick, children, className = "", disabled, type = "button" }) {
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl font-black text-sm border-2 border-b-[4px] transition-all hover:-translate-y-0.5 active:translate-y-1 active:border-b-0 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+const EMPTY_FORM = { title: "", content: "", excerpt: "", coverImage: "", published: false, slug: null };
 
 export default function AdminBlogsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-
-  // Dialog states
   const [editorOpen, setEditorOpen] = useState(false);
-  const [deleteDialog, setDeleteDialog] = useState({
-    open: false,
-    blog: null,
-  });
-  const [previewMode, setPreviewMode] = useState(false);
-
-  // Form state
-  const [form, setForm] = useState({
-    title: "",
-    content: "",
-    excerpt: "",
-    coverImage: "",
-    published: false,
-    slug: null, // null = creating new, string = editing existing
-  });
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, blog: null });
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [previewHtml, setPreviewHtml] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-    } else if (status === "authenticated") {
-      if (session.user.role !== "ADMIN") {
-        router.push("/learn");
-      } else {
-        fetchBlogs();
-      }
+    if (status === "unauthenticated") router.push("/login");
+    else if (status === "authenticated") {
+      if (session.user.role !== "ADMIN") router.push("/learn");
+      else fetchBlogs();
     }
   }, [status, session, router]);
 
   const fetchBlogs = async () => {
     try {
-      const response = await fetch("/api/blogs?all=true");
-      const data = await response.json();
-      if (response.ok) {
-        setBlogs(data);
-      }
-    } catch (error) {
-      toast.error("Gagal memuat blog");
-    } finally {
-      setLoading(false);
-    }
+      const res = await fetch("/api/blogs?all=true");
+      if (res.ok) setBlogs(await res.json());
+    } catch { toast.error("Gagal memuat blog"); }
+    finally { setLoading(false); }
   };
 
-  const openCreateDialog = () => {
-    setForm({
-      title: "",
-      content: "",
-      excerpt: "",
-      coverImage: "",
-      published: false,
-      slug: null,
-    });
-    setPreviewMode(false);
-    setEditorOpen(true);
-  };
-
-  const openEditDialog = (blog) => {
-    setForm({
-      title: blog.title,
-      content: blog.content,
-      excerpt: blog.excerpt || "",
-      coverImage: blog.coverImage || "",
-      published: blog.published,
-      slug: blog.slug,
-    });
-    setPreviewMode(false);
+  const openCreate = () => { setForm(EMPTY_FORM); setShowPreview(false); setEditorOpen(true); };
+  const openEdit = (blog) => {
+    setForm({ title: blog.title, content: blog.content, excerpt: blog.excerpt || "", coverImage: blog.coverImage || "", published: blog.published, slug: blog.slug });
+    setShowPreview(false);
     setEditorOpen(true);
   };
 
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    const formData = new FormData();
-    formData.append("file", file);
-
+    const fd = new FormData();
+    fd.append("file", file);
     try {
       setActionLoading(true);
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await response.json();
-      if (response.ok) {
-        setForm((prev) => ({ ...prev, coverImage: data.url }));
-        toast.success("Gambar berhasil diupload");
-      } else {
-        toast.error(data.error || "Gagal upload gambar");
-      }
-    } catch (error) {
-      toast.error("Gagal upload gambar");
-    } finally {
-      setActionLoading(false);
-    }
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (res.ok) { setForm((p) => ({ ...p, coverImage: data.url })); toast.success("Gambar berhasil diupload"); }
+      else toast.error(data.error || "Gagal upload gambar");
+    } catch { toast.error("Gagal upload gambar"); }
+    finally { setActionLoading(false); }
   };
 
   const handleSave = async () => {
-    if (!form.title.trim() || !form.content.trim()) {
-      toast.error("Judul dan konten harus diisi");
-      return;
-    }
-
+    if (!form.title.trim() || !form.content.trim()) { toast.error("Judul dan konten harus diisi"); return; }
     setActionLoading(true);
     try {
-      const isEditing = form.slug !== null;
-      const url = isEditing ? `/api/blogs/${form.slug}` : "/api/blogs";
-      const method = isEditing ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
+      const isEdit = form.slug !== null;
+      const res = await fetch(isEdit ? `/api/blogs/${form.slug}` : "/api/blogs", {
+        method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: form.title,
-          content: form.content,
-          excerpt: form.excerpt,
-          coverImage: form.coverImage,
-          published: form.published,
-        }),
+        body: JSON.stringify({ title: form.title, content: form.content, excerpt: form.excerpt, coverImage: form.coverImage, published: form.published }),
       });
-
-      if (response.ok) {
-        toast.success(
-          isEditing ? "Blog berhasil diperbarui" : "Blog berhasil dibuat",
-        );
+      if (res.ok) {
+        toast.success(isEdit ? "Blog berhasil diperbarui" : "Blog berhasil dibuat");
         setEditorOpen(false);
         fetchBlogs();
       } else {
-        const data = await response.json();
-        toast.error(data.error || "Gagal menyimpan blog");
+        const d = await res.json();
+        toast.error(d.error || "Gagal menyimpan blog");
       }
-    } catch (error) {
-      toast.error("Gagal menyimpan blog");
-    } finally {
-      setActionLoading(false);
-    }
+    } catch { toast.error("Gagal menyimpan blog"); }
+    finally { setActionLoading(false); }
   };
 
   const handleTogglePublish = async (blog) => {
     try {
-      const response = await fetch(`/api/blogs/${blog.slug}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ published: !blog.published }),
-      });
-      if (response.ok) {
-        toast.success(blog.published ? "Blog di-draft" : "Blog dipublikasikan");
-        fetchBlogs();
-      }
-    } catch (error) {
-      toast.error("Gagal mengubah status");
-    }
+      const res = await fetch(`/api/blogs/${blog.slug}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ published: !blog.published }) });
+      if (res.ok) { toast.success(blog.published ? "Blog di-draft" : "Blog dipublikasikan"); fetchBlogs(); }
+    } catch { toast.error("Gagal mengubah status"); }
   };
 
   const handleDelete = async () => {
     if (!deleteDialog.blog) return;
     setActionLoading(true);
     try {
-      const response = await fetch(`/api/blogs/${deleteDialog.blog.slug}`, {
-        method: "DELETE",
-      });
-      if (response.ok) {
-        toast.success("Blog berhasil dihapus");
-        setDeleteDialog({ open: false, blog: null });
-        fetchBlogs();
-      }
-    } catch (error) {
-      toast.error("Gagal menghapus blog");
-    } finally {
-      setActionLoading(false);
-    }
+      const res = await fetch(`/api/blogs/${deleteDialog.blog.slug}`, { method: "DELETE" });
+      if (res.ok) { toast.success("Blog berhasil dihapus"); setDeleteDialog({ open: false, blog: null }); fetchBlogs(); }
+    } catch { toast.error("Gagal menghapus blog"); }
+    finally { setActionLoading(false); }
   };
 
-  if (status === "loading" || loading) {
-    return <LoadingScreen />;
-  }
+  if (status === "loading" || loading) return null;
+  if (!session || session.user.role !== "ADMIN") return null;
 
-  if (!session || session.user.role !== "ADMIN") {
-    return null;
-  }
+  // ── Full-page Editor ─────────────────────────────────────────
+  if (editorOpen) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] font-[family-name:var(--font-nunito)]">
+        <style dangerouslySetInnerHTML={{ __html: `.duo-btn{border-bottom-width:4px;transition:all .1s ease}.duo-btn:hover{transform:translateY(-2px);border-bottom-width:6px}.duo-btn:active{transform:translateY(4px);border-bottom-width:0}` }} />
 
-  return (
-    <div className="min-h-screen bg-[#f0f9f4]">
-      <Navbar />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Link href="/admin">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Management Blog
-              </h1>
-              <p className="text-gray-500 text-sm">
-                Kelola artikel dan konten blog
-              </p>
-            </div>
+        {/* Top bar */}
+        <div className="sticky top-0 z-30 bg-white border-b-4 border-gray-200 px-4 sm:px-6 py-3 flex items-center gap-3 shadow-sm">
+          <button
+            onClick={() => setEditorOpen(false)}
+            className="duo-btn flex items-center gap-1.5 px-3 py-2 bg-white border-4 border-b-[5px] border-gray-200 rounded-2xl font-black text-gray-600 text-xs hover:bg-gray-50"
+          >
+            <Icon icon="solar:arrow-left-bold" className="text-base" />
+            Kembali
+          </button>
+
+          <div className="flex-1 min-w-0">
+            <input
+              value={form.title}
+              onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+              placeholder="Judul blog..."
+              className="w-full font-black text-lg text-gray-900 bg-transparent border-none outline-none placeholder:text-gray-300 truncate"
+            />
           </div>
-          <Button onClick={openCreateDialog} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Buat Blog Baru
-          </Button>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setShowPreview((v) => !v)}
+              className={`duo-btn flex items-center gap-1.5 px-3 py-2 rounded-2xl font-black text-xs border-4 border-b-[5px] ${showPreview ? "bg-indigo-500 border-indigo-700 text-white" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+            >
+              <Icon icon={showPreview ? "solar:pen-bold" : "solar:eye-bold"} className="text-base" />
+              <span className="hidden sm:inline">{showPreview ? "Editor" : "Preview"}</span>
+            </button>
+
+            <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border-2 border-gray-200 rounded-2xl">
+              <Switch
+                checked={form.published}
+                onCheckedChange={(v) => setForm((p) => ({ ...p, published: v }))}
+                id="pub-toggle"
+              />
+              <label htmlFor="pub-toggle" className={`text-xs font-black cursor-pointer ${form.published ? "text-emerald-600" : "text-gray-400"}`}>
+                {form.published ? "Publish" : "Draft"}
+              </label>
+            </div>
+
+            <DuoBtn
+              onClick={handleSave}
+              disabled={actionLoading}
+              className="bg-emerald-500 border-emerald-700 text-white hover:bg-emerald-600"
+            >
+              {actionLoading
+                ? <Icon icon="svg-spinners:ring-resize" className="text-base" />
+                : <Icon icon="solar:diskette-bold" className="text-base" />
+              }
+              <span className="hidden sm:inline">{form.slug ? "Simpan" : "Buat Blog"}</span>
+            </DuoBtn>
+          </div>
         </div>
 
-        {/* Blog Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Daftar Blog</CardTitle>
-            <CardDescription>{blogs.length} blog ditemukan</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {blogs.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <ImageIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p className="text-lg font-medium">Belum ada blog</p>
-                <p className="text-sm">
-                  Klik &ldquo;Buat Blog Baru&rdquo; untuk memulai
-                </p>
+        {/* Editor body — 2 column on large screens */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          {/* Main editor / preview */}
+          <div className="lg:col-span-2 space-y-4">
+            {showPreview ? (
+              <div className="bg-white rounded-3xl border-4 border-b-[6px] border-gray-200 p-6 sm:p-8 shadow-sm">
+                <div className="flex items-center gap-2 mb-5 pb-4 border-b-2 border-gray-100">
+                  <Icon icon="solar:eye-bold" className="text-indigo-500 text-xl" />
+                  <span className="font-black text-gray-700">Preview</span>
+                </div>
+                {form.coverImage && (
+                  <div className="relative w-full h-48 sm:h-64 rounded-2xl overflow-hidden mb-6 border-2 border-gray-200">
+                    <Image src={form.coverImage} alt="Cover" fill className="object-cover" />
+                  </div>
+                )}
+                <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-3">{form.title || "Judul Blog"}</h1>
+                {form.excerpt && <p className="text-gray-500 font-bold text-sm mb-5 italic border-l-4 border-indigo-300 pl-4">{form.excerpt}</p>}
+                <div
+                  className="prose prose-sm sm:prose max-w-none font-[family-name:var(--font-nunito)]"
+                  dangerouslySetInnerHTML={{ __html: form.content || "<p><em>Belum ada konten</em></p>" }}
+                />
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-20">Cover</TableHead>
-                      <TableHead>Judul</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Penulis</TableHead>
-                      <TableHead>Tanggal</TableHead>
-                      <TableHead className="text-right">Aksi</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {blogs.map((blog) => (
-                      <TableRow key={blog.id}>
-                        <TableCell>
-                          {blog.coverImage ? (
-                            <div className="relative w-16 h-10 rounded overflow-hidden">
-                              <Image
-                                src={blog.coverImage}
-                                alt={blog.title}
-                                fill
-                                className="object-cover"
-                              />
-                            </div>
-                          ) : (
-                            <div className="w-16 h-10 rounded bg-gray-100 flex items-center justify-center">
-                              <ImageIcon className="h-4 w-4 text-gray-400" />
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium text-sm line-clamp-1">
-                              {blog.title}
-                            </p>
-                            <p className="text-xs text-gray-500 line-clamp-1">
-                              /{blog.slug}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={blog.published ? "default" : "secondary"}
-                            className={
-                              blog.published
-                                ? "bg-green-100 text-green-700 hover:bg-green-100"
-                                : ""
-                            }
-                          >
-                            {blog.published ? "Published" : "Draft"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <p className="text-sm">
-                            {blog.author?.name || "Unknown"}
-                          </p>
-                        </TableCell>
-                        <TableCell>
-                          <p className="text-sm text-gray-500">
-                            {new Date(blog.createdAt).toLocaleDateString(
-                              "id-ID",
-                              {
-                                day: "numeric",
-                                month: "short",
-                                year: "numeric",
-                              },
-                            )}
-                          </p>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleTogglePublish(blog)}
-                              title={
-                                blog.published
-                                  ? "Jadikan Draft"
-                                  : "Publikasikan"
-                              }
-                            >
-                              {blog.published ? (
-                                <EyeOff className="h-4 w-4" />
-                              ) : (
-                                <Eye className="h-4 w-4" />
-                              )}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => openEditDialog(blog)}
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() =>
-                                setDeleteDialog({ open: true, blog })
-                              }
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Blog Editor Dialog */}
-      <Dialog open={editorOpen} onOpenChange={setEditorOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {form.slug ? "Edit Blog" : "Buat Blog Baru"}
-            </DialogTitle>
-            <DialogDescription>
-              Gunakan format Markdown untuk menulis konten blog.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            {/* Title */}
-            <div className="space-y-2">
-              <Label htmlFor="title">Judul</Label>
-              <Input
-                id="title"
-                placeholder="Masukkan judul blog..."
-                value={form.title}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, title: e.target.value }))
-                }
+              <TiptapEditor
+                content={form.content}
+                onChange={(html) => setForm((p) => ({ ...p, content: html }))}
+                placeholder="Mulai tulis konten blog yang menginspirasi..."
               />
-            </div>
+            )}
+          </div>
+
+          {/* Sidebar settings */}
+          <div className="space-y-4">
 
             {/* Excerpt */}
-            <div className="space-y-2">
-              <Label htmlFor="excerpt">Ringkasan</Label>
-              <Textarea
-                id="excerpt"
-                placeholder="Ringkasan singkat blog (opsional)..."
-                rows={2}
+            <div className="bg-white rounded-3xl border-4 border-b-[6px] border-gray-200 shadow-sm p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Icon icon="solar:document-text-bold" className="text-indigo-500 text-lg" />
+                <h3 className="font-black text-gray-800 text-sm">Ringkasan</h3>
+              </div>
+              <textarea
                 value={form.excerpt}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, excerpt: e.target.value }))
-                }
+                onChange={(e) => setForm((p) => ({ ...p, excerpt: e.target.value }))}
+                placeholder="Ringkasan singkat yang muncul di daftar blog..."
+                rows={4}
+                maxLength={300}
+                className="w-full text-sm font-bold text-gray-700 placeholder:text-gray-300 bg-gray-50 border-2 border-gray-200 rounded-2xl px-4 py-3 resize-none focus:outline-none focus:border-indigo-400 transition-colors"
               />
+              <p className="text-[10px] font-bold text-gray-400 mt-1 text-right">{form.excerpt.length}/300</p>
             </div>
 
             {/* Cover Image */}
-            <div className="space-y-2">
-              <Label>Cover Image</Label>
-              <div className="flex items-center gap-4">
-                {form.coverImage ? (
-                  <div className="relative w-32 h-20 rounded-lg overflow-hidden border">
-                    <Image
-                      src={form.coverImage}
-                      alt="Cover"
-                      fill
-                      className="object-cover"
-                    />
-                    <button
-                      onClick={() =>
-                        setForm((prev) => ({ ...prev, coverImage: "" }))
-                      }
-                      className="absolute top-1 right-1 bg-black/50 rounded-full p-0.5 hover:bg-black/70"
-                    >
-                      <X className="h-3 w-3 text-white" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="w-32 h-20 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
-                    <ImageIcon className="h-6 w-6 text-gray-400" />
-                  </div>
-                )}
-                <div>
-                  <Label
-                    htmlFor="coverUpload"
-                    className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-md border border-gray-300 text-sm hover:bg-gray-50 transition-colors"
-                  >
-                    <Upload className="h-4 w-4" />
-                    Upload Gambar
-                  </Label>
-                  <input
-                    id="coverUpload"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageUpload}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    JPG, PNG, GIF, WebP. Maks 5MB.
-                  </p>
-                </div>
+            <div className="bg-white rounded-3xl border-4 border-b-[6px] border-gray-200 shadow-sm p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Icon icon="solar:gallery-bold" className="text-indigo-500 text-lg" />
+                <h3 className="font-black text-gray-800 text-sm">Cover Image</h3>
               </div>
-            </div>
 
-            {/* Content with Preview Toggle */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Konten (Markdown)</Label>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPreviewMode(!previewMode)}
-                >
-                  {previewMode ? "Editor" : "Preview"}
-                </Button>
-              </div>
-              {previewMode ? (
-                <div className="min-h-75 max-h-100 overflow-y-auto border rounded-lg p-4 bg-white prose prose-green prose-sm max-w-none">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {form.content || "*Belum ada konten*"}
-                  </ReactMarkdown>
+              {form.coverImage ? (
+                <div className="relative w-full h-36 rounded-2xl overflow-hidden border-2 border-gray-200 mb-3">
+                  <Image src={form.coverImage} alt="Cover" fill className="object-cover" />
+                  <button
+                    onClick={() => setForm((p) => ({ ...p, coverImage: "" }))}
+                    className="absolute top-2 right-2 w-7 h-7 bg-red-500 border-2 border-red-700 rounded-xl flex items-center justify-center text-white hover:bg-red-600 transition-colors"
+                  >
+                    <Icon icon="solar:close-bold" className="text-sm" />
+                  </button>
                 </div>
               ) : (
-                <Textarea
-                  placeholder="Tulis konten blog menggunakan format Markdown..."
-                  rows={14}
-                  className="font-mono text-sm"
-                  value={form.content}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, content: e.target.value }))
-                  }
-                />
+                <div className="w-full h-28 rounded-2xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-2 mb-3 bg-gray-50">
+                  <Icon icon="solar:gallery-add-bold" className="text-3xl text-gray-300" />
+                  <p className="text-xs font-bold text-gray-400">Belum ada cover</p>
+                </div>
               )}
+
+              <label className="w-full flex items-center justify-center gap-2 py-2.5 bg-indigo-50 border-2 border-b-[4px] border-indigo-200 rounded-2xl font-black text-indigo-600 text-xs cursor-pointer hover:bg-indigo-100 transition-colors">
+                <Icon icon="solar:upload-bold" className="text-base" />
+                Upload Gambar
+                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+              </label>
+              <p className="text-[10px] font-bold text-gray-400 mt-2 text-center">JPG, PNG, WebP · Maks 5MB</p>
             </div>
 
-            {/* Published Toggle */}
-            <div className="flex items-center gap-3">
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
+            {/* Publish status */}
+            <div className="bg-white rounded-3xl border-4 border-b-[6px] border-gray-200 shadow-sm p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Icon icon="solar:settings-bold" className="text-indigo-500 text-lg" />
+                <h3 className="font-black text-gray-800 text-sm">Pengaturan</h3>
+              </div>
+              <div className={`flex items-center justify-between p-3 rounded-2xl border-2 ${form.published ? "bg-emerald-50 border-emerald-200" : "bg-gray-50 border-gray-200"}`}>
+                <div>
+                  <p className={`font-black text-sm ${form.published ? "text-emerald-700" : "text-gray-600"}`}>
+                    {form.published ? "Dipublikasikan" : "Draft"}
+                  </p>
+                  <p className="text-[10px] font-bold text-gray-400">
+                    {form.published ? "Terlihat oleh semua pengguna" : "Hanya terlihat oleh admin"}
+                  </p>
+                </div>
+                <Switch
                   checked={form.published}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      published: e.target.checked,
-                    }))
-                  }
-                  className="sr-only peer"
+                  onCheckedChange={(v) => setForm((p) => ({ ...p, published: v }))}
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-              </label>
-              <span className="text-sm font-medium">
-                {form.published ? "Published" : "Draft"}
-              </span>
+              </div>
+            </div>
+
+            {/* Tips */}
+            <div className="bg-indigo-50 rounded-3xl border-4 border-b-[6px] border-indigo-200 shadow-sm p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Icon icon="solar:lightbulb-bold" className="text-indigo-500 text-lg" />
+                <h3 className="font-black text-indigo-700 text-sm">Tips Menulis</h3>
+              </div>
+              <ul className="space-y-2 text-xs font-bold text-indigo-600">
+                {["Gunakan H2/H3 untuk struktur yang jelas", "Tambahkan gambar untuk mempercantik artikel", "Tulis ringkasan yang menarik perhatian", "Blockquote untuk kutipan penting", "Cek preview sebelum publish"].map((tip) => (
+                  <li key={tip} className="flex items-start gap-2">
+                    <Icon icon="solar:check-circle-bold" className="text-indigo-400 shrink-0 mt-0.5" />
+                    {tip}
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setEditorOpen(false)}
-              disabled={actionLoading}
-            >
-              Batal
-            </Button>
-            <Button onClick={handleSave} disabled={actionLoading}>
-              {actionLoading && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              {form.slug ? "Simpan Perubahan" : "Buat Blog"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+  // ── Blog List ────────────────────────────────────────────────
+  return (
+    <div className="min-h-screen bg-[#F8FAFC] font-[family-name:var(--font-nunito)]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        open={deleteDialog.open}
-        onOpenChange={(open) => setDeleteDialog((prev) => ({ ...prev, open }))}
-      >
-        <AlertDialogContent>
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-gradient-to-r from-emerald-500 to-teal-500 p-6 sm:p-8 rounded-3xl border-4 border-b-[6px] border-emerald-700 text-white shadow-lg relative overflow-hidden">
+          <div className="absolute -top-8 -right-8 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="w-14 h-14 bg-white/20 border-2 border-white/30 rounded-2xl flex items-center justify-center">
+              <Icon icon="solar:document-text-bold" className="text-3xl text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-black">Management Blog</h1>
+              <p className="font-bold opacity-80 text-sm">{blogs.length} artikel tersimpan</p>
+            </div>
+          </div>
+          <button
+            onClick={openCreate}
+            className="relative z-10 flex items-center gap-2 px-6 py-3 bg-white text-emerald-600 font-black rounded-2xl border-2 border-b-[5px] border-emerald-200 hover:-translate-y-0.5 active:translate-y-1 active:border-b-0 transition-all text-sm shadow-sm"
+          >
+            <Icon icon="solar:add-circle-bold" className="text-xl" />
+            Buat Blog Baru
+          </button>
+        </div>
+
+        {/* Blog grid */}
+        {blogs.length === 0 ? (
+          <div className="bg-white rounded-3xl border-4 border-b-[6px] border-gray-200 p-16 text-center shadow-sm">
+            <Icon icon="solar:document-text-linear" className="text-6xl text-gray-300 mx-auto mb-4" />
+            <p className="font-black text-gray-500 text-lg mb-1">Belum ada blog</p>
+            <p className="font-bold text-gray-400 text-sm mb-6">Klik "Buat Blog Baru" untuk memulai</p>
+            <button onClick={openCreate} className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white font-black rounded-2xl border-2 border-b-[4px] border-emerald-700 hover:-translate-y-0.5 transition-all text-sm">
+              <Icon icon="solar:add-circle-bold" /> Buat Blog Pertama
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            <AnimatePresence>
+              {blogs.map((blog, i) => (
+                <motion.div
+                  key={blog.id}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.04 }}
+                  className="bg-white rounded-3xl border-4 border-b-[6px] border-gray-200 shadow-sm overflow-hidden hover:-translate-y-1 transition-transform"
+                >
+                  {/* Cover */}
+                  <div className="relative w-full h-36 bg-gradient-to-br from-gray-100 to-gray-200">
+                    {blog.coverImage ? (
+                      <Image src={blog.coverImage} alt={blog.title} fill className="object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Icon icon="solar:gallery-bold" className="text-4xl text-gray-300" />
+                      </div>
+                    )}
+                    <div className="absolute top-2 left-2">
+                      <span className={`px-2.5 py-1 rounded-xl font-black text-[11px] border-2 ${blog.published ? "bg-emerald-100 border-emerald-300 text-emerald-700" : "bg-gray-100 border-gray-300 text-gray-500"}`}>
+                        {blog.published ? "Published" : "Draft"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-4">
+                    <p className="font-black text-gray-900 text-sm line-clamp-2 mb-1">{blog.title}</p>
+                    <p className="text-xs font-bold text-gray-400 mb-3 line-clamp-2">{blog.excerpt || "Tidak ada ringkasan"}</p>
+                    <div className="flex items-center justify-between text-[10px] font-bold text-gray-400 mb-3">
+                      <span className="flex items-center gap-1">
+                        <Icon icon="solar:user-bold" className="text-xs" />
+                        {blog.author?.name || "Unknown"}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Icon icon="solar:calendar-bold" className="text-xs" />
+                        {new Date(blog.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                      </span>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 pt-3 border-t-2 border-gray-100">
+                      <button
+                        onClick={() => handleTogglePublish(blog)}
+                        title={blog.published ? "Jadikan Draft" : "Publikasikan"}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl font-black text-xs border-2 border-b-[3px] transition-all hover:-translate-y-0.5 ${blog.published ? "bg-amber-50 border-amber-200 text-amber-600 hover:bg-amber-100" : "bg-emerald-50 border-emerald-200 text-emerald-600 hover:bg-emerald-100"}`}
+                      >
+                        <Icon icon={blog.published ? "solar:eye-closed-bold" : "solar:eye-bold"} className="text-sm" />
+                        {blog.published ? "Draft" : "Publish"}
+                      </button>
+                      <button
+                        onClick={() => openEdit(blog)}
+                        className="flex items-center justify-center w-9 h-9 rounded-xl bg-indigo-50 border-2 border-b-[3px] border-indigo-200 text-indigo-600 hover:bg-indigo-100 transition-all hover:-translate-y-0.5"
+                      >
+                        <Icon icon="solar:pen-bold" className="text-sm" />
+                      </button>
+                      <button
+                        onClick={() => setDeleteDialog({ open: true, blog })}
+                        className="flex items-center justify-center w-9 h-9 rounded-xl bg-red-50 border-2 border-b-[3px] border-red-200 text-red-500 hover:bg-red-100 transition-all hover:-translate-y-0.5"
+                      >
+                        <Icon icon="solar:trash-bin-trash-bold" className="text-sm" />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
+      </div>
+
+      {/* Delete Dialog */}
+      <AlertDialog open={deleteDialog.open} onOpenChange={(o) => setDeleteDialog((p) => ({ ...p, open: o }))}>
+        <AlertDialogContent className="rounded-3xl border-4 border-b-[6px] border-gray-200 font-[family-name:var(--font-nunito)]">
           <AlertDialogHeader>
-            <AlertDialogTitle>Hapus Blog</AlertDialogTitle>
-            <AlertDialogDescription>
-              Apakah Anda yakin ingin menghapus blog{" "}
-              <strong>&ldquo;{deleteDialog.blog?.title}&rdquo;</strong>?
-              Tindakan ini tidak dapat dibatalkan.
+            <AlertDialogTitle className="font-black">Hapus Blog?</AlertDialogTitle>
+            <AlertDialogDescription className="font-bold text-gray-500">
+              Blog <strong>&ldquo;{deleteDialog.blog?.title}&rdquo;</strong> akan dihapus permanen.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={actionLoading}>
-              Batal
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={actionLoading}
-              className="bg-destructive text-white hover:bg-destructive/90"
-            >
-              {actionLoading && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel className="rounded-2xl font-black border-2 border-b-4" disabled={actionLoading}>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={actionLoading} className="rounded-2xl font-black bg-red-500 border-2 border-b-4 border-red-700 hover:bg-red-600">
+              {actionLoading ? <Icon icon="svg-spinners:ring-resize" className="mr-2" /> : null}
               Hapus
             </AlertDialogAction>
-          </AlertDialogFooter>
+          </div>
         </AlertDialogContent>
       </AlertDialog>
     </div>

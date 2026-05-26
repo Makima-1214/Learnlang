@@ -1,7 +1,13 @@
 import ChatsClient from "./chats-client";
+import DashboardLayout from "@/components/DashboardLayout";
 
-export default function ChatsPage({ searchParams }) {
-  const initialUserId = searchParams?.userId ?? null;
+export default async function ChatsPage({ searchParams }) {
+  const resolvedParams = await searchParams;
+  const initialUserId = resolvedParams?.userId ?? null;
 
-  return <ChatsClient initialUserId={initialUserId} />;
+  return (
+    <DashboardLayout>
+      <ChatsClient initialUserId={initialUserId} />
+    </DashboardLayout>
+  );
 }

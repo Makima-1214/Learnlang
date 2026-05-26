@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import { Trash2, Send, MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UserAvatar from "@/components/UserAvatar";
 import { formatDistanceToNow } from "date-fns";
 import { id } from "date-fns/locale";
 import Link from "next/link";
@@ -206,15 +207,13 @@ export default function BlogComments({ slug }) {
             >
               {/* Avatar */}
               <div className="shrink-0">
-                <Avatar className="w-10 h-10">
-                  <AvatarImage
-                    src={comment.user.avatar}
-                    alt={comment.user.name}
-                  />
-                  <AvatarFallback className="bg-primary text-white font-semibold">
-                    {getInitials(comment.user.name)}
-                  </AvatarFallback>
-                </Avatar>
+                <UserAvatar
+                  src={comment.user.avatar}
+                  name={comment.user.name}
+                  className="w-10 h-10"
+                  size={36}
+                  showInitial
+                />
               </div>
 
               {/* Comment Content */}

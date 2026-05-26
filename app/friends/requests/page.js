@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Navbar from "@/components/Navbar";
 import {
   Card,
   CardContent,
@@ -14,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UserAvatar from "@/components/UserAvatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Check, X, Mail, Users } from "lucide-react";
@@ -97,7 +97,6 @@ export default function FriendRequestsPage() {
   if (loading || status === "loading") {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
         <main className="max-w-4xl mx-auto p-4 sm:p-6 space-y-4">
           {[1, 2, 3].map((item) => (
             <Skeleton key={item} className="h-36 w-full rounded-xl" />
@@ -111,7 +110,6 @@ export default function FriendRequestsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
       <main className="max-w-4xl mx-auto p-4 sm:p-6">
         <div className="mb-6 flex items-center justify-between gap-4">
           <div>
@@ -148,15 +146,12 @@ export default function FriendRequestsPage() {
                 <CardContent className="p-4 sm:p-6">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
                     <div className="flex items-start gap-4">
-                      <Avatar className="w-14 h-14">
-                        <AvatarImage
-                          src={request.sender?.avatar}
-                          alt={request.sender?.name}
-                        />
-                        <AvatarFallback>
-                          {request.sender?.name?.[0] || "U"}
-                        </AvatarFallback>
-                      </Avatar>
+                      <UserAvatar
+                        src={request.sender?.avatar}
+                        name={request.sender?.name}
+                        className="w-14 h-14"
+                        size={44}
+                      />
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
                           <h2 className="font-semibold text-lg">

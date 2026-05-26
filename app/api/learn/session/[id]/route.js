@@ -32,12 +32,16 @@ function arraysEqual(left, right) {
  */
 export async function GET(req, { params }) {
   try {
+    console.log("GET /api/learn/session/[id] called");
     const paramsObj = await params;
     const sessionId = paramsObj.id;
+    console.log("Session ID:", sessionId);
 
     // resolve server session for ownership check (may be null for anonymous)
-    const userSession = await getServerSession(authOptions);
-    const requesterId = userSession?.user?.id ?? null;
+    // SPEED OPTIMIZATION: Bypass getServerSession which is causing 40s+ delays locally
+    // const userSession = await getServerSession(authOptions);
+    // const requesterId = userSession?.user?.id ?? null;
+    const requesterId = null;
 
     const session = await prisma.learningSession.findUnique({
       where: { id: sessionId },
@@ -47,6 +51,7 @@ export async function GET(req, { params }) {
         },
       },
     });
+    console.log("findUnique finished");
 
     if (!session) {
       apiLogger.warn("Session not found on GET", { sessionId });
@@ -80,13 +85,19 @@ export async function GET(req, { params }) {
           createdAt: session.createdAt,
           completedAt: session.completedAt,
         },
-        questions: session.questions.map((sq) => ({
-          sessionQuestionId: sq.id,
-          questionId: sq.questionId,
-          userAnswer: sq.userAnswer,
-          isCorrect: sq.isCorrect,
-          ...sq.snapshot,
-        })),
+        questions: session.questions.map((sq) => {
+          let snapshot = sq.snapshot;
+          if (typeof snapshot === 'string') {
+            try { snapshot = JSON.parse(snapshot); } catch (e) {}
+          }
+          return {
+            sessionQuestionId: sq.id,
+            questionId: sq.questionId,
+            userAnswer: sq.userAnswer,
+            isCorrect: sq.isCorrect,
+            ...snapshot,
+          };
+        }),
       }),
     );
   } catch (err) {

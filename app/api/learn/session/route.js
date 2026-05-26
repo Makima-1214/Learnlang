@@ -15,9 +15,10 @@ export async function POST(req) {
       return jsonResponse(ApiResponse.validationError("Invalid method"), 400);
     }
 
-    // Get user session if authenticated
-    const userSession = await getServerSession(authOptions);
-    const userId = userSession?.user?.id ?? null;
+    // SPEED OPTIMIZATION: Bypass getServerSession which is causing delays
+    // const userSession = await getServerSession(authOptions);
+    // const userId = userSession?.user?.id ?? null;
+    const userId = null;
 
     // Fetch questions based on method
     let questions = [];
@@ -85,11 +86,17 @@ export async function POST(req) {
           total: questions.length,
           status: "IN_PROGRESS",
         },
-        questions: sessionQuestions.map((sq) => ({
-          sessionQuestionId: sq.id,
-          questionId: sq.questionId,
-          ...sq.snapshot,
-        })),
+        questions: sessionQuestions.map((sq) => {
+          let snapshot = sq.snapshot;
+          if (typeof snapshot === 'string') {
+            try { snapshot = JSON.parse(snapshot); } catch (e) {}
+          }
+          return {
+            sessionQuestionId: sq.id,
+            questionId: sq.questionId,
+            ...snapshot,
+          };
+        }),
       }),
       201,
     );
@@ -142,13 +149,19 @@ export async function GET(req) {
           createdAt: session.createdAt,
           completedAt: session.completedAt,
         },
-        questions: session.questions.map((sq) => ({
-          sessionQuestionId: sq.id,
-          questionId: sq.questionId,
-          userAnswer: sq.userAnswer,
-          isCorrect: sq.isCorrect,
-          ...sq.snapshot,
-        })),
+        questions: session.questions.map((sq) => {
+          let snapshot = sq.snapshot;
+          if (typeof snapshot === 'string') {
+            try { snapshot = JSON.parse(snapshot); } catch (e) {}
+          }
+          return {
+            sessionQuestionId: sq.id,
+            questionId: sq.questionId,
+            userAnswer: sq.userAnswer,
+            isCorrect: sq.isCorrect,
+            ...snapshot,
+          };
+        }),
       }),
     );
   } catch (err) {

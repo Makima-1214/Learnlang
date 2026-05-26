@@ -100,56 +100,28 @@ export default function AudioPlayer({ text, title = "Audio", subtitle }) {
   const isSlowSpeaking = speakingRate === 0.75;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-4">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-            <Volume2 className="h-4 w-4" />
-            {title}
-          </p>
-          <p className="text-xs text-slate-500 mt-1">
-            Suara: Google UK English Male (en-GB)
-            {voice?.name && voice.name !== "Google UK English Male"
-              ? ` · fallback: ${voice.name}`
-              : ""}
-          </p>
-          {subtitle ? (
-            <p className="text-xs text-slate-400 mt-1">{subtitle}</p>
-          ) : null}
-        </div>
-        <div className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-          <Clock3 className="h-3.5 w-3.5" />
-          {speakingRate ? `Playing x${speakingRate}` : "Ready"}
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <Button
-          type="button"
-          variant={isNormalSpeaking ? "default" : "outline"}
-          onClick={() => (isNormalSpeaking ? stop() : speak(1))}
-          className="rounded-2xl flex-1 h-12 font-semibold"
-        >
-          {isNormalSpeaking ? (
-            <Pause className="mr-2 h-4 w-4" />
-          ) : (
-            <Play className="mr-2 h-4 w-4" />
-          )}
-          {isNormalSpeaking ? "Stop Normal" : "Normal"}
-        </Button>
-        <Button
-          type="button"
-          variant={isSlowSpeaking ? "default" : "outline"}
-          onClick={() => (isSlowSpeaking ? stop() : speak(0.75))}
-          className="rounded-2xl flex-1 h-12 font-semibold"
-        >
-          {isSlowSpeaking ? (
-            <Pause className="mr-2 h-4 w-4" />
-          ) : (
-            <Play className="mr-2 h-4 w-4" />
-          )}
-          {isSlowSpeaking ? "Stop Slow" : "Slow"}
-        </Button>
+    <div className="rounded-2xl border-2 border-indigo-100 bg-white p-3 shadow-sm flex items-center gap-4">
+      <button
+        type="button"
+        onClick={() => (isNormalSpeaking ? stop() : speak(1))}
+        className={`shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
+          isNormalSpeaking ? "bg-[#6366F1] hover:bg-[#4F46E5] text-white shadow-md scale-105" : "bg-[#EEF2FF] text-[#6366F1] hover:bg-[#E0E7FF] border-2 border-[#C7D2FE]"
+        }`}
+      >
+        {isNormalSpeaking ? (
+          <Pause className="h-6 w-6" />
+        ) : (
+          <Play className="h-6 w-6 ml-1" />
+        )}
+      </button>
+      
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-black text-slate-800">
+          {title}
+        </p>
+        <p className="text-[10px] sm:text-xs font-bold text-slate-400 mt-0.5 uppercase tracking-wider">
+          {isNormalSpeaking ? "Sedang memutar audio..." : "Putar audio untuk mendengar"}
+        </p>
       </div>
     </div>
   );

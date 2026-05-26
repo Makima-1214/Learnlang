@@ -1,35 +1,96 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
-import Navbar from "@/components/Navbar";
-import LoadingScreen from "@/components/LoadingScreen";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Icon } from "@iconify/react";
+import UserAvatar from "@/components/UserAvatar";
 import { motion } from "framer-motion";
-import {
-  Calendar,
-  Trophy,
-  Target,
-  CheckCircle,
-  Star,
-  BookOpen,
-  ArrowLeft,
-  TrendingUp,
-  Zap,
-  Award,
-  Share2,
-  Copy,
-  Check,
-  MessageSquare,
-} from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { toast } from "sonner";
+
+// ─── Helpers ────────────────────────────────────────────────
+
+const getStatusBadge = (status) => {
+  const map = {
+    BENAR: "bg-emerald-100 text-emerald-700 border-2 border-emerald-300",
+    HAMPIR_BENAR: "bg-amber-100 text-amber-700 border-2 border-amber-300",
+    SALAH: "bg-red-100 text-red-700 border-2 border-red-300",
+  };
+  const label = { BENAR: "Benar", HAMPIR_BENAR: "Hampir Benar", SALAH: "Salah" };
+  if (!map[status]) return null;
+  return (
+    <span className={`px-2 py-0.5 rounded-full text-[11px] font-black ${map[status]}`}>
+      {label[status]}
+    </span>
+  );
+};
+
+const getDifficultyBadge = (difficulty) => {
+  const map = {
+    EASY: "bg-emerald-50 text-emerald-600 border-2 border-emerald-200",
+    MEDIUM: "bg-amber-50 text-amber-600 border-2 border-amber-200",
+    HARD: "bg-red-50 text-red-600 border-2 border-red-200",
+  };
+  const label = { EASY: "Mudah", MEDIUM: "Sedang", HARD: "Sulit" };
+  if (!map[difficulty]) return null;
+  return (
+    <span className={`px-2 py-0.5 rounded-full text-[11px] font-black ${map[difficulty]}`}>
+      {label[difficulty]}
+    </span>
+  );
+};
+
+const getAchievementStyle = (badgeColor) => {
+  const map = {
+    green: "bg-emerald-50 border-emerald-300 text-emerald-700",
+    yellow: "bg-yellow-50 border-yellow-300 text-yellow-700",
+    orange: "bg-orange-50 border-orange-300 text-orange-700",
+    red: "bg-red-50 border-red-300 text-red-700",
+    purple: "bg-purple-50 border-purple-300 text-purple-700",
+    pink: "bg-pink-50 border-pink-300 text-pink-700",
+    cyan: "bg-cyan-50 border-cyan-300 text-cyan-700",
+    emerald: "bg-emerald-50 border-emerald-300 text-emerald-700",
+    gold: "bg-amber-50 border-amber-300 text-amber-700",
+  };
+  return map[badgeColor] || "bg-blue-50 border-blue-300 text-blue-700";
+};
+
+// ─── Stat Card ───────────────────────────────────────────────
+
+function StatCard({ icon, iconClass, value, label, delay, bgClass, valueClass }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay }}
+      className={`rounded-3xl border-4 border-b-[6px] border-gray-200 ${bgClass} p-4 flex flex-col items-center shadow-sm hover:-translate-y-1 transition-transform`}
+    >
+      <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-2 bg-white/60">
+        <Icon icon={icon} className={`text-2xl ${iconClass}`} />
+      </div>
+      <p className={`text-3xl font-black ${valueClass}`}>{value}</p>
+      <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mt-0.5 text-center">{label}</p>
+    </motion.div>
+  );
+}
+
+// ─── Section Card ────────────────────────────────────────────
+
+function SectionCard({ title, icon, children }) {
+  return (
+    <div className="bg-white rounded-3xl border-4 border-b-[6px] border-gray-200 shadow-sm overflow-hidden">
+      <div className="flex items-center gap-2 px-5 py-4 border-b-2 border-gray-100">
+        <Icon icon={icon} className="text-xl text-indigo-500" />
+        <h2 className="font-black text-gray-900 text-sm">{title}</h2>
+      </div>
+      <div className="p-5">{children}</div>
+    </div>
+  );
+}
+
+// ─── Main Page ───────────────────────────────────────────────
 
 export default function PublicProfilePage() {
   const params = useParams();
@@ -38,11 +99,7 @@ export default function PublicProfilePage() {
   const [notFound, setNotFound] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    fetchProfile();
-  }, [params.username]);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       const response = await fetch(`/api/users/${params.username}`);
       if (response.ok) {
@@ -56,17 +113,11 @@ export default function PublicProfilePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.username]);
 
-  const getInitials = (name) => {
-    if (!name) return "U";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const copyProfileUrl = async () => {
     const url = `${window.location.origin}/user/${user?.username}`;
@@ -75,7 +126,7 @@ export default function PublicProfilePage() {
       setCopied(true);
       toast.success("Link profil berhasil disalin!");
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch {
       toast.error("Gagal menyalin link profil");
     }
   };
@@ -85,116 +136,46 @@ export default function PublicProfilePage() {
     const shareData = {
       title: `${user?.name} - LernLang`,
       text: `Lihat progress belajar bahasa Inggris ${user?.name} di LernLang!`,
-      url: url,
+      url,
     };
-
     if (navigator.share) {
       try {
         await navigator.share(shareData);
       } catch (err) {
-        if (err.name !== "AbortError") {
-          copyProfileUrl();
-        }
+        if (err.name !== "AbortError") copyProfileUrl();
       }
     } else {
       copyProfileUrl();
     }
   };
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case "BENAR":
-        return (
-          <Badge className="bg-green-100 text-green-700 border-0">Benar</Badge>
-        );
-      case "HAMPIR_BENAR":
-        return (
-          <Badge className="bg-yellow-100 text-yellow-700 border-0">
-            Hampir Benar
-          </Badge>
-        );
-      case "SALAH":
-        return (
-          <Badge className="bg-red-100 text-red-700 border-0">Salah</Badge>
-        );
-      default:
-        return null;
-    }
-  };
+  // ── Loading ──
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Icon icon="svg-spinners:ring-resize" className="text-5xl text-indigo-500" />
+          <p className="font-black text-indigo-500 animate-pulse">Memuat profil...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const getDifficultyBadge = (difficulty) => {
-    switch (difficulty) {
-      case "EASY":
-        return (
-          <Badge variant="outline" className="text-green-600 border-green-300">
-            Mudah
-          </Badge>
-        );
-      case "MEDIUM":
-        return (
-          <Badge
-            variant="outline"
-            className="text-yellow-600 border-yellow-300"
-          >
-            Sedang
-          </Badge>
-        );
-      case "HARD":
-        return (
-          <Badge variant="outline" className="text-red-600 border-red-300">
-            Sulit
-          </Badge>
-        );
-      default:
-        return null;
-    }
-  };
-
-  const getAchievementStyle = (badgeColor) => {
-    switch (badgeColor) {
-      case "green":
-        return "bg-green-50 border-green-200 text-green-700";
-      case "yellow":
-        return "bg-yellow-50 border-yellow-200 text-yellow-700";
-      case "orange":
-        return "bg-orange-50 border-orange-200 text-orange-700";
-      case "red":
-        return "bg-red-50 border-red-200 text-red-700";
-      case "purple":
-        return "bg-purple-50 border-purple-200 text-purple-700";
-      case "pink":
-        return "bg-pink-50 border-pink-200 text-pink-700";
-      case "cyan":
-        return "bg-cyan-50 border-cyan-200 text-cyan-700";
-      case "emerald":
-        return "bg-emerald-50 border-emerald-200 text-emerald-700";
-      case "gold":
-        return "bg-amber-50 border-amber-200 text-amber-700";
-      default:
-        return "bg-blue-50 border-blue-200 text-blue-700";
-    }
-  };
-
-  if (loading) return <LoadingScreen />;
-
+  // ── Not Found ──
   if (notFound) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <div className="max-w-4xl mx-auto px-4 py-20 text-center">
-          <div className="text-6xl mb-4">😔</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Pengguna Tidak Ditemukan
-          </h1>
-          <p className="text-gray-600 mb-6">
-            Username &quot;{params.username}&quot; tidak ditemukan atau belum
-            terdaftar.
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center px-4">
+        <div className="bg-white rounded-3xl border-4 border-b-[6px] border-gray-200 p-10 text-center max-w-sm w-full shadow-sm">
+          <Icon icon="fluent-emoji:pensive-face" className="text-7xl mx-auto mb-4" />
+          <h1 className="text-2xl font-black text-gray-900 mb-2">Pengguna Tidak Ditemukan</h1>
+          <p className="text-gray-500 font-bold text-sm mb-6">
+            Username &quot;{params.username}&quot; tidak ditemukan atau belum terdaftar.
           </p>
           <Link href="/">
-            <Button>
-              <ArrowLeft className="w-4 h-4 mr-2" />
+            <button className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-black rounded-2xl border-b-4 border-indigo-700 transition-all hover:-translate-y-0.5 active:translate-y-1 active:border-b-0">
+              <Icon icon="solar:arrow-left-bold" />
               Kembali ke Beranda
-            </Button>
+            </button>
           </Link>
         </div>
       </div>
@@ -207,504 +188,350 @@ export default function PublicProfilePage() {
       : 0;
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-green-50">
-      <Navbar />
-
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-[#F8FAFC] font-[family-name:var(--font-nunito)]">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.4 }}
           className="space-y-6"
         >
-          {/* Profile Header Card */}
-          <Card className="overflow-hidden border-0 shadow-lg">
+
+          {/* ── Profile Header ── */}
+          <div className="bg-white rounded-3xl border-4 border-b-[6px] border-gray-200 shadow-sm overflow-hidden">
             {/* Cover Banner */}
-            <div className="relative h-32 sm:h-40 bg-linear-to-r from-primary via-green-500 to-emerald-600">
-              <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10"></div>
+            <div className="relative h-28 sm:h-36 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500">
+              <div className="absolute inset-0 opacity-20"
+                style={{ backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "40px 40px" }}
+              />
             </div>
 
-            {/* Profile Info */}
-            <CardContent className="relative pt-0 pb-6 px-4 sm:px-6">
-              <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-6">
-                {/* Avatar */}
+            <div className="px-5 sm:px-8 pb-6 relative">
+              {/* Avatar */}
+              <div className="-mt-14 sm:-mt-16 mb-4 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="-mt-16 sm:-mt-20"
                 >
-                  <Avatar className="w-32 h-32 sm:w-40 sm:h-40 border-4 border-white shadow-xl ring-4 ring-primary/10">
-                    <AvatarImage src={user?.avatar} alt={user?.name} />
-                    <AvatarFallback className="bg-primary text-primary-foreground text-4xl sm:text-5xl font-bold">
-                      {getInitials(user?.name)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <UserAvatar
+                    src={user?.avatar}
+                    name={user?.name}
+                    className="w-24 h-24 sm:w-28 sm:h-28 border-4 border-white shadow-lg ring-4 ring-indigo-100"
+                    size={112}
+                  />
                 </motion.div>
 
-                {/* Info & Actions */}
-                <div className="flex-1 text-center sm:text-left space-y-2 sm:mb-4">
-                  <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
-                      {user?.name}
-                    </h1>
-                    <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
-                      <p className="text-base sm:text-lg text-gray-500 font-medium">
-                        @{user?.username}
-                      </p>
-                      {user?.viewerRelationship?.isFriend && (
-                        <Badge className="bg-green-100 text-green-700 border-0">
-                          🤝 Teman
-                        </Badge>
-                      )}
-                      {!user?.viewerRelationship?.isFriend &&
-                        user?.viewerRelationship?.isFollowing && (
-                          <Badge variant="outline">Mengikuti</Badge>
-                        )}
-                    </div>
-                  </div>
-
-                  {user?.bio && (
-                    <p className="text-gray-700 text-sm sm:text-base max-w-2xl">
-                      {user.bio}
-                    </p>
-                  )}
-
-                  <div className="flex flex-wrap items-center gap-3 justify-center sm:justify-start text-sm text-gray-500">
-                    <div className="flex items-center gap-1.5">
-                      <Calendar className="w-4 h-4" />
-                      <span>
-                        Bergabung{" "}
-                        {user?.createdAt &&
-                          formatDistanceToNow(new Date(user.createdAt), {
-                            addSuffix: true,
-                            locale: idLocale,
-                          })}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        onClick={copyProfileUrl}
-                        variant="outline"
-                        size="sm"
-                        className="gap-2"
-                      >
-                        {copied ? (
-                          <>
-                            <Check className="w-4 h-4" />
-                            Tersalin
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-4 h-4" />
-                            Salin Link
-                          </>
-                        )}
-                      </Button>
-                      <Button
-                        onClick={shareProfile}
-                        size="sm"
-                        className="gap-2"
-                      >
-                        <Share2 className="w-4 h-4" />
-                        Bagikan
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-2">
-                    <Badge variant="secondary">
-                      {user?.followersCount || 0} Pengikut
-                    </Badge>
-                    <Badge variant="secondary">
-                      {user?.followingCount || 0} Mengikuti
-                    </Badge>
-                    <Badge variant="secondary">
-                      {user?.friendshipCount || 0} Teman
-                    </Badge>
-                  </div>
-
-                  {user?.viewerRelationship?.isFriend && (
-                    <div className="pt-2 flex justify-center sm:justify-start">
-                      <Link href={`/chats?userId=${user.id}`}>
-                        <Button className="gap-2">
-                          <MessageSquare className="w-4 h-4" />
-                          Chat Teman
-                        </Button>
-                      </Link>
-                    </div>
-                  )}
+                {/* Action Buttons */}
+                <div className="flex items-center gap-2 sm:mb-2">
+                  <button
+                    onClick={copyProfileUrl}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl border-4 border-b-[5px] border-gray-200 bg-white text-gray-700 font-black text-sm hover:-translate-y-0.5 active:translate-y-1 active:border-b-0 transition-all"
+                  >
+                    <Icon icon={copied ? "solar:check-circle-bold" : "solar:copy-bold"} className={copied ? "text-emerald-500" : "text-gray-500"} />
+                    {copied ? "Tersalin" : "Salin Link"}
+                  </button>
+                  <button
+                    onClick={shareProfile}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl border-4 border-b-[5px] border-indigo-700 bg-indigo-500 text-white font-black text-sm hover:-translate-y-0.5 active:translate-y-1 active:border-b-0 transition-all"
+                  >
+                    <Icon icon="solar:share-bold" />
+                    Bagikan
+                  </button>
                 </div>
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Stats Overview */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
-                <CardContent className="pt-6 text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 mb-3">
-                    <Target className="w-6 h-6 text-blue-600" />
+              {/* Name & Info */}
+              <div className="space-y-2">
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-black text-gray-900">{user?.name}</h1>
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                    <span className="text-gray-500 font-bold">@{user?.username}</span>
+                    {user?.viewerRelationship?.isFriend && (
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-700 border-2 border-emerald-300">
+                        🤝 Teman
+                      </span>
+                    )}
+                    {!user?.viewerRelationship?.isFriend && user?.viewerRelationship?.isFollowing && (
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-indigo-100 text-indigo-700 border-2 border-indigo-300">
+                        Mengikuti
+                      </span>
+                    )}
                   </div>
-                  <p className="text-3xl font-bold text-blue-600 mb-1">
-                    {user?.stats?.totalExercises || 0}
-                  </p>
-                  <p className="text-xs sm:text-sm text-gray-600 font-medium">
-                    Total Latihan
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
+                </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
-                <CardContent className="pt-6 text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 mb-3">
-                    <CheckCircle className="w-6 h-6 text-green-600" />
-                  </div>
-                  <p className="text-3xl font-bold text-green-600 mb-1">
-                    {user?.stats?.correctCount || 0}
-                  </p>
-                  <p className="text-xs sm:text-sm text-gray-600 font-medium">
-                    Jawaban Benar
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
+                {user?.bio && (
+                  <p className="text-gray-600 font-bold text-sm max-w-2xl">{user.bio}</p>
+                )}
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
-                <CardContent className="pt-6 text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-purple-100 mb-3">
-                    <Trophy className="w-6 h-6 text-purple-600" />
-                  </div>
-                  <p className="text-3xl font-bold text-purple-600 mb-1">
-                    {user?.stats?.averageScore || 0}
-                  </p>
-                  <p className="text-xs sm:text-sm text-gray-600 font-medium">
-                    Skor Rata-rata
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
+                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 font-bold">
+                  <span className="flex items-center gap-1.5">
+                    <Icon icon="solar:calendar-bold" className="text-indigo-400" />
+                    Bergabung{" "}
+                    {user?.createdAt &&
+                      formatDistanceToNow(new Date(user.createdAt), { addSuffix: true, locale: idLocale })}
+                  </span>
+                </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
-                <CardContent className="pt-6 text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-orange-100 mb-3">
-                    <TrendingUp className="w-6 h-6 text-orange-600" />
+                {/* Social Counts */}
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {[
+                    { val: user?.followersCount || 0, label: "Pengikut" },
+                    { val: user?.followingCount || 0, label: "Mengikuti" },
+                    { val: user?.friendshipCount || 0, label: "Teman" },
+                  ].map((item) => (
+                    <div key={item.label} className="rounded-2xl border-3 border-b-4 border-gray-200 bg-white px-3 py-1.5 text-center shadow-sm">
+                      <div className="text-base font-black text-indigo-600">{item.val}</div>
+                      <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{item.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Chat Button */}
+                {user?.viewerRelationship?.isFriend && (
+                  <div className="pt-1">
+                    <Link href={`/chats?userId=${user?.id}`}>
+                      <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white font-black rounded-2xl border-b-4 border-indigo-700 transition-all hover:-translate-y-0.5 active:translate-y-1 active:border-b-0 text-sm">
+                        <Icon icon="solar:chat-round-bold" />
+                        Chat Teman
+                      </button>
+                    </Link>
                   </div>
-                  <p className="text-3xl font-bold text-orange-600 mb-1">
-                    {accuracy}%
-                  </p>
-                  <p className="text-xs sm:text-sm text-gray-600 font-medium">
-                    Akurasi
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* ── Stats Grid ── */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <StatCard
+              icon="solar:target-bold"
+              iconClass="text-indigo-500"
+              value={user?.stats?.totalExercises || 0}
+              label="Total Latihan"
+              delay={0.1}
+              bgClass="bg-[#EEF2FF]"
+              valueClass="text-indigo-600"
+            />
+            <StatCard
+              icon="solar:check-circle-bold"
+              iconClass="text-emerald-500"
+              value={user?.stats?.correctCount || 0}
+              label="Jawaban Benar"
+              delay={0.2}
+              bgClass="bg-[#F0FDF4]"
+              valueClass="text-emerald-600"
+            />
+            <StatCard
+              icon="solar:cup-star-bold"
+              iconClass="text-amber-500"
+              value={user?.stats?.averageScore || 0}
+              label="Skor Rata-rata"
+              delay={0.3}
+              bgClass="bg-amber-50"
+              valueClass="text-amber-600"
+            />
+            <StatCard
+              icon="solar:chart-2-bold"
+              iconClass="text-violet-500"
+              value={`${accuracy}%`}
+              label="Akurasi"
+              delay={0.4}
+              bgClass="bg-violet-50"
+              valueClass="text-violet-600"
+            />
+          </div>
+
+          {/* ── Main Content Grid ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
             {/* Difficulty Breakdown */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Zap className="w-4 h-4" />
-                  Tingkat Kesulitan
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
+            <SectionCard title="Tingkat Kesulitan" icon="solar:bolt-bold">
+              <div className="space-y-4">
                 {[
-                  {
-                    key: "EASY",
-                    label: "Mudah",
-                    color: "bg-green-500",
-                    bgColor: "bg-green-100",
-                  },
-                  {
-                    key: "MEDIUM",
-                    label: "Sedang",
-                    color: "bg-yellow-500",
-                    bgColor: "bg-yellow-100",
-                  },
-                  {
-                    key: "HARD",
-                    label: "Sulit",
-                    color: "bg-red-500",
-                    bgColor: "bg-red-100",
-                  },
+                  { key: "EASY", label: "Mudah", bar: "bg-emerald-500", track: "bg-emerald-100" },
+                  { key: "MEDIUM", label: "Sedang", bar: "bg-amber-500", track: "bg-amber-100" },
+                  { key: "HARD", label: "Sulit", bar: "bg-red-500", track: "bg-red-100" },
                 ].map((diff) => {
-                  const count =
-                    user?.stats?.difficultyBreakdown?.[diff.key] || 0;
+                  const count = user?.stats?.difficultyBreakdown?.[diff.key] || 0;
                   const total = user?.stats?.totalExercises || 1;
                   const percent = Math.round((count / total) * 100);
                   return (
                     <div key={diff.key}>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="font-medium">{diff.label}</span>
-                        <span className="text-gray-500">
-                          {count} ({percent}%)
-                        </span>
+                      <div className="flex justify-between text-sm font-bold mb-1.5">
+                        <span className="text-gray-700">{diff.label}</span>
+                        <span className="text-gray-500">{count} ({percent}%)</span>
                       </div>
-                      <div className={`h-2 rounded-full ${diff.bgColor}`}>
+                      <div className={`h-3 rounded-full ${diff.track}`}>
                         <div
-                          className={`h-full rounded-full ${diff.color} transition-all duration-500`}
+                          className={`h-full rounded-full ${diff.bar} transition-all duration-700`}
                           style={{ width: `${percent}%` }}
-                        ></div>
+                        />
                       </div>
                     </div>
                   );
                 })}
-              </CardContent>
-            </Card>
+              </div>
+            </SectionCard>
 
-            {/* Learning Methods Breakdown */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <BookOpen className="w-4 h-4" />
-                  Metode Belajar
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            {/* Learning Methods */}
+            <SectionCard title="Metode Belajar" icon="solar:book-2-bold">
+              <div className="space-y-3">
                 {[
-                  {
-                    key: "vocabulary",
-                    label: "Vocabulary",
-                    icon: "📚",
-                  },
-                  {
-                    key: "listening",
-                    label: "Listening",
-                    icon: "🎧",
-                  },
-                  {
-                    key: "grammar",
-                    label: "Grammar",
-                    icon: "✏️",
-                  },
+                  { key: "vocabulary", label: "Vocabulary", icon: "fluent-emoji:books", bg: "bg-indigo-50", text: "text-indigo-600" },
+                  { key: "listening", label: "Listening", icon: "fluent-emoji:headphone", bg: "bg-blue-50", text: "text-blue-600" },
+                  { key: "grammar", label: "Grammar", icon: "fluent-emoji:pencil", bg: "bg-amber-50", text: "text-amber-600" },
                 ].map((method) => {
                   const count = user?.stats?.methodBreakdown?.[method.key] || 0;
                   return (
                     <div
                       key={method.key}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      className={`flex items-center justify-between p-3 ${method.bg} rounded-2xl border-2 border-b-4 border-gray-100`}
                     >
                       <div className="flex items-center gap-3">
-                        <span className="text-lg">{method.icon}</span>
-                        <span className="font-medium text-sm">
-                          {method.label}
-                        </span>
+                        <Icon icon={method.icon} className="text-2xl" />
+                        <span className="font-black text-sm text-gray-700">{method.label}</span>
                       </div>
-                      <Badge variant="secondary" className="font-bold">
-                        {count}
-                      </Badge>
+                      <span className={`font-black text-base ${method.text}`}>{count}</span>
                     </div>
                   );
                 })}
-              </CardContent>
-            </Card>
+              </div>
+            </SectionCard>
 
             {/* Achievements */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Award className="w-4 h-4" />
-                  Pencapaian
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {user?.achievementSummary ? (
-                  <div className="space-y-4">
-                    {/* Summary Stats */}
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="rounded-lg border bg-gradient-to-br from-blue-50 to-white p-2 text-center">
-                        <p className="text-lg font-bold text-blue-600">
-                          {user.achievementSummary.count || 0}
-                        </p>
-                        <p className="text-xs text-gray-600">Terbuka</p>
+            <SectionCard title="Pencapaian" icon="solar:medal-ribbons-star-bold">
+              {user?.achievementSummary ? (
+                <div className="space-y-4">
+                  {/* Summary */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { val: user.achievementSummary.count || 0, label: "Terbuka", bg: "bg-[#EEF2FF]", text: "text-indigo-600" },
+                      { val: user.achievementSummary.totalPoints || 0, label: "Poin", bg: "bg-amber-50", text: "text-amber-600" },
+                      { val: `${user.achievementSummary.percentage || 0}%`, label: "Progres", bg: "bg-[#F0FDF4]", text: "text-emerald-600" },
+                    ].map((s) => (
+                      <div key={s.label} className={`rounded-2xl border-2 border-b-4 border-gray-100 ${s.bg} p-2 text-center`}>
+                        <p className={`text-lg font-black ${s.text}`}>{s.val}</p>
+                        <p className="text-[10px] font-bold text-gray-500">{s.label}</p>
                       </div>
-                      <div className="rounded-lg border bg-gradient-to-br from-amber-50 to-white p-2 text-center">
-                        <p className="text-lg font-bold text-amber-600">
-                          {user.achievementSummary.totalPoints || 0}
-                        </p>
-                        <p className="text-xs text-gray-600">Poin</p>
-                      </div>
-                      <div className="rounded-lg border bg-gradient-to-br from-emerald-50 to-white p-2 text-center">
-                        <p className="text-lg font-bold text-emerald-600">
-                          {user.achievementSummary.percentage || 0}%
-                        </p>
-                        <p className="text-xs text-gray-600">Progres</p>
-                      </div>
-                    </div>
+                    ))}
+                  </div>
 
-                    {/* Progress Bar */}
+                  {/* Progress Bar */}
+                  <div>
+                    <div className="flex justify-between text-xs font-bold text-gray-500 mb-1">
+                      <span>Progres</span>
+                      <span>{user.achievementSummary.unlocked || 0}/{user.achievementSummary.total || 0}</span>
+                    </div>
+                    <div className="h-3 rounded-full bg-gray-100">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-emerald-500 transition-all duration-700"
+                        style={{ width: `${user.achievementSummary.percentage || 0}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Unlocked */}
+                  {user.achievements?.length > 0 && (
                     <div>
-                      <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-                        <span>Progres</span>
-                        <span>
-                          {user.achievementSummary.unlocked || 0}/
-                          {user.achievementSummary.total || 0}
-                        </span>
-                      </div>
-                      <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-primary to-emerald-500"
-                          style={{
-                            width: `${user.achievementSummary.percentage || 0}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Unlocked Achievements */}
-                    {user.achievements && user.achievements.length > 0 ? (
-                      <div className="space-y-2">
-                        <p className="text-xs font-medium text-gray-600 mb-1">
-                          Dicapai ({user.achievements.length})
-                        </p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
-                          {user.achievements.map((ach) => (
-                            <div
-                              key={ach.type}
-                              className={`rounded-lg border p-2.5 text-xs shadow-sm ${getAchievementStyle(ach.badgeColor)}`}
-                            >
-                              <div className="flex items-start gap-2">
-                                <span className="text-base leading-none">
-                                  {ach.icon || "🎯"}
-                                </span>
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <p className="font-semibold truncate">
-                                      {ach.title}
-                                    </p>
-                                    <Badge
-                                      variant="secondary"
-                                      className="ml-auto shrink-0 text-[10px] px-1.5 py-0"
-                                    >
-                                      +{ach.points}
-                                    </Badge>
-                                  </div>
-                                  <p className="mt-1 line-clamp-2 text-[11px] text-gray-600">
-                                    {ach.description}
-                                  </p>
+                      <p className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">
+                        Dicapai ({user.achievements.length})
+                      </p>
+                      <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto pr-1">
+                        {user.achievements.map((ach) => (
+                          <div
+                            key={ach.type}
+                            className={`rounded-2xl border-2 border-b-4 p-2.5 text-xs ${getAchievementStyle(ach.badgeColor)}`}
+                          >
+                            <div className="flex items-start gap-2">
+                              <span className="text-base leading-none">{ach.icon || "🎯"}</span>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1">
+                                  <p className="font-black truncate">{ach.title}</p>
+                                  <span className="ml-auto shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded-full bg-white/60">
+                                    +{ach.points}
+                                  </span>
                                 </div>
+                                <p className="mt-0.5 line-clamp-2 text-[11px] opacity-80">{ach.description}</p>
                               </div>
                             </div>
-                          ))}
-                        </div>
+                          </div>
+                        ))}
                       </div>
-                    ) : null}
+                    </div>
+                  )}
 
-                    {/* Next Achievements */}
-                    {user.achievementSummary.nextAchievements &&
-                    user.achievementSummary.nextAchievements.length > 0 ? (
-                      <div className="space-y-1 border-t pt-2">
-                        <p className="text-xs font-medium text-gray-600 mb-1">
-                          Berikutnya
-                        </p>
-                        {user.achievementSummary.nextAchievements
-                          .slice(0, 2)
-                          .map((ach) => (
-                            <div
-                              key={ach.type}
-                              className="text-xs p-2 rounded bg-gray-50/50 flex items-center gap-2 opacity-60"
-                            >
-                              <span>{ach.icon || "🎯"}</span>
-                              <span className="font-medium truncate">
-                                {ach.title}
-                              </span>
-                            </div>
-                          ))}
-                      </div>
-                    ) : null}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500 text-center py-4">
-                    Belum ada data pencapaian
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+                  {/* Next Achievements */}
+                  {user.achievementSummary.nextAchievements?.length > 0 && (
+                    <div className="border-t-2 border-gray-100 pt-3">
+                      <p className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Berikutnya</p>
+                      {user.achievementSummary.nextAchievements.slice(0, 2).map((ach) => (
+                        <div key={ach.type} className="flex items-center gap-2 p-2 rounded-xl bg-gray-50 opacity-60 mb-1.5">
+                          <span>{ach.icon || "🎯"}</span>
+                          <span className="font-black text-xs truncate text-gray-600">{ach.title}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <Icon icon="solar:medal-ribbons-star-linear" className="text-4xl text-gray-300 mx-auto mb-2" />
+                  <p className="text-sm font-bold text-gray-400">Belum ada data pencapaian</p>
+                </div>
+              )}
+            </SectionCard>
 
             {/* Recent Activity */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Star className="w-4 h-4" />
-                  Aktivitas Terbaru
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+            <div className="lg:col-span-3">
+              <SectionCard title="Aktivitas Terbaru" icon="solar:history-bold">
                 {!user?.recentActivity || user.recentActivity.length === 0 ? (
-                  <p className="text-sm text-gray-500 text-center py-4">
-                    Belum ada aktivitas
-                  </p>
+                  <div className="text-center py-8">
+                    <Icon icon="solar:clipboard-list-linear" className="text-5xl text-gray-300 mx-auto mb-2" />
+                    <p className="text-sm font-bold text-gray-400">Belum ada aktivitas</p>
+                  </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {user.recentActivity.map((activity, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-2xl border-2 border-b-4 border-gray-100"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="text-sm">
-                            {getStatusBadge(activity.status)}
+                          <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0">
+                            <Icon icon="solar:book-open-bold" className="text-indigo-500 text-lg" />
                           </div>
                           <div>
-                            <p className="text-sm font-medium">
-                              {activity.mode === "EN_ID"
-                                ? "EN → ID"
-                                : "ID → EN"}
+                            <p className="text-sm font-black text-gray-800">
+                              {activity.mode === "EN_ID" ? "EN → ID" : "ID → EN"}
                             </p>
-                            <p className="text-xs text-gray-500">
-                              {format(
-                                new Date(activity.createdAt),
-                                "dd MMM yyyy",
-                                { locale: idLocale },
-                              )}
+                            <p className="text-[11px] font-bold text-gray-400">
+                              {format(new Date(activity.createdAt), "dd MMM yyyy", { locale: idLocale })}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          {getDifficultyBadge(activity.difficulty)}
-                          <span className="font-bold text-sm">
-                            {activity.score}
-                          </span>
+                        <div className="flex flex-col items-end gap-1">
+                          {getStatusBadge(activity.status)}
+                          <div className="flex items-center gap-1.5">
+                            {getDifficultyBadge(activity.difficulty)}
+                            <span className="font-black text-sm text-gray-700">{activity.score}</span>
+                          </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </SectionCard>
+            </div>
+
           </div>
         </motion.div>
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-8 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-sm">
+      <footer className="mt-12 py-8 border-t-4 border-gray-200 bg-white">
+        <div className="max-w-5xl mx-auto px-4 text-center">
+          <p className="text-sm font-bold text-gray-400">
             © {new Date().getFullYear()} LernLang. All rights reserved.
           </p>
         </div>
