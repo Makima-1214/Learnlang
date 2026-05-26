@@ -18,10 +18,16 @@ const getStatusBadge = (status) => {
     HAMPIR_BENAR: "bg-amber-100 text-amber-700 border-2 border-amber-300",
     SALAH: "bg-red-100 text-red-700 border-2 border-red-300",
   };
-  const label = { BENAR: "Benar", HAMPIR_BENAR: "Hampir Benar", SALAH: "Salah" };
+  const label = {
+    BENAR: "Benar",
+    HAMPIR_BENAR: "Hampir Benar",
+    SALAH: "Salah",
+  };
   if (!map[status]) return null;
   return (
-    <span className={`px-2 py-0.5 rounded-full text-[11px] font-black ${map[status]}`}>
+    <span
+      className={`px-2 py-0.5 rounded-full text-[11px] font-black ${map[status]}`}
+    >
       {label[status]}
     </span>
   );
@@ -36,7 +42,9 @@ const getDifficultyBadge = (difficulty) => {
   const label = { EASY: "Mudah", MEDIUM: "Sedang", HARD: "Sulit" };
   if (!map[difficulty]) return null;
   return (
-    <span className={`px-2 py-0.5 rounded-full text-[11px] font-black ${map[difficulty]}`}>
+    <span
+      className={`px-2 py-0.5 rounded-full text-[11px] font-black ${map[difficulty]}`}
+    >
       {label[difficulty]}
     </span>
   );
@@ -59,7 +67,15 @@ const getAchievementStyle = (badgeColor) => {
 
 // ─── Stat Card ───────────────────────────────────────────────
 
-function StatCard({ icon, iconClass, value, label, delay, bgClass, valueClass }) {
+function StatCard({
+  icon,
+  iconClass,
+  value,
+  label,
+  delay,
+  bgClass,
+  valueClass,
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -71,7 +87,9 @@ function StatCard({ icon, iconClass, value, label, delay, bgClass, valueClass })
         <Icon icon={icon} className={`text-2xl ${iconClass}`} />
       </div>
       <p className={`text-3xl font-black ${valueClass}`}>{value}</p>
-      <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mt-0.5 text-center">{label}</p>
+      <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mt-0.5 text-center">
+        {label}
+      </p>
     </motion.div>
   );
 }
@@ -154,8 +172,13 @@ export default function PublicProfilePage() {
     return (
       <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <Icon icon="svg-spinners:ring-resize" className="text-5xl text-indigo-500" />
-          <p className="font-black text-indigo-500 animate-pulse">Memuat profil...</p>
+          <Icon
+            icon="svg-spinners:ring-resize"
+            className="text-5xl text-indigo-500"
+          />
+          <p className="font-black text-indigo-500 animate-pulse">
+            Memuat profil...
+          </p>
         </div>
       </div>
     );
@@ -166,10 +189,16 @@ export default function PublicProfilePage() {
     return (
       <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center px-4">
         <div className="bg-white rounded-3xl border-4 border-b-[6px] border-gray-200 p-10 text-center max-w-sm w-full shadow-sm">
-          <Icon icon="fluent-emoji:pensive-face" className="text-7xl mx-auto mb-4" />
-          <h1 className="text-2xl font-black text-gray-900 mb-2">Pengguna Tidak Ditemukan</h1>
+          <Icon
+            icon="fluent-emoji:pensive-face"
+            className="text-7xl mx-auto mb-4"
+          />
+          <h1 className="text-2xl font-black text-gray-900 mb-2">
+            Pengguna Tidak Ditemukan
+          </h1>
           <p className="text-gray-500 font-bold text-sm mb-6">
-            Username &quot;{params.username}&quot; tidak ditemukan atau belum terdaftar.
+            Username &quot;{params.username}&quot; tidak ditemukan atau belum
+            terdaftar.
           </p>
           <Link href="/">
             <button className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-black rounded-2xl border-b-4 border-indigo-700 transition-all hover:-translate-y-0.5 active:translate-y-1 active:border-b-0">
@@ -182,10 +211,7 @@ export default function PublicProfilePage() {
     );
   }
 
-  const accuracy =
-    user?.stats?.totalExercises > 0
-      ? Math.round((user.stats.correctCount / user.stats.totalExercises) * 100)
-      : 0;
+  const accuracy = user?.stats?.accuracy ?? 0;
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-[family-name:var(--font-nunito)]">
@@ -196,13 +222,17 @@ export default function PublicProfilePage() {
           transition={{ duration: 0.4 }}
           className="space-y-6"
         >
-
           {/* ── Profile Header ── */}
           <div className="bg-white rounded-3xl border-4 border-b-[6px] border-gray-200 shadow-sm overflow-hidden">
             {/* Cover Banner */}
             <div className="relative h-28 sm:h-36 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500">
-              <div className="absolute inset-0 opacity-20"
-                style={{ backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "40px 40px" }}
+              <div
+                className="absolute inset-0 opacity-20"
+                style={{
+                  backgroundImage:
+                    "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)",
+                  backgroundSize: "40px 40px",
+                }}
               />
             </div>
 
@@ -228,7 +258,12 @@ export default function PublicProfilePage() {
                     onClick={copyProfileUrl}
                     className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl border-4 border-b-[5px] border-gray-200 bg-white text-gray-700 font-black text-sm hover:-translate-y-0.5 active:translate-y-1 active:border-b-0 transition-all"
                   >
-                    <Icon icon={copied ? "solar:check-circle-bold" : "solar:copy-bold"} className={copied ? "text-emerald-500" : "text-gray-500"} />
+                    <Icon
+                      icon={
+                        copied ? "solar:check-circle-bold" : "solar:copy-bold"
+                      }
+                      className={copied ? "text-emerald-500" : "text-gray-500"}
+                    />
                     {copied ? "Tersalin" : "Salin Link"}
                   </button>
                   <button
@@ -244,32 +279,45 @@ export default function PublicProfilePage() {
               {/* Name & Info */}
               <div className="space-y-2">
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-black text-gray-900">{user?.name}</h1>
+                  <h1 className="text-2xl sm:text-3xl font-black text-gray-900">
+                    {user?.name}
+                  </h1>
                   <div className="flex flex-wrap items-center gap-2 mt-1">
-                    <span className="text-gray-500 font-bold">@{user?.username}</span>
+                    <span className="text-gray-500 font-bold">
+                      @{user?.username}
+                    </span>
                     {user?.viewerRelationship?.isFriend && (
                       <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-700 border-2 border-emerald-300">
                         🤝 Teman
                       </span>
                     )}
-                    {!user?.viewerRelationship?.isFriend && user?.viewerRelationship?.isFollowing && (
-                      <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-indigo-100 text-indigo-700 border-2 border-indigo-300">
-                        Mengikuti
-                      </span>
-                    )}
+                    {!user?.viewerRelationship?.isFriend &&
+                      user?.viewerRelationship?.isFollowing && (
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-indigo-100 text-indigo-700 border-2 border-indigo-300">
+                          Mengikuti
+                        </span>
+                      )}
                   </div>
                 </div>
 
                 {user?.bio && (
-                  <p className="text-gray-600 font-bold text-sm max-w-2xl">{user.bio}</p>
+                  <p className="text-gray-600 font-bold text-sm max-w-2xl">
+                    {user.bio}
+                  </p>
                 )}
 
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 font-bold">
                   <span className="flex items-center gap-1.5">
-                    <Icon icon="solar:calendar-bold" className="text-indigo-400" />
+                    <Icon
+                      icon="solar:calendar-bold"
+                      className="text-indigo-400"
+                    />
                     Bergabung{" "}
                     {user?.createdAt &&
-                      formatDistanceToNow(new Date(user.createdAt), { addSuffix: true, locale: idLocale })}
+                      formatDistanceToNow(new Date(user.createdAt), {
+                        addSuffix: true,
+                        locale: idLocale,
+                      })}
                   </span>
                 </div>
 
@@ -280,9 +328,16 @@ export default function PublicProfilePage() {
                     { val: user?.followingCount || 0, label: "Mengikuti" },
                     { val: user?.friendshipCount || 0, label: "Teman" },
                   ].map((item) => (
-                    <div key={item.label} className="rounded-2xl border-3 border-b-4 border-gray-200 bg-white px-3 py-1.5 text-center shadow-sm">
-                      <div className="text-base font-black text-indigo-600">{item.val}</div>
-                      <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{item.label}</div>
+                    <div
+                      key={item.label}
+                      className="rounded-2xl border-3 border-b-4 border-gray-200 bg-white px-3 py-1.5 text-center shadow-sm"
+                    >
+                      <div className="text-base font-black text-indigo-600">
+                        {item.val}
+                      </div>
+                      <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                        {item.label}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -316,7 +371,11 @@ export default function PublicProfilePage() {
             <StatCard
               icon="solar:check-circle-bold"
               iconClass="text-emerald-500"
-              value={user?.stats?.correctCount || 0}
+              value={
+                user?.stats?.totalCorrectAnswers ??
+                user?.stats?.correctCount ??
+                0
+              }
               label="Jawaban Benar"
               delay={0.2}
               bgClass="bg-[#F0FDF4]"
@@ -344,23 +403,40 @@ export default function PublicProfilePage() {
 
           {/* ── Main Content Grid ── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-
             {/* Difficulty Breakdown */}
             <SectionCard title="Tingkat Kesulitan" icon="solar:bolt-bold">
               <div className="space-y-4">
                 {[
-                  { key: "EASY", label: "Mudah", bar: "bg-emerald-500", track: "bg-emerald-100" },
-                  { key: "MEDIUM", label: "Sedang", bar: "bg-amber-500", track: "bg-amber-100" },
-                  { key: "HARD", label: "Sulit", bar: "bg-red-500", track: "bg-red-100" },
+                  {
+                    key: "EASY",
+                    label: "Mudah",
+                    bar: "bg-emerald-500",
+                    track: "bg-emerald-100",
+                  },
+                  {
+                    key: "MEDIUM",
+                    label: "Sedang",
+                    bar: "bg-amber-500",
+                    track: "bg-amber-100",
+                  },
+                  {
+                    key: "HARD",
+                    label: "Sulit",
+                    bar: "bg-red-500",
+                    track: "bg-red-100",
+                  },
                 ].map((diff) => {
-                  const count = user?.stats?.difficultyBreakdown?.[diff.key] || 0;
+                  const count =
+                    user?.stats?.difficultyBreakdown?.[diff.key] || 0;
                   const total = user?.stats?.totalExercises || 1;
                   const percent = Math.round((count / total) * 100);
                   return (
                     <div key={diff.key}>
                       <div className="flex justify-between text-sm font-bold mb-1.5">
                         <span className="text-gray-700">{diff.label}</span>
-                        <span className="text-gray-500">{count} ({percent}%)</span>
+                        <span className="text-gray-500">
+                          {count} ({percent}%)
+                        </span>
                       </div>
                       <div className={`h-3 rounded-full ${diff.track}`}>
                         <div
@@ -378,9 +454,27 @@ export default function PublicProfilePage() {
             <SectionCard title="Metode Belajar" icon="solar:book-2-bold">
               <div className="space-y-3">
                 {[
-                  { key: "vocabulary", label: "Vocabulary", icon: "fluent-emoji:books", bg: "bg-indigo-50", text: "text-indigo-600" },
-                  { key: "listening", label: "Listening", icon: "fluent-emoji:headphone", bg: "bg-blue-50", text: "text-blue-600" },
-                  { key: "grammar", label: "Grammar", icon: "fluent-emoji:pencil", bg: "bg-amber-50", text: "text-amber-600" },
+                  {
+                    key: "vocabulary",
+                    label: "Vocabulary",
+                    icon: "fluent-emoji:books",
+                    bg: "bg-indigo-50",
+                    text: "text-indigo-600",
+                  },
+                  {
+                    key: "listening",
+                    label: "Listening",
+                    icon: "fluent-emoji:headphone",
+                    bg: "bg-blue-50",
+                    text: "text-blue-600",
+                  },
+                  {
+                    key: "grammar",
+                    label: "Grammar",
+                    icon: "fluent-emoji:pencil",
+                    bg: "bg-amber-50",
+                    text: "text-amber-600",
+                  },
                 ].map((method) => {
                   const count = user?.stats?.methodBreakdown?.[method.key] || 0;
                   return (
@@ -390,9 +484,13 @@ export default function PublicProfilePage() {
                     >
                       <div className="flex items-center gap-3">
                         <Icon icon={method.icon} className="text-2xl" />
-                        <span className="font-black text-sm text-gray-700">{method.label}</span>
+                        <span className="font-black text-sm text-gray-700">
+                          {method.label}
+                        </span>
                       </div>
-                      <span className={`font-black text-base ${method.text}`}>{count}</span>
+                      <span className={`font-black text-base ${method.text}`}>
+                        {count}
+                      </span>
                     </div>
                   );
                 })}
@@ -400,19 +498,44 @@ export default function PublicProfilePage() {
             </SectionCard>
 
             {/* Achievements */}
-            <SectionCard title="Pencapaian" icon="solar:medal-ribbons-star-bold">
+            <SectionCard
+              title="Pencapaian"
+              icon="solar:medal-ribbons-star-bold"
+            >
               {user?.achievementSummary ? (
                 <div className="space-y-4">
                   {/* Summary */}
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { val: user.achievementSummary.count || 0, label: "Terbuka", bg: "bg-[#EEF2FF]", text: "text-indigo-600" },
-                      { val: user.achievementSummary.totalPoints || 0, label: "Poin", bg: "bg-amber-50", text: "text-amber-600" },
-                      { val: `${user.achievementSummary.percentage || 0}%`, label: "Progres", bg: "bg-[#F0FDF4]", text: "text-emerald-600" },
+                      {
+                        val: user.achievementSummary.count || 0,
+                        label: "Terbuka",
+                        bg: "bg-[#EEF2FF]",
+                        text: "text-indigo-600",
+                      },
+                      {
+                        val: user.achievementSummary.totalPoints || 0,
+                        label: "Poin",
+                        bg: "bg-amber-50",
+                        text: "text-amber-600",
+                      },
+                      {
+                        val: `${user.achievementSummary.percentage || 0}%`,
+                        label: "Progres",
+                        bg: "bg-[#F0FDF4]",
+                        text: "text-emerald-600",
+                      },
                     ].map((s) => (
-                      <div key={s.label} className={`rounded-2xl border-2 border-b-4 border-gray-100 ${s.bg} p-2 text-center`}>
-                        <p className={`text-lg font-black ${s.text}`}>{s.val}</p>
-                        <p className="text-[10px] font-bold text-gray-500">{s.label}</p>
+                      <div
+                        key={s.label}
+                        className={`rounded-2xl border-2 border-b-4 border-gray-100 ${s.bg} p-2 text-center`}
+                      >
+                        <p className={`text-lg font-black ${s.text}`}>
+                          {s.val}
+                        </p>
+                        <p className="text-[10px] font-bold text-gray-500">
+                          {s.label}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -421,12 +544,17 @@ export default function PublicProfilePage() {
                   <div>
                     <div className="flex justify-between text-xs font-bold text-gray-500 mb-1">
                       <span>Progres</span>
-                      <span>{user.achievementSummary.unlocked || 0}/{user.achievementSummary.total || 0}</span>
+                      <span>
+                        {user.achievementSummary.unlocked || 0}/
+                        {user.achievementSummary.total || 0}
+                      </span>
                     </div>
                     <div className="h-3 rounded-full bg-gray-100">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-emerald-500 transition-all duration-700"
-                        style={{ width: `${user.achievementSummary.percentage || 0}%` }}
+                        style={{
+                          width: `${user.achievementSummary.percentage || 0}%`,
+                        }}
                       />
                     </div>
                   </div>
@@ -444,15 +572,21 @@ export default function PublicProfilePage() {
                             className={`rounded-2xl border-2 border-b-4 p-2.5 text-xs ${getAchievementStyle(ach.badgeColor)}`}
                           >
                             <div className="flex items-start gap-2">
-                              <span className="text-base leading-none">{ach.icon || "🎯"}</span>
+                              <span className="text-base leading-none">
+                                {ach.icon || "🎯"}
+                              </span>
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1">
-                                  <p className="font-black truncate">{ach.title}</p>
+                                  <p className="font-black truncate">
+                                    {ach.title}
+                                  </p>
                                   <span className="ml-auto shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded-full bg-white/60">
                                     +{ach.points}
                                   </span>
                                 </div>
-                                <p className="mt-0.5 line-clamp-2 text-[11px] opacity-80">{ach.description}</p>
+                                <p className="mt-0.5 line-clamp-2 text-[11px] opacity-80">
+                                  {ach.description}
+                                </p>
                               </div>
                             </div>
                           </div>
@@ -464,20 +598,34 @@ export default function PublicProfilePage() {
                   {/* Next Achievements */}
                   {user.achievementSummary.nextAchievements?.length > 0 && (
                     <div className="border-t-2 border-gray-100 pt-3">
-                      <p className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Berikutnya</p>
-                      {user.achievementSummary.nextAchievements.slice(0, 2).map((ach) => (
-                        <div key={ach.type} className="flex items-center gap-2 p-2 rounded-xl bg-gray-50 opacity-60 mb-1.5">
-                          <span>{ach.icon || "🎯"}</span>
-                          <span className="font-black text-xs truncate text-gray-600">{ach.title}</span>
-                        </div>
-                      ))}
+                      <p className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">
+                        Berikutnya
+                      </p>
+                      {user.achievementSummary.nextAchievements
+                        .slice(0, 2)
+                        .map((ach) => (
+                          <div
+                            key={ach.type}
+                            className="flex items-center gap-2 p-2 rounded-xl bg-gray-50 opacity-60 mb-1.5"
+                          >
+                            <span>{ach.icon || "🎯"}</span>
+                            <span className="font-black text-xs truncate text-gray-600">
+                              {ach.title}
+                            </span>
+                          </div>
+                        ))}
                     </div>
                   )}
                 </div>
               ) : (
                 <div className="text-center py-6">
-                  <Icon icon="solar:medal-ribbons-star-linear" className="text-4xl text-gray-300 mx-auto mb-2" />
-                  <p className="text-sm font-bold text-gray-400">Belum ada data pencapaian</p>
+                  <Icon
+                    icon="solar:medal-ribbons-star-linear"
+                    className="text-4xl text-gray-300 mx-auto mb-2"
+                  />
+                  <p className="text-sm font-bold text-gray-400">
+                    Belum ada data pencapaian
+                  </p>
                 </div>
               )}
             </SectionCard>
@@ -487,8 +635,13 @@ export default function PublicProfilePage() {
               <SectionCard title="Aktivitas Terbaru" icon="solar:history-bold">
                 {!user?.recentActivity || user.recentActivity.length === 0 ? (
                   <div className="text-center py-8">
-                    <Icon icon="solar:clipboard-list-linear" className="text-5xl text-gray-300 mx-auto mb-2" />
-                    <p className="text-sm font-bold text-gray-400">Belum ada aktivitas</p>
+                    <Icon
+                      icon="solar:clipboard-list-linear"
+                      className="text-5xl text-gray-300 mx-auto mb-2"
+                    />
+                    <p className="text-sm font-bold text-gray-400">
+                      Belum ada aktivitas
+                    </p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -499,22 +652,38 @@ export default function PublicProfilePage() {
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0">
-                            <Icon icon="solar:book-open-bold" className="text-indigo-500 text-lg" />
+                            <Icon
+                              icon="solar:book-open-bold"
+                              className="text-indigo-500 text-lg"
+                            />
                           </div>
                           <div>
                             <p className="text-sm font-black text-gray-800">
-                              {activity.mode === "EN_ID" ? "EN → ID" : "ID → EN"}
+                              {activity.methodLabel ||
+                                activity.method ||
+                                "Sesi Belajar"}
                             </p>
                             <p className="text-[11px] font-bold text-gray-400">
-                              {format(new Date(activity.createdAt), "dd MMM yyyy", { locale: idLocale })}
+                              {activity.level
+                                ? `Level ${activity.level}`
+                                : "Learning Session"}{" "}
+                              •{" "}
+                              {format(
+                                new Date(activity.createdAt),
+                                "dd MMM yyyy",
+                                { locale: idLocale },
+                              )}
                             </p>
                           </div>
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                          {getStatusBadge(activity.status)}
+                          <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-indigo-100 text-indigo-700 border-2 border-indigo-300">
+                            {activity.score}/{activity.total}
+                          </span>
                           <div className="flex items-center gap-1.5">
-                            {getDifficultyBadge(activity.difficulty)}
-                            <span className="font-black text-sm text-gray-700">{activity.score}</span>
+                            <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-700 border-2 border-emerald-300">
+                              {activity.accuracy}%
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -523,7 +692,6 @@ export default function PublicProfilePage() {
                 )}
               </SectionCard>
             </div>
-
           </div>
         </motion.div>
       </main>
