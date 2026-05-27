@@ -20,8 +20,14 @@ export async function GET() {
       where: { role: "ADMIN" },
     });
 
-    // Get total exercises/histories
-    const totalExercises = await prisma.history.count();
+    // Get total completed learning sessions
+    const totalExercises = await prisma.learningSession.count({
+      where: {
+        completedAt: {
+          not: null,
+        },
+      },
+    });
 
     // Get active users (users who have done exercises in last 7 days)
     const sevenDaysAgo = new Date();
@@ -29,7 +35,7 @@ export async function GET() {
 
     const activeUsers = await prisma.user.count({
       where: {
-        histories: {
+        learningSessions: {
           some: {
             createdAt: {
               gte: sevenDaysAgo,
@@ -42,7 +48,7 @@ export async function GET() {
     // Get recent active learners with their exercise count
     const recentLearners = await prisma.user.findMany({
       where: {
-        histories: {
+        learningSessions: {
           some: {
             createdAt: {
               gte: sevenDaysAgo,
@@ -57,10 +63,10 @@ export async function GET() {
         role: true,
         _count: {
           select: {
-            histories: true,
+            learningSessions: true,
           },
         },
-        histories: {
+        learningSessions: {
           where: {
             createdAt: {
               gte: sevenDaysAgo,
@@ -76,30 +82,39 @@ export async function GET() {
         },
       },
       orderBy: {
-        histories: {
+        learningSessions: {
           _count: "desc",
         },
       },
       take: 10,
     });
 
-    // Get exercise statistics by mode
-    const exercisesByMode = await prisma.history.groupBy({
-      by: ["mode"],
-      _count: true,
+    // Get exercise statistics by learning method
+    const exercisesByMode = await prisma.learningSession.groupBy({
+      by: ["method"],
+      _count: {
+        _all: true,
+      },
+      where: {
+        completedAt: {
+          not: null,
+        },
+      },
     });
 
     // Get recent exercises
-    const recentExercises = await prisma.history.findMany({
+    const recentExercises = await prisma.learningSession.findMany({
       take: 10,
       orderBy: {
         createdAt: "desc",
       },
       select: {
         id: true,
-        sourceSentence: true,
-        mode: true,
+        method: true,
+        level: true,
+        total: true,
         score: true,
+        completedAt: true,
         createdAt: true,
         user: {
           select: {
