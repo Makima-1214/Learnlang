@@ -33,9 +33,7 @@ export async function GET(request) {
           take: 1,
         },
       },
-      orderBy: {
-        order: "asc", // Sort by order field for learning path
-      },
+      orderBy: [{ minXp: "asc" }, { order: "asc" }, { createdAt: "asc" }],
     });
 
     return NextResponse.json(quizzes);

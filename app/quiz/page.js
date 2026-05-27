@@ -9,6 +9,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { Lock, CheckCircle2, Clock, BookOpen, Trophy } from "lucide-react";
 import AIMascot from "@/components/AIMascot";
+import { sortQuizzesForPath } from "@/lib/quiz-order";
 
 // Custom Icons
 const CyberLockIcon = () => (
@@ -67,7 +68,7 @@ export default function QuizPage() {
       if (quizRes.ok) {
         const data = await quizRes.json();
         const sortedQuizzes = Array.isArray(data)
-          ? data.sort((a, b) => a.order - b.order)
+          ? sortQuizzesForPath(data)
           : [];
         setQuizzes(sortedQuizzes);
 
@@ -95,17 +96,17 @@ export default function QuizPage() {
   };
 
   // Check if quiz is unlocked (previous quiz must be completed)
-  const isQuizUnlocked = (quiz) => {
-    if (quiz.order === 0) return true; // First quiz is always unlocked
+  const isQuizUnlocked = (quizIndex) => {
+    if (quizIndex <= 0) return true; // First quiz in the path is always unlocked
 
-    const previousQuiz = quizzes.find((q) => q.order === quiz.order - 1);
+    const previousQuiz = quizzes[quizIndex - 1];
     if (!previousQuiz) return true;
 
     return previousQuiz.results && previousQuiz.results.length > 0;
   };
 
-  const canAttemptQuiz = (quiz) => {
-    return isQuizUnlocked(quiz) && userXp >= (quiz.minXp || 0);
+  const canAttemptQuiz = (quiz, quizIndex) => {
+    return isQuizUnlocked(quizIndex) && userXp >= (quiz.minXp || 0);
   };
 
   // Generate bezier path for the learning path
@@ -341,11 +342,11 @@ export default function QuizPage() {
                 {quizzes.map((quiz, index) => {
                   const x = index % 2 === 0 ? 280 : 120;
                   const y = 80 + index * 140;
-                  const isUnlocked = isQuizUnlocked(quiz);
+                  const isUnlocked = isQuizUnlocked(index);
                   const isCompleted = quiz.results && quiz.results.length > 0;
                   const isSelected = selectedQuiz === quiz.id;
                   const meetsXp = userXp >= (quiz.minXp || 0);
-                  const canAttempt = isUnlocked && meetsXp;
+                  const canAttempt = canAttemptQuiz(quiz, index);
                   const quizColor = quiz.color || "#6366F1";
 
                   return (
@@ -435,7 +436,7 @@ export default function QuizPage() {
                           className="absolute -bottom-2 bg-white text-gray-700 text-[10px] font-black px-2 py-0.5 rounded-full border-2 shadow-sm"
                           style={{ borderColor: quizColor }}
                         >
-                          {quiz.order + 1}
+                          {index + 1}
                         </span>
                       </button>
 

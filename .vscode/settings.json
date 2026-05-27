@@ -22,6 +22,10 @@
         "/^Get-CimInstance Win32_Process -Filter \"Name='node\\.exe'\" \\| Select-Object ProcessId,CommandLine \\| Format-List$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^npx jest lib/__tests__/quiz-order\\.test\\.js --runInBand$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }
