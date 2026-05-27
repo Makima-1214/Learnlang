@@ -581,6 +581,36 @@ export default function DashboardLayout({ children }) {
   const [missions, setMissions] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentUserRank, setCurrentUserRank] = useState(null);
+  const [followingUserIds, setFollowingUserIds] = useState([]);
+
+  const handleFollow = async (userId) => {
+    if (!userId || followingUserIds.includes(userId)) return;
+
+    setFollowingUserIds((prev) => [...prev, userId]);
+
+    try {
+      const response = await fetch("/api/friends/follow", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ followingId: userId }),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.error || "Gagal mengikuti pengguna");
+      }
+
+      setSuggestions(
+        (prev) => prev?.filter((user) => user.id !== userId) || prev,
+      );
+    } catch (error) {
+      console.error("Error following user:", error);
+    } finally {
+      setFollowingUserIds((prev) => prev.filter((id) => id !== userId));
+    }
+  };
 
   // Fetch data dari API
   useEffect(() => {
@@ -1133,8 +1163,15 @@ export default function DashboardLayout({ children }) {
                               : "Pelajar baru"}
                           </p>
                         </div>
-                        <button className="px-3 py-1.5 bg-[#EEF2FF] text-[#6366F1] border-2 border-[#C7D2FE] font-black text-[10px] rounded-lg hover:bg-[#E0E7FF] transition-colors shrink-0">
-                          Ikuti
+                        <button
+                          type="button"
+                          onClick={() => handleFollow(user.id)}
+                          disabled={followingUserIds.includes(user.id)}
+                          className="px-3 py-1.5 bg-[#EEF2FF] text-[#6366F1] border-2 border-[#C7D2FE] font-black text-[10px] rounded-lg hover:bg-[#E0E7FF] transition-colors shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          {followingUserIds.includes(user.id)
+                            ? "Menyimpan..."
+                            : "Ikuti"}
                         </button>
                       </div>
                     ))
