@@ -1050,6 +1050,54 @@ export default function DashboardLayout({ children }) {
                     </div>
                   </div>
                 </div>
+                {/* Tingkat Pengguna */}
+                <div className="bg-white border-2 border-b-[5px] border-gray-200 rounded-2xl p-5 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-violet-50 border-2 border-violet-200">
+                        <IconLeague />
+                      </span>
+                      <div>
+                        <h3 className="font-black text-gray-800 text-[13px] leading-none">
+                          Tingkat Saat Ini
+                        </h3>
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-1">
+                          {loading ? "Memuat..." : stats?.currentTier || "Belum ada tier"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {loading ? (
+                    <div className="space-y-3 animate-pulse">
+                      <div className="h-8 w-40 rounded-xl bg-gray-100" />
+                      <div className="h-3 w-56 rounded bg-gray-100" />
+                      <div className="h-2 w-full rounded bg-gray-100" />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="mt-4 space-y-2.5">
+                        <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                          <span>Progress ke tier berikutnya</span>
+                          <span>
+                            {stats?.tierProgress?.remainingXP != null
+                              ? `${stats.tierProgress.remainingXP} XP`
+                              : "0 XP"}
+                          </span>
+                        </div>
+                        <div className="h-3 rounded-full bg-gray-100 overflow-hidden border border-gray-200">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-violet-400 to-indigo-500"
+                            style={{
+                              width: `${Math.round((stats?.tierProgress?.progress || 0) * 100)}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
                 {/* Klasemen Mini / Liga */}
                 <div className="bg-white border-2 border-b-[5px] border-gray-200 rounded-2xl p-5 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
@@ -1079,107 +1127,113 @@ export default function DashboardLayout({ children }) {
                             key={user.id}
                             className={`flex items-center gap-3 ${
                               isCurrentUser
-                                ? "bg-indigo-50 p-2 -mx-2 rounded-xl border-2 border-indigo-100"
-                                : ""
+                                ? "bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2"
+                                : "px-3 py-1.5"
                             }`}
                           >
-                            <span
-                              className={`text-xs font-black ${
-                                idx === 0
-                                  ? "text-amber-500"
-                                  : idx === 1
-                                    ? "text-gray-400"
-                                    : "text-gray-300"
-                              } w-4 text-center`}
-                            >
-                              {user.rank || idx + 1}
-                            </span>
                             <div
-                              className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs border ${
-                                isCurrentUser
-                                  ? "bg-gradient-to-br from-indigo-500 to-purple-500 text-white border-indigo-600"
-                                  : "bg-gray-100 text-gray-600 border-gray-200"
+                              className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black ${
+                                idx === 0
+                                  ? "bg-yellow-100 text-yellow-700"
+                                  : idx === 1
+                                    ? "bg-gray-100 text-gray-600"
+                                    : idx === 2
+                                      ? "bg-amber-100 text-amber-700"
+                                      : "bg-gray-50 text-gray-500"
                               }`}
                             >
-                              {user.name?.charAt(0).toUpperCase() || "?"}
+                              {idx + 1}
                             </div>
-                            <span
-                              className={`text-[12px] font-bold ${isCurrentUser ? "text-indigo-900 font-black" : "text-gray-700"} flex-1 truncate`}
-                            >
-                              {isCurrentUser ? "Anda" : user.name}
-                            </span>
-                            <span
-                              className={`text-[11px] font-black ${isCurrentUser ? "text-indigo-600" : "text-gray-500"}`}
-                            >
-                              {user.totalXP} XP
-                            </span>
+                            {user.avatar ? (
+                              <img
+                                src={user.avatar}
+                                alt={user.name}
+                                className="w-7 h-7 rounded-full object-cover"
+                              />
+                            ) : (
+                              <UserAvatar
+                                user={user}
+                                size="sm"
+                                className="w-7 h-7 shrink-0"
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="text-[11px] font-black text-gray-800 truncate">
+                                {user.name}
+                              </div>
+                              <div className="text-[9px] text-gray-500">
+                                {user.totalXP || 0} XP
+                              </div>
+                            </div>
                           </div>
                         );
                       })
                     ) : (
                       <div className="text-center py-4 text-gray-400 text-xs">
-                        Tidak ada data
+                        Belum ada data.
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Cari Teman / Suggestion */}
+                {/* Rekomendasi Teman */}
                 <div className="bg-white border-2 border-b-[5px] border-gray-200 rounded-2xl p-5 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-black text-gray-800 text-[13px] flex items-center gap-2">
                       <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-indigo-50 border-2 border-indigo-200">
                         <IconFriendAdd />
                       </span>
-                      Tambah Teman
+                      Rekomendasi Teman
                     </h3>
-                    <Link
-                      href="/friends"
-                      className="text-[9px] font-black text-[#6366F1] uppercase tracking-wider cursor-pointer hover:underline"
-                    >
-                      Cari
-                    </Link>
                   </div>
-                  {loading ? (
-                    <div className="text-center py-4 text-gray-400 text-xs">
-                      Memuat...
-                    </div>
-                  ) : suggestions && suggestions.length > 0 ? (
-                    suggestions.map((user) => (
-                      <div
-                        key={user.id}
-                        className="flex items-center gap-3 mt-2"
-                      >
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center font-bold text-indigo-600 border-2 border-indigo-200 shrink-0">
-                          {user.name?.charAt(0).toUpperCase() || "?"}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-black text-gray-800 text-[12px] truncate">
-                            {user.name}
-                          </p>
-                          <p className="text-[10px] font-semibold text-gray-400 truncate">
-                            {user.totalXP > 0
-                              ? `${user.totalXP} XP`
-                              : "Pelajar baru"}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleFollow(user.id)}
-                          disabled={followingUserIds.includes(user.id)}
-                          className="px-3 py-1.5 bg-[#EEF2FF] text-[#6366F1] border-2 border-[#C7D2FE] font-black text-[10px] rounded-lg hover:bg-[#E0E7FF] transition-colors shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
+                  <div className="flex flex-col gap-2.5">
+                    {suggestions && suggestions.length > 0 ? (
+                      suggestions.map((user) => (
+                        <div
+                          key={user.id}
+                          className="flex items-center gap-3 px-3 py-2 rounded-xl bg-gray-50 border border-gray-100"
                         >
-                          {followingUserIds.includes(user.id)
-                            ? "Menyimpan..."
-                            : "Ikuti"}
-                        </button>
+                          {user.avatar ? (
+                            <img
+                              src={user.avatar}
+                              alt={user.name}
+                              className="w-7 h-7 rounded-full object-cover"
+                            />
+                          ) : (
+                            <UserAvatar
+                              user={user}
+                              size="sm"
+                              className="w-7 h-7 shrink-0"
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-black text-gray-800 text-[12px] truncate">
+                              {user.name}
+                            </p>
+                            <p className="text-[10px] font-semibold text-gray-400 truncate">
+                              {user.totalXP > 0
+                                ? `${user.totalXP} XP`
+                                : "Pelajar baru"}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleFollow(user.id)}
+                            disabled={followingUserIds.includes(user.id)}
+                            className="px-3 py-1.5 bg-[#EEF2FF] text-[#6366F1] border-2 border-[#C7D2FE] font-black text-[10px] rounded-lg hover:bg-[#E0E7FF] transition-colors shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
+                          >
+                            {followingUserIds.includes(user.id)
+                              ? "Menyimpan..."
+                              : "Ikuti"}
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-4 text-gray-400 text-xs">
+                        Tidak ada rekomendasi
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-4 text-gray-400 text-xs">
-                      Tidak ada rekomendasi
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             </>
@@ -1234,11 +1288,15 @@ export default function DashboardLayout({ children }) {
               </Link>
               <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-50 border-2 border-amber-200 rounded-xl">
                 <StatusFlame size={16} />
-                <span className="text-xs font-black text-amber-500">12</span>
+                <span className="text-xs font-black text-amber-500">
+                  {loading ? "..." : stats?.streak ?? 0}
+                </span>
               </div>
               <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-sky-50 border-2 border-sky-200 rounded-xl">
                 <StatusBattery size={16} />
-                <span className="text-xs font-black text-sky-500">5</span>
+                <span className="text-xs font-black text-sky-500">
+                  {loading ? "..." : stats?.energy?.current ?? 0}
+                </span>
               </div>
             </div>
           </header>

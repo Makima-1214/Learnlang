@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { ApiResponse, jsonResponse } from "@/lib/api-response";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { computeLevelFromXP, computeTierLabelFromXP } from "@/lib/tiers";
 
 /**
  * POST /api/learn/session - Create a new learning session with questions
@@ -9,7 +10,7 @@ import { authOptions } from "@/lib/auth";
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { method, level = "A1", limit = 5 } = body;
+    const { method, level: requestedLevel, limit = 5 } = body;
 
     if (!method || !["vocabulary", "listening", "grammar"].includes(method)) {
       return jsonResponse(ApiResponse.validationError("Invalid method"), 400);
@@ -17,6 +18,18 @@ export async function POST(req) {
 
     const userSession = await getServerSession(authOptions);
     const userId = userSession?.user?.id ?? null;
+
+    let level = requestedLevel || "A1";
+    let tier = computeTierLabelFromXP(0);
+    if (userId) {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { xp: true },
+      });
+      const userXP = user?.xp || 0;
+      level = computeLevelFromXP(userXP);
+      tier = computeTierLabelFromXP(userXP);
+    }
 
     // Fetch questions based on method. Use randomized selection so repeated sessions
     // don't always return the same earliest rows. We use a raw SQL RAND() ordering
@@ -110,6 +123,7 @@ export async function POST(req) {
           id: session.id,
           method,
           level,
+          tier,
           total: questions.length,
           status: "IN_PROGRESS",
         },

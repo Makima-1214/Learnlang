@@ -10,6 +10,11 @@ import { jsonResponse } from "@/lib/api-response";
 import { calculateStreak, calculateTotalXP } from "@/lib/streak";
 import { getUserEnergy } from "@/lib/energy";
 import { apiLogger } from "@/lib/logger";
+import {
+  computeLevelFromXP,
+  computeTierLabelFromXP,
+  getNextTierProgress,
+} from "@/lib/tiers";
 
 export async function GET(req) {
   try {
@@ -62,6 +67,11 @@ export async function GET(req) {
       },
     });
 
+    // Compute user tier/league info from XP
+    const currentLevel = computeLevelFromXP(totalXP);
+    const currentTier = computeTierLabelFromXP(totalXP);
+    const tierProgress = getNextTierProgress(totalXP);
+
     return jsonResponse(
       {
         success: true,
@@ -72,6 +82,10 @@ export async function GET(req) {
           exp: totalXP,
           achievementCount,
           sessionCount,
+          currentLevel,
+          currentTier,
+          tierProgress,
+          primaryTier: `${currentLevel} • ${currentTier}`,
           energy,
           lastSessionDate,
           user: {

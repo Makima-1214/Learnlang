@@ -320,7 +320,6 @@ export default function MethodPracticeClient({ method }) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               method: methodStr,
-              level: "A1",
               limit: 5,
             }),
           });
