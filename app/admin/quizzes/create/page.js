@@ -16,13 +16,29 @@ import Link from "next/link";
 // ── Custom Bespoke SVG Icons ──────────────────────────────────────────────────
 
 const BackIcon = () => (
-  <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    className="w-4 h-4 mr-2"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="3"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M19 12H5M12 19l-7-7 7-7" />
   </svg>
 );
 
 const SaveMagicIcon = () => (
-  <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    className="w-5 h-5 mr-2"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
     <polyline points="17 21 17 13 7 13 7 21" />
     <path d="M7 3v5h8" />
@@ -31,7 +47,15 @@ const SaveMagicIcon = () => (
 );
 
 const QuestionPlusIcon = () => (
-  <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    className="w-5 h-5 mr-2"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <circle cx="12" cy="12" r="10" />
     <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
     <path d="M12 17h.01" />
@@ -40,7 +64,15 @@ const QuestionPlusIcon = () => (
 );
 
 const TrashCanIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    className="w-5 h-5"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
     <line x1="10" y1="11" x2="10" y2="17" />
     <line x1="14" y1="11" x2="14" y2="17" />
@@ -52,19 +84,83 @@ const TrashCanIcon = () => (
 const EMOJI_GROUPS = [
   {
     label: "Bahasa & Belajar",
-    emojis: ["🗺️", "🧭", "📜", "🔤", "🗣️", "💬", "🧠", "🪄", "🔮", "📡", "🧬", "🔭", "🪐", "⚗️", "🧪"],
+    emojis: [
+      "🗺️",
+      "🧭",
+      "📜",
+      "🔤",
+      "🗣️",
+      "💬",
+      "🧠",
+      "🪄",
+      "🔮",
+      "📡",
+      "🧬",
+      "🔭",
+      "🪐",
+      "⚗️",
+      "🧪",
+    ],
   },
   {
     label: "Petualangan",
-    emojis: ["⚔️", "🛡️", "🏹", "🗡️", "🧱", "🏰", "🌋", "🏔️", "🌊", "🌪️", "🌌", "🌠", "🪨", "🌿", "🍄"],
+    emojis: [
+      "⚔️",
+      "🛡️",
+      "🏹",
+      "🗡️",
+      "🧱",
+      "🏰",
+      "🌋",
+      "🏔️",
+      "🌊",
+      "🌪️",
+      "🌌",
+      "🌠",
+      "🪨",
+      "🌿",
+      "🍄",
+    ],
   },
   {
     label: "Teknologi & Sains",
-    emojis: ["🤖", "👾", "🕹️", "💾", "🖥️", "⌨️", "🔌", "🧲", "⚙️", "🔩", "🪛", "🔋", "💡", "🔬", "🧯"],
+    emojis: [
+      "🤖",
+      "👾",
+      "🕹️",
+      "💾",
+      "🖥️",
+      "⌨️",
+      "🔌",
+      "🧲",
+      "⚙️",
+      "🔩",
+      "🪛",
+      "🔋",
+      "💡",
+      "🔬",
+      "🧯",
+    ],
   },
   {
     label: "Simbol & Unik",
-    emojis: ["🎯", "🎲", "🎴", "🃏", "🀄", "♟️", "🧩", "🪬", "🧿", "🪤", "🎪", "🎭", "🎨", "🖼️", "🪞"],
+    emojis: [
+      "🎯",
+      "🎲",
+      "🎴",
+      "🃏",
+      "🀄",
+      "♟️",
+      "🧩",
+      "🪬",
+      "🧿",
+      "🪤",
+      "🎪",
+      "🎭",
+      "🎨",
+      "🖼️",
+      "🪞",
+    ],
   },
 ];
 
@@ -73,7 +169,9 @@ function EmojiPicker({ value, onChange }) {
   const ref = useRef(null);
 
   useEffect(() => {
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
@@ -87,20 +185,33 @@ function EmojiPicker({ value, onChange }) {
       >
         <span className="text-2xl leading-none">{value}</span>
         <span className="text-sm font-bold text-gray-400">Pilih emoji</span>
-        <svg className="w-4 h-4 ml-auto text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        <svg
+          className="w-4 h-4 ml-auto text-gray-400"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
       </button>
 
       {open && (
         <div className="absolute z-50 top-full mt-2 left-0 w-80 bg-white border-3 border-gray-200 rounded-2xl shadow-xl p-4 space-y-3">
           {EMOJI_GROUPS.map((group) => (
             <div key={group.label}>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">{group.label}</p>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">
+                {group.label}
+              </p>
               <div className="flex flex-wrap gap-1">
                 {group.emojis.map((emoji) => (
                   <button
                     key={emoji}
                     type="button"
-                    onClick={() => { onChange(emoji); setOpen(false); }}
+                    onClick={() => {
+                      onChange(emoji);
+                      setOpen(false);
+                    }}
                     className={`w-9 h-9 text-xl rounded-xl flex items-center justify-center transition-all hover:scale-110 hover:bg-indigo-50 border-2 ${value === emoji ? "border-indigo-400 bg-indigo-50 scale-110" : "border-transparent"}`}
                   >
                     {emoji}
@@ -118,14 +229,18 @@ function EmojiPicker({ value, onChange }) {
 export default function CreateQuizPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [editQuizId, setEditQuizId] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(!!editQuizId);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     published: false,
     order: 0,
     timeLimit: null,
+    rewardXp: 20,
+    minXp: 0,
     icon: "📚",
     color: "#6366F1",
     questions: [
@@ -138,6 +253,55 @@ export default function CreateQuizPage() {
       },
     ],
   });
+
+  useEffect(() => {
+    if (!editQuizId) return;
+
+    const loadQuiz = async () => {
+      try {
+        setInitialLoading(true);
+        const response = await fetch(`/api/admin/quizzes/${editQuizId}`);
+        if (!response.ok) {
+          toast.error("Quiz tidak ditemukan");
+          router.push("/admin/quizzes");
+          return;
+        }
+
+        const quiz = await response.json();
+        setFormData({
+          title: quiz.title || "",
+          description: quiz.description || "",
+          published: !!quiz.published,
+          order: quiz.order || 0,
+          timeLimit: quiz.timeLimit || null,
+          rewardXp: quiz.rewardXp || 20,
+          minXp: quiz.minXp || 0,
+          icon: quiz.icon || "📚",
+          color: quiz.color || "#6366F1",
+          questions: (quiz.questions || []).map((question) => ({
+            question: question.question || "",
+            options: (question.options || []).map((option) => ({
+              option: option.option || "",
+              isCorrect: !!option.isCorrect,
+            })),
+          })),
+        });
+      } catch (error) {
+        toast.error("Gagal memuat data quiz");
+        router.push("/admin/quizzes");
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    loadQuiz();
+  }, [editQuizId, router]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    setEditQuizId(params.get("id"));
+  }, []);
 
   if (status === "loading") return null;
 
@@ -245,38 +409,58 @@ export default function CreateQuizPage() {
 
     setLoading(true);
     try {
-      const response = await fetch("/api/admin/quizzes", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        editQuizId ? `/api/admin/quizzes/${editQuizId}` : "/api/admin/quizzes",
+        {
+          method: editQuizId ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
         },
-        body: JSON.stringify(formData),
-      });
+      );
 
       if (response.ok) {
-        toast.success("Quiz berhasil dibuat");
+        toast.success(
+          editQuizId ? "Quiz berhasil diperbarui" : "Quiz berhasil dibuat",
+        );
         router.push("/admin/quizzes");
       } else {
         const error = await response.json();
-        toast.error(error.error || "Gagal membuat quiz");
+        toast.error(
+          error.error ||
+            (editQuizId ? "Gagal memperbarui quiz" : "Gagal membuat quiz"),
+        );
       }
     } catch (error) {
-      console.error("Failed to create quiz:", error);
-      toast.error("Gagal membuat quiz");
+      console.error("Failed to save quiz:", error);
+      toast.error(editQuizId ? "Gagal memperbarui quiz" : "Gagal membuat quiz");
     } finally {
       setLoading(false);
     }
   };
 
+  if (initialLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-violet-500" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white font-[family-name:var(--font-nunito)]">
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         .duo-card { border-bottom-width: 6px; border-radius: 1.5rem; transition: all 0.2s; }
         .duo-btn { border-bottom-width: 4px; border-radius: 1rem; transition: all 0.1s; }
         .duo-btn:active { transform: translateY(2px); border-bottom-width: 0; margin-bottom: 4px; }
         .duo-input { border-width: 3px; border-radius: 1rem; }
         .duo-input:focus { border-color: #8B5CF6; ring: 0; }
-      `}} />
+      `,
+        }}
+      />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
         {/* Header */}
@@ -284,13 +468,20 @@ export default function CreateQuizPage() {
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
           <div className="relative z-10 text-center sm:text-left">
             <Link href="/admin/quizzes">
-              <Button variant="ghost" className="mb-4 text-white hover:bg-white/20 font-black">
+              <Button
+                variant="ghost"
+                className="mb-4 text-white hover:bg-white/20 font-black"
+              >
                 <BackIcon /> Kembali ke Daftar
               </Button>
             </Link>
-            <h1 className="text-3xl font-black tracking-tight">Buat Kuis Baru</h1>
+            <h1 className="text-3xl font-black tracking-tight">
+              {editQuizId ? "Edit Kuis" : "Buat Kuis Baru"}
+            </h1>
             <p className="font-bold opacity-90 text-sm">
-            Buat quiz dengan pertanyaan pilihan ganda
+              {editQuizId
+                ? "Perbarui quiz dan pengaturannya"
+                : "Buat quiz dengan pertanyaan pilihan ganda"}
             </p>
           </div>
         </div>
@@ -301,7 +492,12 @@ export default function CreateQuizPage() {
           <Card className="duo-card border-4 border-gray-100 shadow-none">
             <CardContent className="space-y-4">
               <div className="pt-6">
-                <Label htmlFor="title" className="font-black text-gray-700 ml-1">Judul Quiz *</Label>
+                <Label
+                  htmlFor="title"
+                  className="font-black text-gray-700 ml-1"
+                >
+                  Judul Quiz *
+                </Label>
                 <Input
                   id="title"
                   value={formData.title}
@@ -314,7 +510,12 @@ export default function CreateQuizPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="description" className="font-black text-gray-700 ml-1">Deskripsi</Label>
+                <Label
+                  htmlFor="description"
+                  className="font-black text-gray-700 ml-1"
+                >
+                  Deskripsi
+                </Label>
                 <Textarea
                   id="description"
                   value={formData.description}
@@ -326,7 +527,7 @@ export default function CreateQuizPage() {
                   className="duo-input border-gray-200 focus-visible:ring-0"
                 />
               </div>
-              
+
               {/* New Fields for Learning Path */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
@@ -337,13 +538,18 @@ export default function CreateQuizPage() {
                     min="0"
                     value={formData.order}
                     onChange={(e) =>
-                      setFormData({ ...formData, order: parseInt(e.target.value) || 0 })
+                      setFormData({
+                        ...formData,
+                        order: parseInt(e.target.value) || 0,
+                      })
                     }
                     placeholder="0"
                     className="duo-input border-gray-200"
                     required
                   />
-                  <p className="text-[10px] text-gray-400 font-bold px-1 uppercase tracking-tighter">0 = Level pertama</p>
+                  <p className="text-[10px] text-gray-400 font-bold px-1 uppercase tracking-tighter">
+                    0 = Level pertama
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="timeLimit">Batas Waktu (menit)</Label>
@@ -353,7 +559,12 @@ export default function CreateQuizPage() {
                     min="1"
                     value={formData.timeLimit || ""}
                     onChange={(e) =>
-                      setFormData({ ...formData, timeLimit: e.target.value ? parseInt(e.target.value) : null })
+                      setFormData({
+                        ...formData,
+                        timeLimit: e.target.value
+                          ? parseInt(e.target.value)
+                          : null,
+                      })
                     }
                     placeholder="Kosongkan jika tidak ada batas"
                     className="duo-input border-gray-200"
@@ -363,12 +574,61 @@ export default function CreateQuizPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
+                  <Label htmlFor="rewardXp">Reward EXP *</Label>
+                  <Input
+                    id="rewardXp"
+                    type="number"
+                    min="0"
+                    value={formData.rewardXp}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        rewardXp: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="20"
+                    className="duo-input border-gray-200"
+                    required
+                  />
+                  <p className="text-[10px] text-gray-400 font-bold px-1 uppercase tracking-tighter">
+                    EXP yang didapat setelah selesai
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="minXp">Minimum EXP *</Label>
+                  <Input
+                    id="minXp"
+                    type="number"
+                    min="0"
+                    value={formData.minXp}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        minXp: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="0"
+                    className="duo-input border-gray-200"
+                    required
+                  />
+                  <p className="text-[10px] text-gray-400 font-bold px-1 uppercase tracking-tighter">
+                    EXP minimum untuk membuka quiz
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
                   <Label htmlFor="icon">Icon/Emoji</Label>
                   <EmojiPicker
                     value={formData.icon}
-                    onChange={(emoji) => setFormData({ ...formData, icon: emoji })}
+                    onChange={(emoji) =>
+                      setFormData({ ...formData, icon: emoji })
+                    }
                   />
-                  <p className="text-[10px] text-gray-400 font-bold px-1 uppercase tracking-tighter">Emoji unik kuis</p>
+                  <p className="text-[10px] text-gray-400 font-bold px-1 uppercase tracking-tighter">
+                    Emoji unik kuis
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="color">Warna Tema</Label>
@@ -397,7 +657,12 @@ export default function CreateQuizPage() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="published" className="font-black text-gray-800">Publikasikan Kuis</Label>
+                  <Label
+                    htmlFor="published"
+                    className="font-black text-gray-800"
+                  >
+                    Publikasikan Kuis
+                  </Label>
                   <p className="text-xs font-bold text-gray-400 mt-1">
                     Quiz yang dipublikasikan dapat dilihat oleh pengguna
                   </p>
@@ -430,7 +695,10 @@ export default function CreateQuizPage() {
             </div>
 
             {formData.questions.map((question, qIndex) => (
-              <Card key={qIndex} className="duo-card border-4 border-gray-100 shadow-none overflow-hidden group">
+              <Card
+                key={qIndex}
+                className="duo-card border-4 border-gray-100 shadow-none overflow-hidden group"
+              >
                 <CardHeader className="bg-gray-50/50 border-b-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg font-black text-gray-700">
@@ -453,10 +721,14 @@ export default function CreateQuizPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="pt-4">
-                    <Label className="font-black text-sm text-gray-600 ml-1">Kata / Kalimat Soal *</Label>
+                    <Label className="font-black text-sm text-gray-600 ml-1">
+                      Kata / Kalimat Soal *
+                    </Label>
                     <Input
                       value={question.question}
-                      onChange={(e) => handleQuestionChange(qIndex, e.target.value)}
+                      onChange={(e) =>
+                        handleQuestionChange(qIndex, e.target.value)
+                      }
                       placeholder="Contoh: apple"
                       className="duo-input border-gray-200"
                       required
@@ -465,7 +737,9 @@ export default function CreateQuizPage() {
 
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <Label className="font-black text-sm text-gray-600 ml-1 uppercase tracking-widest text-[10px]">Opsi Jawaban *</Label>
+                      <Label className="font-black text-sm text-gray-600 ml-1 uppercase tracking-widest text-[10px]">
+                        Opsi Jawaban *
+                      </Label>
                       {question.options.length < 4 && (
                         <Button
                           type="button"
@@ -480,7 +754,9 @@ export default function CreateQuizPage() {
                     <div className="space-y-2">
                       {question.options.map((option, oIndex) => (
                         <div key={oIndex} className="flex items-center gap-2">
-                          <div className="font-black text-gray-400 w-6 text-center">{String.fromCharCode(65 + oIndex)}</div>
+                          <div className="font-black text-gray-400 w-6 text-center">
+                            {String.fromCharCode(65 + oIndex)}
+                          </div>
                           <Input
                             value={option.option}
                             onChange={(e) =>
@@ -532,9 +808,21 @@ export default function CreateQuizPage() {
             >
               Batal
             </Button>
-            <Button type="submit" disabled={loading} className="duo-btn bg-violet-600 border-violet-800 border-2 border-b-4 text-white hover:bg-violet-700 font-black px-10">
-              {loading ? <Loader2 className="animate-spin mr-2" /> : <SaveMagicIcon />}
-              {loading ? "Menyimpan..." : "Simpan Kuis"}
+            <Button
+              type="submit"
+              disabled={loading}
+              className="duo-btn bg-violet-600 border-violet-800 border-2 border-b-4 text-white hover:bg-violet-700 font-black px-10"
+            >
+              {loading ? (
+                <Loader2 className="animate-spin mr-2" />
+              ) : (
+                <SaveMagicIcon />
+              )}
+              {loading
+                ? "Menyimpan..."
+                : editQuizId
+                  ? "Perbarui Kuis"
+                  : "Simpan Kuis"}
             </Button>
           </div>
         </form>
