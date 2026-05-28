@@ -59,7 +59,7 @@ const port = parseInt(process.env.PORT || "3000", 10);
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
-app.prepare().then(() => {
+app.prepare().then(async () => {
   const httpServer = createServer(async (req, res) => {
     try {
       const parsedUrl = parse(req.url, true);
@@ -257,6 +257,20 @@ app.prepare().then(() => {
 
   // Make io accessible globally
   global.io = io;
+
+  const { refillAllUserEnergy, ENERGY_REFILL_MS } =
+    await import("./lib/energy.js");
+
+  const runEnergyRefill = async () => {
+    try {
+      await refillAllUserEnergy({ io: global.io });
+    } catch (err) {
+      console.error("Energy refill failed:", err);
+    }
+  };
+
+  await runEnergyRefill();
+  setInterval(runEnergyRefill, ENERGY_REFILL_MS);
 
   httpServer
     .once("error", (err) => {

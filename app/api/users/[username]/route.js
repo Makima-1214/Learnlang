@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { calculateStreak, calculateTotalXP } from "@/lib/streak";
+import { getUserEnergy } from "@/lib/energy";
 import {
   getAchievementProgress,
   getUserAchievements,
@@ -13,6 +15,12 @@ export async function GET(request, { params }) {
     const { username } = await params;
     const session = await getServerSession(authOptions);
 
+    const methodLabelMap = {
+      vocabulary: "Vocabulary",
+      listening: "Listening",
+      grammar: "Grammar",
+    };
+
     const user = await prisma.user.findUnique({
       where: { username },
       select: {
@@ -21,14 +29,10 @@ export async function GET(request, { params }) {
         username: true,
         avatar: true,
         bio: true,
+        xp: true,
+        energy: true,
+        energyNextRefillAt: true,
         createdAt: true,
-        _count: {
-          select: {
-            histories: true,
-            comments: true,
-            reactions: true,
-          },
-        },
       },
     });
 
@@ -104,6 +108,15 @@ export async function GET(request, { params }) {
     });
 
     const totalExercises = completedSessions.length;
+    const totalCorrectAnswers = completedSessions.reduce(
+      (sum, item) => sum + (Number(item.score) || 0),
+      0,
+    );
+    const totalQuestionsAnswered = completedSessions.reduce(
+      (sum, item) => sum + (Number(item.total) || 0),
+      0,
+    );
+
     const averageScore = totalExercises
       ? Math.round(
           completedSessions.reduce((s, cs) => s + (cs.score || 0), 0) /
@@ -111,9 +124,10 @@ export async function GET(request, { params }) {
         )
       : 0;
 
-    const correctCount = completedSessions.filter(
-      (s) => typeof s.score === "number" && s.score === s.total,
-    ).length;
+    const correctCount = totalCorrectAnswers;
+    const accuracy = totalQuestionsAnswered
+      ? Math.round((totalCorrectAnswers / totalQuestionsAnswered) * 100)
+      : 0;
 
     // Define 'almost correct' as >=60% and <100%
     const almostCorrectCount = completedSessions.filter((s) => {
@@ -146,16 +160,25 @@ export async function GET(request, { params }) {
 
     // Get recent activity (last 5) from learning sessions
     const recentActivity = completedSessions.slice(0, 5).map((s) => ({
+      id: s.id,
       method: s.method,
+      methodLabel: methodLabelMap[s.method] || s.method,
       score: s.score,
       total: s.total,
       level: s.level,
       createdAt: s.createdAt,
+      accuracy: s.total ? Math.round(((s.score || 0) / s.total) * 100) : 0,
     }));
 
     const [achievementData, achievementProgress] = await Promise.all([
       getUserAchievements(user.id),
       getAchievementProgress(user.id),
+    ]);
+
+    const [streakData, totalXP, energy] = await Promise.all([
+      calculateStreak(user.id),
+      calculateTotalXP(user.id),
+      getUserEnergy(user.id, { emit: false }),
     ]);
 
     return NextResponse.json({
@@ -164,10 +187,18 @@ export async function GET(request, { params }) {
       followingCount,
       friendshipCount,
       viewerRelationship,
+      totalXP,
+      streak: streakData.streak,
+      lastSessionDate: streakData.lastSessionDate,
+      energy,
       stats: {
+        totalXP,
+        streak: streakData.streak,
         totalExercises,
         averageScore,
         correctCount,
+        totalCorrectAnswers,
+        accuracy,
         almostCorrectCount,
         difficultyBreakdown: difficultyStats.reduce((acc, d) => {
           acc[d.level] = d._count.id;

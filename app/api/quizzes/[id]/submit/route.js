@@ -14,6 +14,11 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { xp: true },
+    });
+
     const body = await request.json();
     const { answers } = body; // answers: { questionId: optionId }
 
@@ -32,6 +37,25 @@ export async function POST(request, { params }) {
     if (!quiz) {
       return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
     }
+
+    const currentUserXp = user?.xp || 0;
+    const minXp = quiz.minXp || 0;
+    if (currentUserXp < minXp) {
+      return NextResponse.json(
+        { error: `Minimum XP untuk quiz ini adalah ${minXp}` },
+        { status: 403 },
+      );
+    }
+
+    const previousResult = await prisma.quizResult.findFirst({
+      where: {
+        quizId: quiz.id,
+        userId: session.user.id,
+      },
+      select: {
+        id: true,
+      },
+    });
 
     // Calculate score
     let correctCount = 0;
@@ -69,6 +93,15 @@ export async function POST(request, { params }) {
     });
 
     try {
+      const rewardGranted = !previousResult && (quiz.rewardXp || 0) > 0;
+
+      if (rewardGranted) {
+        await prisma.user.update({
+          where: { id: session.user.id },
+          data: { xp: { increment: quiz.rewardXp || 0 } },
+        });
+      }
+
       await awardQuizAchievements(session.user.id);
     } catch (achievementError) {
       console.error("Failed to award quiz achievements:", achievementError);
@@ -79,6 +112,8 @@ export async function POST(request, { params }) {
       score: correctCount,
       totalQuestions,
       percentage: Math.round((correctCount / totalQuestions) * 100),
+      rewardXp: quiz.rewardXp || 0,
+      rewardGranted: !previousResult && (quiz.rewardXp || 0) > 0,
       detailedResults,
     });
   } catch (error) {

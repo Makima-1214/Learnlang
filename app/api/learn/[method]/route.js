@@ -54,25 +54,18 @@ export async function GET(req, { params }) {
 
   let records = [];
   try {
-    if (method === "vocabulary") {
-      records = await prisma.vocabularyQuestion.findMany({
-        where: { level },
-        orderBy: { createdAt: "asc" },
-        take: limit,
-      });
-    } else if (method === "listening") {
-      records = await prisma.listeningQuestion.findMany({
-        where: { level },
-        orderBy: { createdAt: "asc" },
-        take: limit,
-      });
-    } else if (method === "grammar") {
-      records = await prisma.grammarQuestion.findMany({
-        where: { level },
-        orderBy: { createdAt: "asc" },
-        take: limit,
-      });
-    }
+    const tableMap = {
+      listening: "listening_questions",
+      vocabulary: "vocabulary_questions",
+      grammar: "grammar_questions",
+    };
+    const table = tableMap[method];
+    if (!table)
+      return jsonResponse(ApiResponse.notFound("Unknown learning method"), 404);
+
+    const raw = `SELECT * FROM ${table} WHERE level = ? ORDER BY RAND() LIMIT ?`;
+    // @ts-ignore
+    records = await prisma.$queryRawUnsafe(raw, level, limit);
   } catch (err) {
     return jsonResponse(
       ApiResponse.internalError(err.message || "DB error"),

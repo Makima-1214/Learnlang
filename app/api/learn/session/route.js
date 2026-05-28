@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { ApiResponse, jsonResponse } from "@/lib/api-response";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { computeLevelFromXP, computeTierLabelFromXP } from "@/lib/tiers";
 
 /**
  * POST /api/learn/session - Create a new learning session with questions
@@ -9,39 +10,78 @@ import { authOptions } from "@/lib/auth";
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { method, level = "A1", limit = 5 } = body;
+    const { method, level: requestedLevel, limit = 5 } = body;
 
     if (!method || !["vocabulary", "listening", "grammar"].includes(method)) {
       return jsonResponse(ApiResponse.validationError("Invalid method"), 400);
     }
 
-    // SPEED OPTIMIZATION: Bypass getServerSession which is causing delays
-    // const userSession = await getServerSession(authOptions);
-    // const userId = userSession?.user?.id ?? null;
-    const userId = null;
+    const userSession = await getServerSession(authOptions);
+    const userId = userSession?.user?.id ?? null;
 
-    // Fetch questions based on method
+    let level = requestedLevel || "A1";
+    let tier = computeTierLabelFromXP(0);
+    if (userId) {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { xp: true },
+      });
+      const userXP = user?.xp || 0;
+      level = computeLevelFromXP(userXP);
+      tier = computeTierLabelFromXP(userXP);
+    }
+
+    // Fetch questions based on method. Use randomized selection so repeated sessions
+    // don't always return the same earliest rows. We use a raw SQL RAND() ordering
+    // which is acceptable for moderate dataset sizes (MySQL). If you need scale,
+    // consider reservoir sampling or pre-shuffled pools.
     let questions = [];
     const take = Math.min(parseInt(limit, 10), 5);
 
-    if (method === "vocabulary") {
-      questions = await prisma.vocabularyQuestion.findMany({
-        where: { level },
-        orderBy: { createdAt: "asc" },
-        take,
-      });
-    } else if (method === "listening") {
-      questions = await prisma.listeningQuestion.findMany({
-        where: { level },
-        orderBy: { createdAt: "asc" },
-        take,
-      });
-    } else if (method === "grammar") {
-      questions = await prisma.grammarQuestion.findMany({
-        where: { level },
-        orderBy: { createdAt: "asc" },
-        take,
-      });
+    // Map method to DB table name (see prisma schema maps)
+    const tableMap = {
+      vocabulary: "vocabulary_questions",
+      listening: "listening_questions",
+      grammar: "grammar_questions",
+    };
+
+    const table = tableMap[method];
+    if (!table) {
+      return jsonResponse(ApiResponse.validationError("Invalid method"), 400);
+    }
+
+    try {
+      // Use parameterized raw query to select random rows
+      // Note: prisma.$queryRawUnsafe is used to interpolate table name; values are
+      // passed as parameters to avoid injection for values.
+      const raw = `SELECT * FROM ${table} WHERE level = ? ORDER BY RAND() LIMIT ?`;
+      // @ts-ignore - $queryRaw may return any
+      questions = await prisma.$queryRawUnsafe(raw, level, take);
+    } catch (err) {
+      console.error(
+        "Randomized query failed, falling back to deterministic fetch:",
+        err,
+      );
+      // Fallback: deterministic selection (existing behavior)
+      if (method === "vocabulary") {
+        questions = await prisma.vocabularyQuestion.findMany({
+          where: { level },
+          orderBy: { createdAt: "asc" },
+          take,
+        });
+      } else if (method === "listening") {
+        questions = await prisma.listeningQuestion.findMany({
+          where: { level },
+          orderBy: { createdAt: "asc" },
+          take,
+        });
+      } else if (method === "grammar") {
+        questions = await prisma.grammarQuestion.findMany({
+          where: { level },
+          orderBy: { createdAt: "asc" },
+          take,
+        });
+      }
     }
 
     if (questions.length === 0) {
@@ -83,13 +123,16 @@ export async function POST(req) {
           id: session.id,
           method,
           level,
+          tier,
           total: questions.length,
           status: "IN_PROGRESS",
         },
         questions: sessionQuestions.map((sq) => {
           let snapshot = sq.snapshot;
-          if (typeof snapshot === 'string') {
-            try { snapshot = JSON.parse(snapshot); } catch (e) {}
+          if (typeof snapshot === "string") {
+            try {
+              snapshot = JSON.parse(snapshot);
+            } catch (e) {}
           }
           return {
             sessionQuestionId: sq.id,
@@ -151,8 +194,10 @@ export async function GET(req) {
         },
         questions: session.questions.map((sq) => {
           let snapshot = sq.snapshot;
-          if (typeof snapshot === 'string') {
-            try { snapshot = JSON.parse(snapshot); } catch (e) {}
+          if (typeof snapshot === "string") {
+            try {
+              snapshot = JSON.parse(snapshot);
+            } catch (e) {}
           }
           return {
             sessionQuestionId: sq.id,

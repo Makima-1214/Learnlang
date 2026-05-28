@@ -26,7 +26,7 @@ export async function GET(request, { params }) {
                 id: true,
                 option: true,
                 order: true,
-                // Don't include isCorrect for users
+                isCorrect: true, // include isCorrect so client can show immediate feedback
               },
               orderBy: { order: "asc" },
             },

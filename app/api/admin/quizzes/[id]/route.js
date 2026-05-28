@@ -64,7 +64,18 @@ export async function PUT(request, { params }) {
     }
 
     const body = await request.json();
-    const { title, description, published, questions } = body;
+    const {
+      title,
+      description,
+      published,
+      order,
+      timeLimit,
+      rewardXp,
+      minXp,
+      icon,
+      color,
+      questions,
+    } = body;
 
     // Delete existing questions and create new ones (simplest approach)
     await prisma.quizQuestion.deleteMany({
@@ -77,6 +88,12 @@ export async function PUT(request, { params }) {
         title,
         description: description || null,
         published: published || false,
+        order: Number.isFinite(Number(order)) ? Number(order) : 0,
+        timeLimit: timeLimit ? Number(timeLimit) : null,
+        rewardXp: Number.isFinite(Number(rewardXp)) ? Number(rewardXp) : 20,
+        minXp: Number.isFinite(Number(minXp)) ? Number(minXp) : 0,
+        icon: icon || null,
+        color: color || "#6366F1",
         questions: {
           create: questions.map((q, index) => ({
             question: q.question,

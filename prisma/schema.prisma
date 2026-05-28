@@ -20,6 +20,9 @@ model User {
   avatar    String?  @db.Text
   bio       String?  @db.Text
   role      Role     @default(USER)
+  xp        Int      @default(0)
+  energy    Int      @default(5)
+  energyNextRefillAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
     // Presence tracking for real-time features
@@ -64,6 +67,9 @@ model User {
   dailyMissions DailyMission[]
   // Learning Sessions
   learningSessions LearningSession[]
+
+  @@index([xp])
+  @@index([energy])
   
   @@map("users")
 }
@@ -158,6 +164,8 @@ model Quiz {
   published   Boolean  @default(false)
   order       Int      @default(0) // Order in learning path (0 = first, 1 = second, etc.)
   timeLimit   Int?     // Time limit in minutes (optional)
+  rewardXp    Int      @default(20) // XP reward for completing the quiz
+  minXp       Int      @default(0)  // Minimum XP required to attempt the quiz
   icon        String?  @db.Text // Icon/emoji for the quiz
   color       String?  @default("#6366F1") // Color theme for the quiz
   createdById String

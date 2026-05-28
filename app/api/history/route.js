@@ -11,17 +11,46 @@ export async function GET(request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const histories = await prisma.history.findMany({
+    const learningSessions = await prisma.learningSession.findMany({
       where: {
         userId: session.user.id,
+        status: "COMPLETED",
       },
       orderBy: {
-        createdAt: "desc",
+        completedAt: "desc",
       },
-      take: 100, // Limit to last 100 entries
+      take: 100,
+      include: {
+        questions: {
+          orderBy: { order: "asc" },
+        },
+      },
     });
 
-    return NextResponse.json({ histories });
+    const histories = learningSessions.map((sessionItem) => ({
+      id: sessionItem.id,
+      method: sessionItem.method,
+      level: sessionItem.level,
+      total: sessionItem.total,
+      score: sessionItem.score,
+      status: sessionItem.status,
+      createdAt: sessionItem.createdAt,
+      completedAt: sessionItem.completedAt,
+      questionsCount: sessionItem.questions.length,
+      questions: sessionItem.questions.map((question) => ({
+        id: question.id,
+        questionId: question.questionId,
+        questionType: question.questionType,
+        userAnswer: question.userAnswer,
+        isCorrect: question.isCorrect,
+        order: question.order,
+      })),
+    }));
+
+    return NextResponse.json({
+      histories,
+      learningSessions: histories,
+    });
   } catch (error) {
     console.error("Error fetching history:", error);
     return NextResponse.json(
@@ -39,17 +68,42 @@ export async function DELETE(request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await prisma.history.deleteMany({
+    const completedSessions = await prisma.learningSession.findMany({
       where: {
         userId: session.user.id,
+        status: "COMPLETED",
       },
+      select: { id: true },
     });
 
-    return NextResponse.json({ message: "History cleared successfully" });
+    const sessionIds = completedSessions.map((item) => item.id);
+
+    if (sessionIds.length === 0) {
+      return NextResponse.json({
+        message: "Learning history cleared successfully",
+      });
+    }
+
+    await prisma.$transaction([
+      prisma.sessionQuestion.deleteMany({
+        where: {
+          sessionId: { in: sessionIds },
+        },
+      }),
+      prisma.learningSession.deleteMany({
+        where: {
+          id: { in: sessionIds },
+        },
+      }),
+    ]);
+
+    return NextResponse.json({
+      message: "Learning history cleared successfully",
+    });
   } catch (error) {
     console.error("Error clearing history:", error);
     return NextResponse.json(
-      { error: "Failed to clear history" },
+      { error: "Failed to clear learning history" },
       { status: 500 },
     );
   }

@@ -25,26 +25,52 @@ import { motion } from "framer-motion";
 // ==================================================
 
 const SparkleIcon = () => (
-  <svg className="w-4 h-4 text-yellow-300 animate-pulse" viewBox="0 0 16 16" fill="none">
-    <path d="M8 0L9.5 5.5L15 7L9.5 8.5L8 14L6.5 8.5L1 7L6.5 5.5L8 0Z" fill="currentColor" />
+  <svg
+    className="w-4 h-4 text-yellow-300 animate-pulse"
+    viewBox="0 0 16 16"
+    fill="none"
+  >
+    <path
+      d="M8 0L9.5 5.5L15 7L9.5 8.5L8 14L6.5 8.5L1 7L6.5 5.5L8 0Z"
+      fill="currentColor"
+    />
   </svg>
 );
 
 const SearchIcon = () => (
-  <svg className="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    className="w-5 h-5 text-gray-500"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="3"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <circle cx="11" cy="11" r="8"></circle>
     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
   </svg>
 );
 
 const HeartFilledIcon = () => (
-  <svg className="w-3.5 h-3.5 text-red-500 fill-red-500 animate-bounce" viewBox="0 0 24 24">
+  <svg
+    className="w-3.5 h-3.5 text-red-500 fill-red-500 animate-bounce"
+    viewBox="0 0 24 24"
+  >
     <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
   </svg>
 );
 
 const MailIcon = () => (
-  <svg className="w-4 h-4 text-[#14B8A6]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    className="w-4 h-4 text-[#14B8A6]"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
     <polyline points="22,6 12,13 2,6"></polyline>
   </svg>
@@ -53,30 +79,92 @@ const MailIcon = () => (
 const FriendsBadgeIllustration = () => (
   <svg className="w-16 h-16 drop-shadow-md" viewBox="0 0 80 80" fill="none">
     {/* Head 1 */}
-    <circle cx="28" cy="35" r="12" fill="#E2E8F0" stroke="#0F766E" strokeWidth="3.5" />
+    <circle
+      cx="28"
+      cy="35"
+      r="12"
+      fill="#E2E8F0"
+      stroke="#0F766E"
+      strokeWidth="3.5"
+    />
     {/* Body 1 */}
-    <path d="M12 58c0-8 6-12 16-12s16 4 16 12v3H12v-3z" fill="#0D9488" stroke="#0F766E" strokeWidth="3.5" />
+    <path
+      d="M12 58c0-8 6-12 16-12s16 4 16 12v3H12v-3z"
+      fill="#0D9488"
+      stroke="#0F766E"
+      strokeWidth="3.5"
+    />
     {/* Head 2 */}
-    <circle cx="52" cy="35" r="12" fill="#E2E8F0" stroke="#0F766E" strokeWidth="3.5" />
+    <circle
+      cx="52"
+      cy="35"
+      r="12"
+      fill="#E2E8F0"
+      stroke="#0F766E"
+      strokeWidth="3.5"
+    />
     {/* Body 2 */}
-    <path d="M36 58c0-8 6-12 16-12s16 4 16 12v3H36v-3z" fill="#2DD4BF" stroke="#0F766E" strokeWidth="3.5" strokeLinejoin="round" />
+    <path
+      d="M36 58c0-8 6-12 16-12s16 4 16 12v3H36v-3z"
+      fill="#2DD4BF"
+      stroke="#0F766E"
+      strokeWidth="3.5"
+      strokeLinejoin="round"
+    />
     {/* Sparkle */}
-    <path d="M40 18l1.5 3 3 .5-2 2 .5 3-3-2-3 2 .5-3-2-2 3-.5 1.5-3z" fill="#F59E0B" />
+    <path
+      d="M40 18l1.5 3 3 .5-2 2 .5 3-3-2-3 2 .5-3-2-2 3-.5 1.5-3z"
+      fill="#F59E0B"
+    />
   </svg>
 );
 
 const EmptyInboxIcon = () => (
-  <svg className="w-20 h-20 mx-auto mb-4 drop-shadow-md" viewBox="0 0 80 80" fill="none">
-    <rect x="15" y="20" width="50" height="40" rx="8" fill="#F0FDF4" stroke="#10B981" strokeWidth="3" />
-    <path d="M15 28l25 15 25-15" stroke="#10B981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+  <svg
+    className="w-20 h-20 mx-auto mb-4 drop-shadow-md"
+    viewBox="0 0 80 80"
+    fill="none"
+  >
+    <rect
+      x="15"
+      y="20"
+      width="50"
+      height="40"
+      rx="8"
+      fill="#F0FDF4"
+      stroke="#10B981"
+      strokeWidth="3"
+    />
+    <path
+      d="M15 28l25 15 25-15"
+      stroke="#10B981"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
     <circle cx="40" cy="50" r="8" fill="#E8F5E9" />
   </svg>
 );
 
 const LoaderIcon = () => (
-  <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none">
-    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+  <svg
+    className="w-4 h-4 animate-spin text-white"
+    viewBox="0 0 24 24"
+    fill="none"
+  >
+    <circle
+      className="opacity-25"
+      cx="12"
+      cy="12"
+      r="10"
+      stroke="currentColor"
+      strokeWidth="4"
+    ></circle>
+    <path
+      className="opacity-75"
+      fill="currentColor"
+      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+    ></path>
   </svg>
 );
 
@@ -264,20 +352,24 @@ export default function FriendsPage() {
       });
 
       if (!response.ok) {
-        const fail = await response.json().catch(() => null);
-        throw new Error(fail?.error?.message || "Failed to follow");
+        throw new Error("Failed follow user");
       }
       const data = await response.json();
 
+      // Update local state immediately for responsive UI
       setFollowingIds((prev) => new Set([...prev, userId]));
       syncFollowStateAcrossLists(userId, true);
 
+      // Immediately remove from recommendations local state for instant feedback
       setRecommendations((prev) => removeUserFromRecommendations(prev, userId));
 
-      if (activeTab === "search") loadFriends();
-      else if (activeTab === "recommendations") loadRecommendations();
-      else if (activeTab === "followers") loadFollowers();
-      else if (activeTab === "following") loadFollowing();
+      if (activeTab === "following") {
+        void loadFollowing();
+      }
+
+      if (data?.data?.isFriend || activeTab === "friends") {
+        void loadFriends();
+      }
 
       toast.success(
         data?.data?.message ||
@@ -287,7 +379,7 @@ export default function FriendsPage() {
       );
     } catch (err) {
       setError(err.message);
-      toast.error(err.message || "Gagal mengikuti pengguna");
+      toast.error("Failed follow user");
     } finally {
       setActionLoadingUserId(null);
     }
@@ -305,10 +397,10 @@ export default function FriendsPage() {
       );
 
       if (!response.ok) {
-        const fail = await response.json().catch(() => null);
-        throw new Error(fail?.error?.message || "Failed to unfollow");
+        throw new Error("Failed unfollow user");
       }
 
+      // Update local state immediately for responsive UI
       setFollowingIds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(userId);
@@ -316,15 +408,18 @@ export default function FriendsPage() {
       });
       syncFollowStateAcrossLists(userId, false);
 
-      if (activeTab === "search") loadFriends();
-      else if (activeTab === "recommendations") loadRecommendations();
-      else if (activeTab === "followers") loadFollowers();
-      else if (activeTab === "following") loadFollowing();
+      if (activeTab === "following") {
+        void loadFollowing();
+      }
+
+      if (activeTab === "friends") {
+        void loadFriends();
+      }
 
       toast.success("Berhasil berhenti mengikuti pengguna");
     } catch (err) {
       setError(err.message);
-      toast.error(err.message || "Gagal berhenti mengikuti pengguna");
+      toast.error("Failed unfollow user");
     } finally {
       setActionLoadingUserId(null);
     }
@@ -333,7 +428,7 @@ export default function FriendsPage() {
   const FriendCard = ({ user, isFriend }) => (
     <Card
       className="border-4 border-b-8 border-gray-200 rounded-3xl overflow-hidden hover:border-[#14B8A6]/70 transition-all duration-200 bg-white"
-      style={{ borderBottomColor: '#E5E7EB' }}
+      style={{ borderBottomColor: "#E5E7EB" }}
     >
       <CardContent className="pt-6">
         <div className="flex items-start gap-4">
@@ -346,7 +441,9 @@ export default function FriendsPage() {
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <h3 className="font-black text-gray-950 text-base truncate">{user.name}</h3>
+              <h3 className="font-black text-gray-950 text-base truncate">
+                {user.name}
+              </h3>
               {isFriend && (
                 <span className="inline-flex items-center gap-1 rounded-xl bg-red-50 px-2.5 py-1 text-[10px] font-black uppercase text-red-600 border border-red-200">
                   <HeartFilledIcon />
@@ -355,7 +452,9 @@ export default function FriendsPage() {
               )}
             </div>
             {user.username && (
-              <p className="text-xs font-bold text-gray-400 mb-2">@{user.username}</p>
+              <p className="text-xs font-bold text-gray-400 mb-2">
+                @{user.username}
+              </p>
             )}
             {user.bio && (
               <p className="text-xs font-bold text-gray-500 line-clamp-2 mb-3 leading-relaxed">
@@ -411,7 +510,9 @@ export default function FriendsPage() {
       <CardContent className="py-6 flex flex-col items-center">
         <EmptyInboxIcon />
         <h3 className="text-xl font-black text-gray-900 mb-2">{title}</h3>
-        <p className="text-sm font-bold text-gray-500 mb-6 max-w-xs">{description}</p>
+        <p className="text-sm font-bold text-gray-500 mb-6 max-w-xs">
+          {description}
+        </p>
         {actionLabel && onAction && (
           <button
             onClick={onAction}
@@ -442,7 +543,9 @@ export default function FriendsPage() {
   if (status === "loading") {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-lg font-black text-[#14B8A6] animate-pulse">Memuat Pengguna...</div>
+        <div className="text-lg font-black text-[#14B8A6] animate-pulse">
+          Memuat Pengguna...
+        </div>
       </div>
     );
   }
@@ -453,8 +556,9 @@ export default function FriendsPage() {
 
   return (
     <DashboardLayout>
-      <style dangerouslySetInnerHTML={{
-        __html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         .cloud-bg {
           position: absolute;
           background: white;
@@ -474,10 +578,11 @@ export default function FriendsPage() {
           transform: translateY(4px);
           border-bottom-width: 0px;
         }
-      `}} />
+      `,
+        }}
+      />
 
       <div className="min-h-[calc(100vh-4rem)] bg-white relative w-full font-[family-name:var(--font-nunito)]">
-
         {/* Cloud Decorations */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
           <div className="cloud-bg w-48 h-16 top-12 -left-12 shadow-sm animate-[bounce_4s_infinite]" />
@@ -485,7 +590,6 @@ export default function FriendsPage() {
         </div>
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 flex flex-col gap-8 relative z-10">
-
           {/* ── Hero Banner — Gamified ── */}
           <motion.section
             initial={{ opacity: 0, y: -20 }}
@@ -504,7 +608,8 @@ export default function FriendsPage() {
                     Cari Teman Belajar!
                   </h1>
                   <p className="text-lg sm:text-xl text-white/90 font-bold leading-relaxed max-w-xl">
-                    Temukan rekan belajar bahasa Inggris di seluruh Indonesia, ikuti aktivitas mereka, dan berlombalah menjadi nomor satu!
+                    Temukan rekan belajar bahasa Inggris di seluruh Indonesia,
+                    ikuti aktivitas mereka, dan berlombalah menjadi nomor satu!
                   </p>
                 </div>
                 <div className="hidden sm:block">
@@ -518,9 +623,16 @@ export default function FriendsPage() {
                   ["Inbox", "Request Masuk"],
                   ["Koneksi", "100% Interaktif"],
                 ].map(([value, label]) => (
-                  <div key={label} className="rounded-2xl border-4 border-[#0F766E] bg-white text-[#0F766E] px-5 py-3 shadow-[0_4px_0_#0F766E] transform hover:-translate-y-1 active:translate-y-1 active:shadow-none transition-all cursor-default">
-                    <div className="text-xl font-black leading-none mb-1">{value}</div>
-                    <div className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{label}</div>
+                  <div
+                    key={label}
+                    className="rounded-2xl border-4 border-[#0F766E] bg-white text-[#0F766E] px-5 py-3 shadow-[0_4px_0_#0F766E] transform hover:-translate-y-1 active:translate-y-1 active:shadow-none transition-all cursor-default"
+                  >
+                    <div className="text-xl font-black leading-none mb-1">
+                      {value}
+                    </div>
+                    <div className="text-[10px] font-bold opacity-80 uppercase tracking-widest">
+                      {label}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -542,13 +654,20 @@ export default function FriendsPage() {
 
           {/* Error Alert */}
           {error && (
-            <Alert variant="destructive" className="rounded-2xl border-2 border-red-200 bg-red-50 text-red-700">
+            <Alert
+              variant="destructive"
+              className="rounded-2xl border-2 border-red-200 bg-red-50 text-red-700"
+            >
               <AlertDescription className="font-bold">{error}</AlertDescription>
             </Alert>
           )}
 
           {/* ── Sticky search & Tabs selection ── */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col gap-6">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="flex flex-col gap-6"
+          >
             <div className="flex flex-col gap-4">
               {/* Search Card Container */}
               <Card className="border-4 border-gray-200 rounded-3xl overflow-hidden bg-white shadow-sm">
@@ -596,7 +715,10 @@ export default function FriendsPage() {
             {/* Contents tab views */}
             <div className="grid gap-6">
               {/* Search view */}
-              <TabsContent value="search" className="mt-0 outline-none flex flex-col gap-4">
+              <TabsContent
+                value="search"
+                className="mt-0 outline-none flex flex-col gap-4"
+              >
                 {loading ? (
                   <div className="grid gap-4">
                     {[...Array(3)].map((_, i) => (
@@ -628,7 +750,10 @@ export default function FriendsPage() {
               </TabsContent>
 
               {/* Recommendations view */}
-              <TabsContent value="recommendations" className="mt-0 outline-none flex flex-col gap-4">
+              <TabsContent
+                value="recommendations"
+                className="mt-0 outline-none flex flex-col gap-4"
+              >
                 {loading ? (
                   <div className="grid gap-4">
                     {[...Array(3)].map((_, i) => (
@@ -656,7 +781,10 @@ export default function FriendsPage() {
               </TabsContent>
 
               {/* Friends view */}
-              <TabsContent value="friends" className="mt-0 outline-none flex flex-col gap-4">
+              <TabsContent
+                value="friends"
+                className="mt-0 outline-none flex flex-col gap-4"
+              >
                 {loading ? (
                   <div className="grid gap-4">
                     {[...Array(3)].map((_, i) => (
@@ -680,7 +808,10 @@ export default function FriendsPage() {
               </TabsContent>
 
               {/* Followers view */}
-              <TabsContent value="followers" className="mt-0 outline-none flex flex-col gap-4">
+              <TabsContent
+                value="followers"
+                className="mt-0 outline-none flex flex-col gap-4"
+              >
                 {loading ? (
                   <div className="grid gap-4">
                     {[...Array(3)].map((_, i) => (
@@ -708,7 +839,10 @@ export default function FriendsPage() {
               </TabsContent>
 
               {/* Following view */}
-              <TabsContent value="following" className="mt-0 outline-none flex flex-col gap-4">
+              <TabsContent
+                value="following"
+                className="mt-0 outline-none flex flex-col gap-4"
+              >
                 {loading ? (
                   <div className="grid gap-4">
                     {[...Array(3)].map((_, i) => (
@@ -736,7 +870,6 @@ export default function FriendsPage() {
               </TabsContent>
             </div>
           </Tabs>
-
         </div>
       </div>
     </DashboardLayout>

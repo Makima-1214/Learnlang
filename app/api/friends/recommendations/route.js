@@ -23,11 +23,18 @@ export async function GET(req) {
     const userId = session.user.id;
     const limit = 10;
 
-    // Get users I already follow (must be excluded from recommendations)
-    const myFollowsAll = await prisma.follow.findMany({
-      where: { followerId: userId },
-      select: { followingId: true },
-    });
+    const [myFollowsAll, myFriends] = await Promise.all([
+      prisma.follow.findMany({
+        where: { followerId: userId },
+        select: { followingId: true },
+      }),
+      prisma.friendship.findMany({
+        where: {
+          OR: [{ initiatorId: userId }, { friendId: userId }],
+        },
+      }),
+    ]);
+
     const alreadyFollowingIds = new Set(myFollowsAll.map((f) => f.followingId));
 
     // Get users who follow you but you don't follow back
@@ -49,109 +56,85 @@ export async function GET(req) {
       take: limit,
     });
 
-    // Get your friends
-    const myFriends = await prisma.friendship.findMany({
-      where: {
-        OR: [{ initiatorId: userId }, { friendId: userId }],
-      },
-    });
-
     const friendIds = new Set(
       myFriends.flatMap((f) =>
         f.initiatorId === userId ? [f.friendId] : [f.initiatorId],
       ),
     );
 
+    const excludedIds = new Set([userId, ...alreadyFollowingIds, ...friendIds]);
+
     // Get users your friends are following (for recommendations)
-    const friendFollows = await prisma.follow.findMany({
-      where: {
-        followerId: {
-          in: Array.from(friendIds),
-        },
-      },
-      include: {
-        following: {
-          select: {
-            id: true,
-            name: true,
-            username: true,
-            avatar: true,
-            bio: true,
+    const friendFollowingIds = Array.from(friendIds);
+
+    const friendFollowRows = friendFollowingIds.length
+      ? await prisma.follow.findMany({
+          where: {
+            followerId: {
+              in: friendFollowingIds,
+            },
           },
-        },
-      },
-    });
+          include: {
+            following: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+                avatar: true,
+                bio: true,
+              },
+            },
+          },
+        })
+      : [];
 
     // Combine and deduplicate recommendations
     const recommendations = new Map();
 
+    const addRecommendation = (user, reason, priority) => {
+      if (!user || excludedIds.has(user.id) || recommendations.has(user.id)) {
+        return;
+      }
+
+      recommendations.set(user.id, {
+        ...user,
+        reason,
+        priority,
+      });
+    };
+
     // Add followers first (priority 1)
     potentialFriends.forEach((f) => {
-      if (
-        f.follower.id !== userId &&
-        !friendIds.has(f.follower.id) &&
-        !alreadyFollowingIds.has(f.follower.id)
-      ) {
-        recommendations.set(f.follower.id, {
-          ...f.follower,
-          reason: "follows you",
-          priority: 1,
-        });
-      }
+      addRecommendation(f.follower, "follows you", 1);
     });
 
     // Add friends of friends (priority 2)
-    friendFollows.forEach((f) => {
-      if (
-        f.following.id !== userId &&
-        !friendIds.has(f.following.id) &&
-        !alreadyFollowingIds.has(f.following.id) &&
-        !recommendations.has(f.following.id)
-      ) {
-        recommendations.set(f.following.id, {
-          ...f.following,
-          reason: "mutual friends follow them",
-          priority: 2,
-        });
-      }
+    friendFollowRows.forEach((f) => {
+      addRecommendation(f.following, "mutual friends follow them", 2);
     });
-
-    // Get current follow status (for safety + metadata on returned users)
-    const myFollows = await prisma.follow.findMany({
-      where: {
-        followerId: userId,
-        followingId: {
-          in: Array.from(recommendations.keys()),
-        },
-      },
-    });
-
-    const followingIds = new Set(myFollows.map((f) => f.followingId));
 
     const finalRecommendations = Array.from(recommendations.values())
       .map((u) => ({
         ...u,
-        isFollowing: followingIds.has(u.id),
+        isFollowing: excludedIds.has(u.id),
         isFriend: friendIds.has(u.id),
       }))
       .sort((a, b) => a.priority - b.priority)
-      .filter((u) => !u.isFollowing && !u.isFriend)
+      .filter((u) => !excludedIds.has(u.id))
       .slice(0, 10);
 
     // Fallback: if social graph is sparse, recommend other users the current user
     // doesn't already follow or befriend.
     if (finalRecommendations.length < limit) {
-      const excludedIds = new Set([
-        userId,
-        ...friendIds,
-        ...followingIds,
+      const fallbackExcludedIds = new Set([
+        ...Array.from(excludedIds),
         ...finalRecommendations.map((u) => u.id),
       ]);
 
       const fallbackUsers = await prisma.user.findMany({
         where: {
           id: {
-            notIn: Array.from(excludedIds),
+            notIn: Array.from(fallbackExcludedIds),
           },
         },
         select: {
@@ -172,8 +155,8 @@ export async function GET(req) {
           ...u,
           reason: "user lain di LernLang",
           priority: 3,
-          isFollowing: followingIds.has(u.id),
-          isFriend: friendIds.has(u.id),
+          isFollowing: false,
+          isFriend: false,
         });
       });
     }

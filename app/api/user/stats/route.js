@@ -8,7 +8,13 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { jsonResponse } from "@/lib/api-response";
 import { calculateStreak, calculateTotalXP } from "@/lib/streak";
+import { getUserEnergy } from "@/lib/energy";
 import { apiLogger } from "@/lib/logger";
+import {
+  computeLevelFromXP,
+  computeTierLabelFromXP,
+  getNextTierProgress,
+} from "@/lib/tiers";
 
 export async function GET(req) {
   try {
@@ -18,11 +24,11 @@ export async function GET(req) {
       return jsonResponse(
         { error: "Unauthorized" },
         401,
-        "User not authenticated"
+        "User not authenticated",
       );
     }
 
-    const userId = session.id;
+    const userId = session.user.id;
 
     // Get user info
     const user = await prisma.user.findUnique({
@@ -45,6 +51,9 @@ export async function GET(req) {
     // Calculate total XP
     const totalXP = await calculateTotalXP(userId);
 
+    // Calculate energy state from persistent storage
+    const energy = await getUserEnergy(userId, { emit: false });
+
     // Count achievements
     const achievementCount = await prisma.achievement.count({
       where: { userId },
@@ -58,32 +67,10 @@ export async function GET(req) {
       },
     });
 
-    // Energy system (max 5 per day, resets at UTC midnight)
-    // For now, implement simple system: max 5 energy, -1 per session, resets daily
-    const today = new Date();
-    const startOfDay = new Date(
-      today.getUTCFullYear(),
-      today.getUTCMonth(),
-      today.getUTCDate()
-    );
-    const endOfDay = new Date(
-      today.getUTCFullYear(),
-      today.getUTCMonth(),
-      today.getUTCDate() + 1
-    );
-
-    const sessionsToday = await prisma.learningSession.count({
-      where: {
-        userId,
-        completedAt: {
-          gte: startOfDay,
-          lt: endOfDay,
-        },
-      },
-    });
-
-    const maxEnergy = 5;
-    const currentEnergy = Math.max(0, maxEnergy - sessionsToday);
+    // Compute user tier/league info from XP
+    const currentLevel = computeLevelFromXP(totalXP);
+    const currentTier = computeTierLabelFromXP(totalXP);
+    const tierProgress = getNextTierProgress(totalXP);
 
     return jsonResponse(
       {
@@ -92,12 +79,14 @@ export async function GET(req) {
           userId,
           streak,
           totalXP,
+          exp: totalXP,
           achievementCount,
           sessionCount,
-          energy: {
-            current: currentEnergy,
-            max: maxEnergy,
-          },
+          currentLevel,
+          currentTier,
+          tierProgress,
+          primaryTier: `${currentLevel} • ${currentTier}`,
+          energy,
           lastSessionDate,
           user: {
             name: user.name,
@@ -107,7 +96,7 @@ export async function GET(req) {
         },
       },
       200,
-      "User stats retrieved"
+      "User stats retrieved",
     );
   } catch (error) {
     apiLogger.error("Error getting user stats:", {

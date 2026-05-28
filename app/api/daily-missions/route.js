@@ -4,7 +4,7 @@
  * Initializes missions if they don't exist for today
  */
 
-import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { jsonResponse } from "@/lib/api-response";
@@ -38,27 +38,23 @@ export async function GET(req) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session) {
-      return jsonResponse(
-        { error: "Unauthorized" },
-        401,
-        "User not authenticated"
-      );
+    if (!session || !session.user) {
+      return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
-    const userId = session.id;
+    const userId = session.user.id;
 
     // Get today's date (UTC)
     const today = new Date();
     const startOfDay = new Date(
       today.getUTCFullYear(),
       today.getUTCMonth(),
-      today.getUTCDate()
+      today.getUTCDate(),
     );
     const endOfDay = new Date(
       today.getUTCFullYear(),
       today.getUTCMonth(),
-      today.getUTCDate() + 1
+      today.getUTCDate() + 1,
     );
 
     // Get or create today's missions
@@ -86,8 +82,8 @@ export async function GET(req) {
               reward: mission.reward,
               progress: 0,
             },
-          })
-        )
+          }),
+        ),
       );
     }
 
@@ -143,19 +139,25 @@ export async function GET(req) {
         const isCompleted = progress >= mission.target;
 
         // Update mission if progress or completion status changed
-        if (progress !== mission.progress || isCompleted !== mission.completed) {
+        if (
+          progress !== mission.progress ||
+          isCompleted !== mission.completed
+        ) {
           return prisma.dailyMission.update({
             where: { id: mission.id },
             data: {
               progress,
               completed: isCompleted,
-              completedAt: isCompleted && !mission.completed ? new Date() : mission.completedAt,
+              completedAt:
+                isCompleted && !mission.completed
+                  ? new Date()
+                  : mission.completedAt,
             },
           });
         }
 
         return mission;
-      })
+      }),
     );
 
     return jsonResponse(
@@ -174,7 +176,7 @@ export async function GET(req) {
         })),
       },
       200,
-      "Daily missions retrieved"
+      "Daily missions retrieved",
     );
   } catch (error) {
     apiLogger.error("Error getting daily missions:", {

@@ -255,7 +255,7 @@ export default function AIMascot({ mood = "neutral", skin = "detective" }) {
             exit={{ scale: 0, opacity: 0 }}
             className="absolute -top-6 bg-red-100 text-red-700 border-4 border-red-300 font-extrabold px-4 py-2 rounded-2xl text-xs shadow-md z-20"
           >
-            Ada yang salah!Cara Pintar
+            Ada yang salah! bip oop *#x@!
           </motion.div>
         )}
       </AnimatePresence>

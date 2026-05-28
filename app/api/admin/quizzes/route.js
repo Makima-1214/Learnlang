@@ -53,7 +53,18 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { title, description, published, order, timeLimit, icon, color, questions } = body;
+    const {
+      title,
+      description,
+      published,
+      order,
+      timeLimit,
+      rewardXp,
+      minXp,
+      icon,
+      color,
+      questions,
+    } = body;
 
     if (!title || !questions || questions.length === 0) {
       return NextResponse.json(
@@ -70,6 +81,8 @@ export async function POST(request) {
         published: published || false,
         order: order || 0,
         timeLimit: timeLimit || null,
+        rewardXp: Number.isFinite(Number(rewardXp)) ? Number(rewardXp) : 20,
+        minXp: Number.isFinite(Number(minXp)) ? Number(minXp) : 0,
         icon: icon || null,
         color: color || "#6366F1",
         createdById: session.user.id,
