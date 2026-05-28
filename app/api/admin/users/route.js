@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 // GET all users (Admin only)
-export async function GET() {
+export async function GET(request) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -12,11 +12,29 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const query = searchParams.get("q")?.trim() || "";
+    const take = Math.min(Number(searchParams.get("take") || 20), 50);
+
+    const where = query
+      ? {
+          OR: [
+            { name: { contains: query } },
+            { username: { contains: query } },
+            { email: { contains: query } },
+          ],
+        }
+      : {};
+
     const users = await prisma.user.findMany({
+      where,
       select: {
         id: true,
         name: true,
+        username: true,
         email: true,
+        avatar: true,
+        xp: true,
         role: true,
         createdAt: true,
         _count: {
@@ -28,6 +46,7 @@ export async function GET() {
       orderBy: {
         createdAt: "desc",
       },
+      take,
     });
 
     return NextResponse.json({ users });
